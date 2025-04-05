@@ -1,0 +1,57 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #fff6e5, #ffe1e1);
+    color: #333;
+}
+header {
+    background: #f95f62;
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+nav {
+    margin-top: 1rem;
+}
+nav a {
+    margin: 0 1rem;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+}
+.container {
+    padding: 2rem;
+}
+section {
+    margin-bottom: 4rem;
+}
+h2 {
+    border-bottom: 2px solid #f95f62;
+    padding-bottom: 0.5rem;
+    color: #d7385e;
+}
+.card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    transition: transform 0.3s ease;
+}
+.card:hover {
+    transform: scale(1.02);
+}
+.footer {
+    background: #f95f62;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+input[type="file"] {
+    margin-top: 1rem;
+}
