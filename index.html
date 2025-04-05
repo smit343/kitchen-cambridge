@@ -1,78 +1,61 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Spiritual Sabha & Recipe Site</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spiritual Sabha & Recipes</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    function toggleDetails(id) {
+      document.getElementById(id).classList.toggle('show');
+    }
+  </script>
 </head>
 <body>
-    <header>
-        <h1>Spiritual Sabha & Recipe</h1>
-        <nav>
-            <a href="#sabha">Sabha Events</a>
-            <a href="#recipes">Recipes</a>
-        </nav>
-    </header>
-    <div class="container">
-        <section id="sabha">
-            <h2>Sabha Event Records</h2>
+  <header>
+    <h1>Spiritual Sabha & Recipes</h1>
+    <nav>
+      <a href="#sabha">Sabha</a>
+      <a href="#recipes">Recipes</a>
+    </nav>
+  </header>
 
-            <div class="card">
-                <h3>2024-04-01 - Ram Navmi Sabha</h3>
-                <p><strong>Pujya Santo's Presence:</strong> Swami Yogi Rajanand</p>
-                <p><strong>Total Attended:</strong> 120 (Gents: 70, Ladies: 50)</p>
-                <p><strong>Food For:</strong> 130</p>
-                <p><strong>Menu:</strong> Khichdi, Kadhi, Thepla</p>
-                <p><strong>Ingredients:</strong> Rice 5kg, Dal 2kg, Curd 3L</p>
-                <p><strong>Left-Over Food:</strong> Khichdi for 10 people</p>
-                <p><strong>Insufficient Item:</strong> Thepla (for 5 people)</p>
-                <p><strong>Weather:</strong> Sunny, Temp: 25°C</p>
-                <p><strong>Food Delivery:</strong> Kitchen pickup</p>
-                <p><strong>Special Note:</strong> Very peaceful sabha with bhajans</p>
-            </div>
+  <main>
+    <section id="sabha">
+      <h2>Sabha Events</h2>
+      <div class="sabha-list">
+        <button onclick="toggleDetails('sabha-0')">2023-03-25</button>
+        <div class="sabha-details" id="sabha-0">
+          <strong>Timestamp:</strong><br>
+          <strong>Sabha Date:</strong> 2023-03-25<br>
+          <strong>Special Event:</strong> Normal sabha<br>
+          <strong>Pujya Santo's Presence:</strong> NO<br>
+          <strong>Total Hribhakto Attended Sabha:</strong> 470<br>
+          <strong>Total Gents:</strong> 277<br>
+          <strong>Total Ladies:</strong> 193<br>
+          <strong>For How Many People We Made Food:</strong> 530<br>
+        </div>
+      </div>
+    </section>
 
-            <div class="card">
-                <h3>2024-03-15 - Holi Sabha</h3>
-                <p><strong>Pujya Santo's Presence:</strong> None</p>
-                <p><strong>Total Attended:</strong> 95 (Gents: 55, Ladies: 40)</p>
-                <p><strong>Food For:</strong> 100</p>
-                <p><strong>Menu:</strong> Pulao, Raita</p>
-                <p><strong>Ingredients:</strong> Rice 4kg, Veggies 2kg</p>
-                <p><strong>Left-Over Food:</strong> Raita for 5 people</p>
-                <p><strong>Insufficient Item:</strong> Pulao (for 3 people)</p>
-                <p><strong>Weather:</strong> Cloudy, Temp: 22°C</p>
-                <p><strong>Food Delivery:</strong> Brought by volunteer</p>
-                <p><strong>Special Note:</strong> Holi celebration was cheerful</p>
-            </div>
-        </section>
+    <section id="recipes">
+      <h2>Recipes</h2>
+      <div class="recipe-gallery">
+        <div class="recipe-card">
+          <h3>Rabdi</h3>
+          <p><strong>Process:</strong> <a href="Recipe_Images/Rabdi.Process.173229.png">Rabdi Process Image</a></p>
+        </div>
+        <div class="recipe-card">
+          <h3>Ladava (wheat laddu)</h3>
+          <p><strong>Process:</strong> <a href="Recipe_Images/Ladava (wheat laddu).Process.173738.jpg">Laddu Process Image</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
 
-        <section id="recipes">
-            <h2>Recipes</h2>
-
-            <div class="card">
-                <h3>Khichdi</h3>
-                <p><strong>Details:</strong> 1 cup rice, 1/2 cup moong dal, salt, turmeric, pressure cook with 3 cups water</p>
-            </div>
-
-            <div class="card">
-                <h3>Thepla</h3>
-                <p><strong>Details:</strong> Wheat flour 2 cups, methi leaves, curd, turmeric, chili, make dough and roast</p>
-            </div>
-
-            <div class="card">
-                <h3>Kadhi</h3>
-                <p><strong>Details:</strong> 2 cups curd, 2 tbsp gram flour, ginger, green chili, boil and temper with mustard & curry leaves</p>
-            </div>
-
-            <div class="card">
-                <p><strong>Upload a new recipe image:</strong></p>
-                <input type="file" accept="image/*">
-            </div>
-        </section>
-    </div>
-
-    <div class="footer">
-        &copy; 2025 Spiritual Events & Recipes. All rights reserved.
-    </div>
+  <footer>
+    <p>&copy; 2025 Spiritual Events & Recipes</p>
+  </footer>
 </body>
 </html>
