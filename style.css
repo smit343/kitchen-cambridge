@@ -2,21 +2,15 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('https://i.ibb.co/0q1wms3/spiritual-bg1.jpg'), linear-gradient(135deg, #fff6e5, #ffe1e1);
-    background-blend-mode: overlay;
-    background-size: cover;
-    background-attachment: fixed;
-    color: #333;
+    background: linear-gradient(to bottom right, #f9e4b7, #fdebd0, #f5f5f5);
+    color: #2c2c2c;
 }
 header {
-    background: linear-gradient(90deg, #f95f62, #fba83c);
+    background: linear-gradient(90deg, #f97316, #ef4444);
     color: white;
     padding: 1.5rem;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-nav {
-    margin-top: 1rem;
 }
 nav a {
     margin: 0 1rem;
@@ -26,44 +20,46 @@ nav a {
 }
 .container {
     padding: 2rem;
-    backdrop-filter: blur(4px);
 }
 section {
-    margin-bottom: 4rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
 }
 h2 {
-    border-bottom: 2px solid #f95f62;
-    padding-bottom: 0.5rem;
-    color: #b41e66;
+    color: #d97706;
 }
-.card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    padding: 1.5rem;
-    margin: 1rem 0;
-    transition: all 0.3s ease;
-}
-.card:hover {
-    transform: scale(1.02);
-}
-details summary {
-    cursor: pointer;
+label {
     font-weight: bold;
 }
-.recipe-img {
+input[type="text"],
+input[type="date"],
+input[type="file"] {
     width: 100%;
-    max-width: 400px;
-    margin-top: 1rem;
-    border-radius: 12px;
+    padding: 0.5rem;
+    margin-top: 0.3rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+button {
+    padding: 0.7rem 1.5rem;
+    background: #f97316;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+button:hover {
+    background: #ea580c;
 }
 footer {
-    background: #f95f62;
+    background: #f97316;
     color: white;
     text-align: center;
     padding: 1rem;
     font-size: 0.9rem;
-}
-input[type="file"] {
-    margin-top: 1rem;
 }
