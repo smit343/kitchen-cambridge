@@ -1,28 +1,125 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Spiritual Sabha & Recipes - Home</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sabha & Recipes</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header>
-    <h1>Spiritual Sabha & Recipe Records</h1>
-    <nav>
-        <a href="add.html" class="add-button">➕ Add New Entry</a>
-    </nav>
-</header>
-<div class="container">
-    <section id="sabha-records">
-        <h2>Sabha Records</h2>
-        <p>No records submitted yet. Records will appear here dynamically after submission.</p>
-    </section>
-    <section id="recipe-records">
-        <h2>Recipes</h2>
-        <p>No recipes submitted yet. Recipes will appear here dynamically after submission.</p>
-    </section>
-</div>
-<footer>&copy; 2025 Spiritual Events & Recipes. All rights reserved.</footer>
+  <div class="container">
+    <h1>📅 Sabha Records</h1>
+    <button onclick="addRow('sabha')">➕ Add Sabha Entry</button>
+    <button onclick="saveData('sabha')">💾 Save Sabha</button>
+    <table id="sabha-table" class="data-table"></table>
+
+    <h1>🍽️ Recipes</h1>
+    <button onclick="addRow('recipe')">➕ Add Recipe</button>
+    <button onclick="saveData('recipe')">💾 Save Recipes</button>
+    <table id="recipe-table" class="data-table"></table>
+  </div>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz8_uhN1T_rD2ZsW4UB7kfAkFMPPMpmtyM-1e9B_SpUvawMNoEIhN2N2uFlhrLSTJPM7A/exec';
+
+    const sabhaColumns = ["Timestamp", "Sabha Date", "Special Event ", "Pujya Santo's Presence", "Total Hribhakto \nAttended Sabha", "Total Gents ", "Total Ladies", "For How Many People We Made Food ?", "Menu", "Ingredients Quantity", "Left-Over Food  (If Any)", "Which Item Was Insufficient (For How Many People)", "Any Item was Re-Made ? (If Any)", "Any Event In KWC Area", "How was Weather ?", "Temperature", "Email address", "Food Delivery", "Total serving table", "Special note"];
+    const recipeColumns = ["Recipe name", "Process / Measurements", "Process"];
+    let sabhaData = [];
+    let recipeData = [];
+
+    async function fetchData() {
+      const res1 = await fetch('https://sheets.googleapis.com/v4/spreadsheets/1e3G643bDe61k3G78JhbjfpSktDL0E5lcOpo-XmmpfxA/values/Form responses 1?key=AIzaSyBXBIUG3E1LtKk0NfBCN_8NsufcfxSqhYc');
+      const data1 = await res1.json();
+      sabhaData = formatSheetData(data1);
+      createTable('sabha-table', sabhaColumns, sabhaData);
+
+      const res2 = await fetch('https://sheets.googleapis.com/v4/spreadsheets/1e3G643bDe61k3G78JhbjfpSktDL0E5lcOpo-XmmpfxA/values/Recipes?key=AIzaSyBXBIUG3E1LtKk0NfBCN_8NsufcfxSqhYc');
+      const data2 = await res2.json();
+      recipeData = formatSheetData(data2);
+      createTable('recipe-table', recipeColumns, recipeData);
+    }
+
+    function formatSheetData(raw) {
+      const [headers, ...rows] = raw.values;
+      return rows.map(row => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = row[i] || "");
+        return obj;
+      });
+    }
+
+    function createTable(id, columns, data) {
+      const table = document.getElementById(id);
+      table.innerHTML = "";
+
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      columns.forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+      headerRow.innerHTML += '<th>Actions</th>';
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      data.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        columns.forEach(col => {
+          const td = document.createElement("td");
+          td.contentEditable = true;
+          td.textContent = row[col] || "";
+          tr.appendChild(td);
+        });
+        const actions = document.createElement("td");
+        actions.innerHTML = `<button onclick="deleteRow('${id}', ${index})">🗑️</button>`;
+        tr.appendChild(actions);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
+
+    function deleteRow(tableId, index) {
+      if (tableId === 'sabha-table') sabhaData.splice(index, 1);
+      else recipeData.splice(index, 1);
+      createTable(tableId, tableId === 'sabha-table' ? sabhaColumns : recipeColumns, tableId === 'sabha-table' ? sabhaData : recipeData);
+    }
+
+    function addRow(type) {
+      const empty = {};
+      const cols = type === 'sabha' ? sabhaColumns : recipeColumns;
+      cols.forEach(c => empty[c] = "");
+      if (type === 'sabha') sabhaData.push(empty);
+      else recipeData.push(empty);
+      createTable(type + '-table', cols, type === 'sabha' ? sabhaData : recipeData);
+    }
+
+    function saveData(type) {
+      const table = document.getElementById(type + '-table');
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const cols = type === 'sabha' ? sabhaColumns : recipeColumns;
+
+      const dataToSend = rows.map(row => {
+        const cells = row.querySelectorAll('td');
+        const obj = {};
+        cols.forEach((col, i) => {
+          obj[col] = cells[i].innerText.trim();
+        });
+        return obj;
+      });
+
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ type, data: dataToSend }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(res => res.text())
+        .then(msg => alert('✅ Data saved successfully!'))
+        .catch(err => alert('❌ Error saving data.'));
+    }
+
+    fetchData();
+  </script>
 </body>
 </html>
