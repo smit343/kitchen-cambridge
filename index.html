@@ -1,125 +1,960 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sabha & Recipes</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabha Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        
+        .neumorphic {
+            border-radius: 12px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            box-shadow:  8px 8px 16px #d9d9d9,
+                        -8px -8px 16px #ffffff;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .floating-btn {
+            animation: bounce 3s infinite;
+        }
+        
+        .chat-bubble {
+            position: relative;
+            border-radius: 18px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            max-width: 70%;
+        }
+        
+        .user-bubble {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-bubble {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <h1>📅 Sabha Records</h1>
-    <button onclick="addRow('sabha')">➕ Add Sabha Entry</button>
-    <button onclick="saveData('sabha')">💾 Save Sabha</button>
-    <table id="sabha-table" class="data-table"></table>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-card fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-om text-2xl text-purple-600"></i>
+            <h1 class="text-xl font-bold text-purple-800">Sabha Manager Pro</h1>
+        </div>
+        <div class="flex space-x-4">
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 transition">
+                <i class="fas fa-moon text-gray-700"></i>
+            </button>
+            <button id="user-menu" class="p-2 rounded-full hover:bg-gray-200 transition">
+                <i class="fas fa-user-circle text-xl text-gray-700"></i>
+            </button>
+        </div>
+    </nav>
 
-    <h1>🍽️ Recipes</h1>
-    <button onclick="addRow('recipe')">➕ Add Recipe</button>
-    <button onclick="saveData('recipe')">💾 Save Recipes</button>
-    <table id="recipe-table" class="data-table"></table>
-  </div>
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 pt-24 pb-20">
+        <!-- Tabs -->
+        <div class="flex overflow-x-auto mb-8 glass-card p-2 rounded-xl">
+            <button data-tab="sabha" class="tab-btn active px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-calendar-alt mr-2 text-purple-600"></i> Sabha Data
+            </button>
+            <button data-tab="recipes" class="tab-btn px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-utensils mr-2 text-purple-600"></i> Recipes
+            </button>
+            <button data-tab="search" class="tab-btn px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-search mr-2 text-purple-600"></i> Search
+            </button>
+            <button data-tab="ai" class="tab-btn px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-robot mr-2 text-purple-600"></i> AI Assistant
+            </button>
+        </div>
 
-  <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbz8_uhN1T_rD2ZsW4UB7kfAkFMPPMpmtyM-1e9B_SpUvawMNoEIhN2N2uFlhrLSTJPM7A/exec';
+        <!-- Tab Contents -->
+        <div class="tab-contents">
+            <!-- Sabha Data Tab -->
+            <div id="sabha" class="tab-content active">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-purple-900">Sabha Events</h2>
+                    <button id="add-sabha-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center transition">
+                        <i class="fas fa-plus mr-2"></i> Add Event
+                    </button>
+                </div>
 
-    const sabhaColumns = ["Timestamp", "Sabha Date", "Special Event ", "Pujya Santo's Presence", "Total Hribhakto \nAttended Sabha", "Total Gents ", "Total Ladies", "For How Many People We Made Food ?", "Menu", "Ingredients Quantity", "Left-Over Food  (If Any)", "Which Item Was Insufficient (For How Many People)", "Any Item was Re-Made ? (If Any)", "Any Event In KWC Area", "How was Weather ?", "Temperature", "Email address", "Food Delivery", "Total serving table", "Special note"];
-    const recipeColumns = ["Recipe name", "Process / Measurements", "Process"];
-    let sabhaData = [];
-    let recipeData = [];
+                <!-- Filters -->
+                <div class="glass-card p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                            <input type="date" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Special Event</label>
+                            <select class="w-full p-2 border rounded-lg">
+                                <option value="">All Events</option>
+                                <option value="Janmashtami">Janmashtami</option>
+                                <option value="Gurupurnima">Gurupurnima</option>
+                                <option value="Annakut">Annakut</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                            <input type="text" placeholder="Search events..." class="w-full p-2 border rounded-lg">
+                        </div>
+                    </div>
+                </div>
 
-    async function fetchData() {
-      const res1 = await fetch('https://sheets.googleapis.com/v4/spreadsheets/1e3G643bDe61k3G78JhbjfpSktDL0E5lcOpo-XmmpfxA/values/Form responses 1?key=AIzaSyBXBIUG3E1LtKk0NfBCN_8NsufcfxSqhYc');
-      const data1 = await res1.json();
-      sabhaData = formatSheetData(data1);
-      createTable('sabha-table', sabhaColumns, sabhaData);
+                <!-- Data Table -->
+                <div class="glass-card p-4 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pujya Santo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- Sample Data Rows -->
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">15/08/2023</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Independence Day</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Pujya Bapa</td>
+                                <td class="px-6 py-4 whitespace-nowrap">120</td>
+                                <td class="px-6 py-4 whitespace-nowrap flex space-x-2">
+                                    <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></button>
+                                    <button class="text-green-600 hover:text-green-800"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">30/08/2023</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Janmashtami</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Pujya Doctor Swami</td>
+                                <td class="px-6 py-4 whitespace-nowrap">250</td>
+                                <td class="px-6 py-4 whitespace-nowrap flex space-x-2">
+                                    <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></button>
+                                    <button class="text-green-600 hover:text-green-800"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-      const res2 = await fetch('https://sheets.googleapis.com/v4/spreadsheets/1e3G643bDe61k3G78JhbjfpSktDL0E5lcOpo-XmmpfxA/values/Recipes?key=AIzaSyBXBIUG3E1LtKk0NfBCN_8NsufcfxSqhYc');
-      const data2 = await res2.json();
-      recipeData = formatSheetData(data2);
-      createTable('recipe-table', recipeColumns, recipeData);
-    }
+                <!-- Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="glass-card p-4">
+                        <h3 class="text-lg font-semibold mb-4">Attendance Trend</h3>
+                        <canvas id="attendanceChart" height="250"></canvas>
+                    </div>
+                    <div class="glass-card p-4">
+                        <h3 class="text-lg font-semibold mb-4">Food Preparation</h3>
+                        <canvas id="foodChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
 
-    function formatSheetData(raw) {
-      const [headers, ...rows] = raw.values;
-      return rows.map(row => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h] = row[i] || "");
-        return obj;
-      });
-    }
+            <!-- Recipes Tab -->
+            <div id="recipes" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-purple-900">Kitchen Recipes</h2>
+                    <button id="add-recipe-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center transition">
+                        <i class="fas fa-plus mr-2"></i> Add Recipe
+                    </button>
+                </div>
 
-    function createTable(id, columns, data) {
-      const table = document.getElementById(id);
-      table.innerHTML = "";
+                <!-- Recipe Search -->
+                <div class="glass-card p-4 mb-6">
+                    <div class="relative">
+                        <input type="text" placeholder="Search recipes by name, ingredient or process..." 
+                            class="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
 
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      columns.forEach(col => {
-        const th = document.createElement("th");
-        th.textContent = col;
-        headerRow.appendChild(th);
-      });
-      headerRow.innerHTML += '<th>Actions</th>';
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+                <!-- Recipe Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Sample Recipe Card -->
+                    <div class="neumorphic rounded-xl overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1">
+                        <div class="h-48 bg-gray-200 relative">
+                            <img src="https://via.placeholder.com/400x300" alt="Recipe" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-2">
+                                <i class="fas fa-ellipsis-v text-gray-700"></i>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-xl font-bold mb-2">Kichadi</h3>
+                            <p class="text-gray-600 mb-4 line-clamp-2">A delicious traditional dish made with rice, lentils and mild spices. Perfect for prasadam distribution.</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500"><i class="fas fa-clock mr-1"></i> 45 mins</span>
+                                <button class="text-purple-600 hover:text-purple-800 font-medium">View Recipe</button>
+                            </div>
+                        </div>
+                    </div>
 
-      const tbody = document.createElement("tbody");
-      data.forEach((row, index) => {
-        const tr = document.createElement("tr");
-        columns.forEach(col => {
-          const td = document.createElement("td");
-          td.contentEditable = true;
-          td.textContent = row[col] || "";
-          tr.appendChild(td);
+                    <!-- Another Recipe Card -->
+                    <div class="neumorphic rounded-xl overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1">
+                        <div class="h-48 bg-gray-200 relative">
+                            <img src="https://via.placeholder.com/400x300" alt="Recipe" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-2">
+                                <i class="fas fa-ellipsis-v text-gray-700"></i>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-xl font-bold mb-2">Sabudana Khichdi</h3>
+                            <p class="text-gray-600 mb-4 line-clamp-2">A fasting special dish made with tapioca pearls, peanuts and potatoes.</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500"><i class="fas fa-clock mr-1"></i> 30 mins</span>
+                                <button class="text-purple-600 hover:text-purple-800 font-medium">View Recipe</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Recipe Card -->
+                    <div class="neumorphic rounded-xl overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center min-h-[300px] cursor-pointer">
+                        <div class="text-center p-4">
+                            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-plus text-purple-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-purple-800">Add New Recipe</h3>
+                            <p class="text-gray-500 mt-1">Click to create a new recipe card</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Tab -->
+            <div id="search" class="tab-content">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-purple-900 mb-2">Ingredient Search</h2>
+                    <p class="text-gray-600">Find specific ingredients or measurements across all sabhas and recipes</p>
+                </div>
+
+                <div class="glass-card p-6 mb-8">
+                    <div class="relative">
+                        <input type="text" id="ingredient-search" placeholder="Search for ingredients or measurements (e.g. 'Find kichadi quantity')" 
+                            class="w-full p-4 pl-12 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg">
+                        <i class="fas fa-search absolute left-4 top-4.5 text-gray-400 text-xl"></i>
+                        <button id="search-btn" class="absolute right-2 top-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div id="search-results" class="space-y-4">
+                    <!-- Sample Result Card -->
+                    <div class="glass-card p-4 rounded-xl hover:shadow-md transition">
+                        <div class="flex items-start">
+                            <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                                <i class="fas fa-utensils text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg mb-1">Kichadi Quantity</h3>
+                                <p class="text-gray-600 mb-2">Found in Sabha: Janmashtami 2023</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="font-medium">Ingredients:</p>
+                                    <ul class="list-disc list-inside text-sm text-gray-700">
+                                        <li>Rice: 10 kg</li>
+                                        <li>Moong Dal: 3 kg</li>
+                                        <li>Ghee: 1.5 kg</li>
+                                        <li>Spices: As needed</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Another Result Card -->
+                    <div class="glass-card p-4 rounded-xl hover:shadow-md transition">
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                                <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg mb-1">Sabudana Khichdi</h3>
+                                <p class="text-gray-600 mb-2">Found in Recipe Collection</p>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="font-medium">Ingredients for 50 people:</p>
+                                    <ul class="list-disc list-inside text-sm text-gray-700">
+                                        <li>Sabudana: 5 kg (soaked overnight)</li>
+                                        <li>Peanuts: 1 kg</li>
+                                        <li>Potatoes: 3 kg</li>
+                                        <li>Ghee: 1 kg</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Assistant Tab -->
+            <div id="ai" class="tab-content">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-purple-900 mb-2">AI Assistant</h2>
+                    <p class="text-gray-600">Ask questions about sabha data, recipes, or get suggestions for your next event</p>
+                </div>
+
+                <div class="glass-card p-6 mb-8">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full mr-4">
+                            <i class="fas fa-robot text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Sabha AI Assistant</h3>
+                            <p class="text-gray-600 text-sm">Powered by ChatGPT</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Container -->
+                    <div id="chat-container" class="h-96 overflow-y-auto mb-4 space-y-4 flex flex-col p-2">
+                        <!-- AI Welcome Message -->
+                        <div class="chat-bubble ai-bubble">
+                            <p>Hello! I'm your Sabha AI Assistant. How can I help you today? Here are some things you can ask:</p>
+                            <ul class="list-disc list-inside mt-2 pl-4">
+                                <li>What was the average attendance last month?</li>
+                                <li>Find recipes that use potatoes</li>
+                                <li>Show me the ingredient list for 100 people kichadi</li>
+                                <li>Analyze our food preparation trends</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="flex space-x-2">
+                        <input type="text" id="ai-input" placeholder="Ask me anything about sabhas or recipes..." 
+                            class="flex-1 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <button id="send-ai-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+
+                    <!-- Quick Questions -->
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-500 mb-2">Try asking:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="quick-question bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm transition">
+                                Average attendance?
+                            </button>
+                            <button class="quick-question bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm transition">
+                                Popular recipes?
+                            </button>
+                            <button class="quick-question bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm transition">
+                                Food cost analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fixed bottom-8 right-8 z-50">
+        <div class="relative">
+            <button id="fab-main" class="floating-btn w-14 h-14 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl transition transform hover:scale-110">
+                <i class="fas fa-plus"></i>
+            </button>
+            <div id="fab-menu" class="absolute bottom-16 right-0 hidden space-y-2">
+                <button class="w-12 h-12 bg-purple-500 text-white rounded-full shadow flex items-center justify-center transition transform hover:scale-110">
+                    <i class="fas fa-calendar-plus"></i>
+                </button>
+                <button class="w-12 h-12 bg-indigo-500 text-white rounded-full shadow flex items-center justify-center transition transform hover:scale-110">
+                    <i class="fas fa-utensils"></i>
+                </button>
+                <button class="w-12 h-12 bg-pink-500 text-white rounded-full shadow flex items-center justify-center transition transform hover:scale-110">
+                    <i class="fas fa-question"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Sabha Modal -->
+    <div id="sabha-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Add New Sabha Event</h3>
+                <button id="close-sabha-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sabha Date</label>
+                        <input type="date" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Special Event</label>
+                        <input type="text" placeholder="Event name" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pujya Santo's Presence</label>
+                    <input type="text" placeholder="Names of saints" class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Bhaktas</label>
+                        <input type="number" placeholder="Count" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gents</label>
+                        <input type="number" placeholder="Count" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ladies</label>
+                        <input type="number" placeholder="Count" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Menu</label>
+                    <textarea placeholder="List all food items" class="w-full p-2 border rounded-lg" rows="2"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ingredients Quantity</label>
+                    <textarea placeholder="List all ingredients with quantities" class="w-full p-2 border rounded-lg" rows="3"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Left-Over Food</label>
+                        <input type="text" placeholder="Details" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Any Item Re-Made</label>
+                        <input type="text" placeholder="Details" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                    <textarea placeholder="Additional notes" class="w-full p-2 border rounded-lg" rows="2"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Photo/File</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                        <div class="space-y-1 text-center">
+                            <div class="flex text-sm text-gray-600">
+                                <label class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input type="file" class="sr-only">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Recipe Modal -->
+    <div id="recipe-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Add New Recipe</h3>
+                <button id="close-recipe-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                    <input type="text" placeholder="Recipe name" class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Process</label>
+                    <textarea placeholder="Step-by-step instructions" class="w-full p-2 border rounded-lg" rows="5"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ingredients</label>
+                        <textarea placeholder="List all ingredients with quantities" class="w-full p-2 border rounded-lg" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cooking Time</label>
+                        <input type="text" placeholder="e.g. 45 minutes" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input type="file" class="sr-only">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Recipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Recipe Modal -->
+    <div id="view-recipe-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Kichadi Recipe</h3>
+                <button id="close-view-recipe-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="h-64 bg-gray-200 rounded-lg overflow-hidden mb-4">
+                        <img src="https://via.placeholder.com/400x300" alt="Kichadi" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex items-center text-gray-600 space-x-4">
+                        <span><i class="fas fa-clock mr-1"></i> 45 mins</span>
+                        <span><i class="fas fa-utensils mr-1"></i> Serves 50</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-2">Ingredients:</h4>
+                    <ul class="list-disc list-inside mb-4 text-gray-700">
+                        <li>Rice: 10 kg</li>
+                        <li>Moong Dal: 3 kg</li>
+                        <li>Ghee: 1.5 kg</li>
+                        <li>Turmeric: 50g</li>
+                        <li>Cumin seeds: 100g</li>
+                        <li>Salt: to taste</li>
+                    </ul>
+                    
+                    <h4 class="font-bold mb-2">Process:</h4>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>Wash rice and dal together 3-4 times</li>
+                        <li>Soak for 30 minutes</li>
+                        <li>Heat ghee in large pot, add cumin seeds</li>
+                        <li>Add drained rice and dal, stir for 2 minutes</li>
+                        <li>Add water (1:3 ratio), turmeric and salt</li>
+                        <li>Cook on medium flame until fully cooked</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6">
+                <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center">
+                    <i class="fas fa-print mr-2"></i> Print
+                </button>
+                <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center">
+                    <i class="fas fa-download mr-2"></i> Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked button
+                btn.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = btn.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
         });
-        const actions = document.createElement("td");
-        actions.innerHTML = `<button onclick="deleteRow('${id}', ${index})">🗑️</button>`;
-        tr.appendChild(actions);
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-    }
 
-    function deleteRow(tableId, index) {
-      if (tableId === 'sabha-table') sabhaData.splice(index, 1);
-      else recipeData.splice(index, 1);
-      createTable(tableId, tableId === 'sabha-table' ? sabhaColumns : recipeColumns, tableId === 'sabha-table' ? sabhaData : recipeData);
-    }
-
-    function addRow(type) {
-      const empty = {};
-      const cols = type === 'sabha' ? sabhaColumns : recipeColumns;
-      cols.forEach(c => empty[c] = "");
-      if (type === 'sabha') sabhaData.push(empty);
-      else recipeData.push(empty);
-      createTable(type + '-table', cols, type === 'sabha' ? sabhaData : recipeData);
-    }
-
-    function saveData(type) {
-      const table = document.getElementById(type + '-table');
-      const rows = Array.from(table.querySelectorAll('tbody tr'));
-      const cols = type === 'sabha' ? sabhaColumns : recipeColumns;
-
-      const dataToSend = rows.map(row => {
-        const cells = row.querySelectorAll('td');
-        const obj = {};
-        cols.forEach((col, i) => {
-          obj[col] = cells[i].innerText.trim();
+        // Floating Action Button
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        
+        fabMain.addEventListener('click', () => {
+            fabMenu.classList.toggle('hidden');
         });
-        return obj;
-      });
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({ type, data: dataToSend }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-        .then(res => res.text())
-        .then(msg => alert('✅ Data saved successfully!'))
-        .catch(err => alert('❌ Error saving data.'));
-    }
+        // Modals
+        // Sabha Modal
+        const addSabhaBtn = document.getElementById('add-sabha-btn');
+        const sabhaModal = document.getElementById('sabha-modal');
+        const closeSabhaModal = document.getElementById('close-sabha-modal');
+        
+        addSabhaBtn.addEventListener('click', () => {
+            sabhaModal.classList.remove('hidden');
+        });
+        
+        closeSabhaModal.addEventListener('click', () => {
+            sabhaModal.classList.add('hidden');
+        });
 
-    fetchData();
-  </script>
-</body>
+        // Recipe Modal
+        const addRecipeBtn = document.getElementById('add-recipe-btn');
+        const recipeModal = document.getElementById('recipe-modal');
+        const closeRecipeModal = document.getElementById('close-recipe-modal');
+        
+        addRecipeBtn.addEventListener('click', () => {
+            recipeModal.classList.remove('hidden');
+        });
+        
+        closeRecipeModal.addEventListener('click', () => {
+            recipeModal.classList.add('hidden');
+        });
+
+        // View Recipe Modal
+        const viewRecipeBtns = document.querySelectorAll('[data-target="view-recipe"]');
+        const viewRecipeModal = document.getElementById('view-recipe-modal');
+        const closeViewRecipeModal = document.getElementById('close-view-recipe-modal');
+        
+        viewRecipeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewRecipeModal.classList.remove('hidden');
+            });
+        });
+        
+        closeViewRecipeModal.addEventListener('click', () => {
+            viewRecipeModal.classList.add('hidden');
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === sabhaModal) {
+                sabhaModal.classList.add('hidden');
+            }
+            if (e.target === recipeModal) {
+                recipeModal.classList.add('hidden');
+            }
+            if (e.target === viewRecipeModal) {
+                viewRecipeModal.classList.add('hidden');
+            }
+        });
+
+        // AI Chat
+        const aiInput = document.getElementById('ai-input');
+        const sendAiBtn = document.getElementById('send-ai-btn');
+        const chatContainer = document.getElementById('chat-container');
+        const quickQuestions = document.querySelectorAll('.quick-question');
+        
+        function addUserMessage(message) {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble user-bubble';
+            bubble.innerHTML = `<p>${message}</p>`;
+            chatContainer.appendChild(bubble);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function addAiResponse(response) {
+            // Simulate typing effect
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble ai-bubble';
+            chatContainer.appendChild(bubble);
+            
+            let i = 0;
+            const speed = 20;
+            const typingEffect = setInterval(() => {
+                if (i < response.length) {
+                    bubble.innerHTML = `<p>${response.substring(0, i)}</p>`;
+                    i++;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    clearInterval(typingEffect);
+                }
+            }, speed);
+        }
+        
+        sendAiBtn.addEventListener('click', () => {
+            const message = aiInput.value.trim();
+            if (message) {
+                addUserMessage(message);
+                aiInput.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const responses = [
+                        "Based on the data from the last 5 sabhas, the average attendance was 145 devotees.",
+                        "The most popular recipe in our collection is Kichadi, prepared 8 times in the last month.",
+                        "For 100 people, you'll need approximately 20kg rice, 6kg moong dal, and 3kg ghee for kichadi.",
+                        "The food cost analysis shows that our average cost per devotee is ₹35.50."
+                    ];
+                    
+                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                    addAiResponse(randomResponse);
+                }, 1000);
+            }
+        });
+        
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendAiBtn.click();
+            }
+        });
+        
+        quickQuestions.forEach(btn => {
+            btn.addEventListener('click', () => {
+                aiInput.value = btn.textContent.trim();
+                sendAiBtn.click();
+            });
+        });
+
+        // Charts
+        // Attendance Chart
+        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+        const attendanceChart = new Chart(attendanceCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Monthly Attendance',
+                    data: [120, 145, 132, 155, 180, 210],
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                    borderColor: 'rgba(99, 102, 241, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Food Chart
+        const foodCtx = document.getElementById('foodChart').getContext('2d');
+        const foodChart = new Chart(foodCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Kichadi', 'Sabudana', 'Puri', 'Sabji', 'Halwa', 'Other'],
+                datasets: [{
+                    label: 'Times Prepared',
+                    data: [12, 8, 10, 15, 7, 5],
+                    backgroundColor: [
+                        'rgba(139, 92, 246, 0.7)',
+                        'rgba(99, 102, 241, 0.7)',
+                        'rgba(236, 72, 153, 0.7)',
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(75, 85, 99, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(139, 92, 246, 1)',
+                        'rgba(99, 102, 241, 1)',
+                        'rgba(236, 72, 153, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(75, 85, 99, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const icon = themeToggle.querySelector('i');
+            if (document.documentElement.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // Sample data for search functionality
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const searchTerm = document.getElementById('ingredient-search').value.toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            
+            // Clear previous results
+            resultsContainer.innerHTML = '';
+            
+            if (searchTerm.includes('kichadi') || searchTerm.includes('quantity')) {
+                // Add sample result
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'glass-card p-4 rounded-xl hover:shadow-md transition';
+                resultDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-utensils text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Kichadi Quantity</h3>
+                            <p class="text-gray-600 mb-2">Found in Sabha: Janmashtami 2023</p>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-medium">Ingredients:</p>
+                                <ul class="list-disc list-inside text-sm text-gray-700">
+                                    <li>Rice: 10 kg</li>
+                                    <li>Moong Dal: 3 kg</li>
+                                    <li>Ghee: 1.5 kg</li>
+                                    <li>Spices: As needed</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.appendChild(resultDiv);
+            }
+            
+            if (searchTerm.includes('sabudana') || searchTerm.includes('khichdi')) {
+                // Add another sample result
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'glass-card p-4 rounded-xl hover:shadow-md transition';
+                resultDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Sabudana Khichdi</h3>
+                            <p class="text-gray-600 mb-2">Found in Recipe Collection</p>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-medium">Ingredients for 50 people:</p>
+                                <ul class="list-disc list-inside text-sm text-gray-700">
+                                    <li>Sabudana: 5 kg (soaked overnight)</li>
+                                    <li>Peanuts: 1 kg</li>
+                                    <li>Potatoes: 3 kg</li>
+                                    <li>Ghee: 1 kg</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.appendChild(resultDiv);
+            }
+            
+            if (resultsContainer.children.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">No results found for "${searchTerm}"</p>
+                        <p class="text-sm text-gray-500 mt-2">Try searching for "kichadi quantity" or "sabudana recipe"</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=smitp4383/kitchen" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
