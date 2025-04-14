@@ -1484,25 +1484,26 @@
     }
 
     function syncWithGoogleSheets() {
-        // In a real implementation, this would:
-        // 1. Validate the Google Sheet URL and name
-        // 2. Use Google Sheets API to read/write data
-        // 3. Handle authentication (likely through a backend service)
-        
-        syncConfig.sheetUrl = sheetUrlInput.value;
-        syncConfig.sheetName = sheetNameInput.value;
-        syncConfig.autoSync = autoSyncCheckbox.checked;
-        
-        // Show success message
-        alert('Sync settings saved successfully!');
-        syncModal.classList.add('hidden');
-        
-        if (syncConfig.autoSync) {
-            startAutoSync();
-        } else {
-            stopAutoSync();
-        }
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxj75vvLsPMqWffxTHIkavcp47Venefqr6OUpODFvvPrz4jUYEbHk117uXbznUNwBHv/exec";
+
+        sabhaData.forEach(row => {
+            fetch(webAppUrl, {
+                method: "POST",
+                body: JSON.stringify(row),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+             })
+             .then(res => res.text())
+             .then(msg => console.log("Sheet Sync:", msg))
+             .catch(err => console.error("Sync error:", err));
+        });
+
+        alert("Data synced to Google Sheet!");
     }
+
+
+
 
     function startAutoSync() {
         // Clear any existing interval
