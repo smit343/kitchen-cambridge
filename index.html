@@ -17,6 +17,7 @@
             --light: #f8fafc;
         }
 
+
 <script>
 const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxj75vvLsPMqWffxTHIkavcp47Venefqr6OUpODFvvPrz4jUYEbHk117uXbznUNwBHv/exec"; // replace with your URL
 </script>
@@ -1162,22 +1163,23 @@ const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxj75v
         sabhaData = sabhaData.filter(s => s.id !== id);
         loadSabhaData();
     }
+    
 
     async function saveSabha() {
-  const id = document.getElementById('sabha-id').value || Date.now().toString();
-  const sabha = {
-    id: id,
-    date: document.getElementById('sabha-date').value,
-    event: document.getElementById('special-event').value,
-    pujyaSanto: document.getElementById('pujya-santo').value,
-    totalBhaktas: parseInt(document.getElementById('total-bhaktas').value) || 0,
-    gents: parseInt(document.getElementById('gents').value) || 0,
-    ladies: parseInt(document.getElementById('ladies').value) || 0,
-    menu: document.getElementById('menu').value,
-    ingredients: document.getElementById('ingredients').value,
-    leftoverFood: document.getElementById('leftover-food').value,
-    remadeItems: document.getElementById('remade-items').value,
-    note: document.getElementById('note').value
+        const id = document.getElementById('sabha-id').value || Date.now().toString();
+        const sabha = {
+            id: id,
+            date: document.getElementById('sabha-date').value,
+            event: document.getElementById('special-event').value,
+            pujyaSanto: document.getElementById('pujya-santo').value,
+            totalBhaktas: parseInt(document.getElementById('total-bhaktas').value) || 0,
+            gents: parseInt(document.getElementById('gents').value) || 0,
+            ladies: parseInt(document.getElementById('ladies').value) || 0,
+            menu: document.getElementById('menu').value,
+            ingredients: document.getElementById('ingredients').value,
+            leftoverFood: document.getElementById('leftover-food').value,
+            remadeItems: document.getElementById('remade-items').value,
+            note: document.getElementById('note').value   
   };
 
   try {
@@ -1193,14 +1195,15 @@ const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxj75v
     console.error("Error saving sabha:", err);
   }
 }
-
-async function fetchSabhaData() {
-  try {
-    const res = await fetch(GOOGLE_SHEET_WEB_APP_URL);
-    sabhaData = await res.json();
-    loadSabhaData();
-  } catch (err) {
-    console.error("Failed to fetch sabha data:", err);
+        
+  
+    async function fetchSabhaData() {
+      try {
+        const res = await fetch(GOOGLE_SHEET_WEB_APP_URL);
+        sabhaData = await res.json();
+        loadSabhaData();
+      } catch (err) {
+        console.error("Failed to fetch sabha data:", err);
   }
 }
 
