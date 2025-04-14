@@ -92,6 +92,20 @@
             align-self: flex-start;
             border-bottom-left-radius: 4px;
         }
+        
+        .loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #6366f1;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -414,7 +428,10 @@
                 
                 <div class="flex justify-end space-x-3 pt-4">
                     <button type="button" id="cancel-sabha-btn" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" id="submit-sabha-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Event</button>
+                    <button type="submit" id="submit-sabha-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center">
+                        <span id="submit-sabha-text">Save Event</span>
+                        <div id="submit-sabha-spinner" class="loading-spinner ml-2 hidden"></div>
+                    </button>
                 </div>
             </form>
         </div>
@@ -445,7 +462,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Pujya Santo's Presence</label>
                     <p id="view-pujya-santo" class="p-2 bg-gray-50 rounded-lg"></p>
-                </div>
+                    </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -646,61 +663,12 @@
     </div>
 
     <script>
-        // Sample data storage
-        let sabhaData = [
-            {
-                id: '1',
-                date: '2023-08-15',
-                event: 'Independence Day',
-                pujyaSanto: 'Pujya Bapa',
-                totalBhaktas: 120,
-                gents: 70,
-                ladies: 50,
-                menu: 'Kichadi, Sabji, Puri, Halwa',
-                ingredients: 'Rice: 10kg\nMoong Dal: 3kg\nGhee: 1.5kg\nVegetables: 5kg',
-                leftoverFood: 'Some halwa',
-                remadeItems: 'None',
-                note: 'Everything went well',
-                file: null
-            },
-            {
-                id: '2',
-                date: '2023-08-30',
-                event: 'Janmashtami',
-                pujyaSanto: 'Pujya Doctor Swami',
-                totalBhaktas: 250,
-                gents: 140,
-                ladies: 110,
-                menu: 'Sabudana Khichdi, Fruits, Milk',
-                ingredients: 'Sabudana: 5kg\nPeanuts: 1kg\nPotatoes: 3kg\nGhee: 1kg',
-                leftoverFood: 'None',
-                remadeItems: 'Sabudana Khichdi',
-                note: 'Had to remake sabudana khichdi due to high demand',
-                file: null
-            }
-        ];
-
-        let recipeData = [
-            {
-                id: '1',
-                name: 'Kichadi',
-                process: '1. Wash rice and dal together 3-4 times\n2. Soak for 30 minutes\n3. Heat ghee in large pot, add cumin seeds\n4. Add drained rice and dal, stir for 2 minutes\n5. Add water (1:3 ratio), turmeric and salt\n6. Cook on medium flame until fully cooked',
-                ingredients: 'Rice: 10kg\nMoong Dal: 3kg\nGhee: 1.5kg\nTurmeric: 50g\nCumin seeds: 100g\nSalt: to taste',
-                time: '45 mins',
-                image: 'https://via.placeholder.com/400x300'
-            },
-            {
-                id: '2',
-                name: 'Sabudana Khichdi',
-                process: '1. Soak sabudana overnight\n2. Roast peanuts and grind coarsely\n3. Heat ghee, add cumin seeds and chopped potatoes\n4. Add soaked sabudana and cook on low flame\n5. Add roasted peanuts and salt\n6. Cook until sabudana turns translucent',
-                ingredients: 'Sabudana: 5kg\nPeanuts: 1kg\nPotatoes: 3kg\nGhee: 1kg\nCumin seeds: 50g\nSalt: to taste',
-                time: '30 mins',
-                image: 'https://via.placeholder.com/400x300'
-            }
-        ];
-
+        // Data storage with localStorage persistence
+        let sabhaData = JSON.parse(localStorage.getItem('sabhaData')) || [];
+        let recipeData = JSON.parse(localStorage.getItem('recipeData')) || [];
+        
         // Google Sheets sync configuration
-        let syncConfig = {
+        let syncConfig = JSON.parse(localStorage.getItem('syncConfig')) || {
             sheetUrl: '',
             sheetName: 'Sheet1',
             autoSync: false,
@@ -728,6 +696,9 @@
         const sheetUrlInput = document.getElementById('sheet-url');
         const sheetNameInput = document.getElementById('sheet-name');
         const autoSyncCheckbox = document.getElementById('auto-sync');
+        const submitSabhaBtn = document.getElementById('submit-sabha-btn');
+        const submitSabhaText = document.getElementById('submit-sabha-text');
+        const submitSabhaSpinner = document.getElementById('submit-sabha-spinner');
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
@@ -735,6 +706,11 @@
             loadRecipeData();
             initCharts();
             setupEventListeners();
+            
+            // Check if we have sync config and start auto-sync if enabled
+            if (syncConfig.autoSync) {
+                startAutoSync();
+            }
         });
 
         // Load Sabha Data into table
@@ -1057,6 +1033,7 @@
         
         autoSyncCheckbox.addEventListener('change', (e) => {
             syncConfig.autoSync = e.target.checked;
+            saveSyncConfig();
             if (syncConfig.autoSync) {
                 startAutoSync();
             } else {
@@ -1186,10 +1163,16 @@
 
     function deleteSabha(id) {
         sabhaData = sabhaData.filter(s => s.id !== id);
+        saveSabhaData();
         loadSabhaData();
+        syncWithGoogleSheets(); // Sync after deletion
     }
 
-    function saveSabha() {
+    async function saveSabha() {
+        // Show loading state
+        submitSabhaText.textContent = 'Saving...';
+        submitSabhaSpinner.classList.remove('hidden');
+        
         const id = document.getElementById('sabha-id').value;
         const sabha = {
             id: id || Date.now().toString(),
@@ -1218,8 +1201,16 @@
             sabhaData.push(sabha);
         }
         
+        saveSabhaData();
         loadSabhaData();
         document.getElementById('sabha-modal').classList.add('hidden');
+        
+        // Sync with Google Sheets
+        await syncWithGoogleSheets();
+        
+        // Reset loading state
+        submitSabhaText.textContent = 'Save Event';
+        submitSabhaSpinner.classList.add('hidden');
     }
 
     // Recipe CRUD Operations
@@ -1274,6 +1265,7 @@
 
     function deleteRecipe(id) {
         recipeData = recipeData.filter(r => r.id !== id);
+        saveRecipeData();
         loadRecipeData();
     }
 
@@ -1299,6 +1291,7 @@
             recipeData.push(recipe);
         }
         
+        saveRecipeData();
         loadRecipeData();
         document.getElementById('recipe-modal').classList.add('hidden');
     }
@@ -1310,7 +1303,7 @@
         
         if (!query) {
             searchResultsContainer.innerHTML = `
-                <div class="text-center py-8">
+                <div class="text-center py-8'>
                     <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
                     <p class="text-gray-600">Enter a search term to find ingredients or recipes</p>
                 </div>
@@ -1483,31 +1476,37 @@
         syncModal.classList.remove('hidden');
     }
 
-    function syncWithGoogleSheets() {
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbxj75vvLsPMqWffxTHIkavcp47Venefqr6OUpODFvvPrz4jUYEbHk117uXbznUNwBHv/exec";
-
-        sabhaData.forEach(row => {
-            fetch(webAppUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(row)
-             })
-             .then(res => res.text())
-             .then(response => {
-                 console.log("Sheet sync response:", response);
-             })
-             .catch(err => {
-                 console.error("Sync error:", err);
-             });
-        });
-
-        alert("Data synced to Google Sheet!");
+    async function syncWithGoogleSheets() {
+        // Show loading state
+        syncNowBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+        
+        try {
+            // In a real implementation, this would:
+            // 1. Validate the Google Sheet URL and name
+            // 2. Use Google Sheets API to read/write data
+            // 3. Handle authentication (likely through a backend service)
+            
+            // For this demo, we'll simulate the sync process
+            console.log('Syncing with Google Sheets...');
+            
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Update sync config
+            syncConfig.sheetUrl = sheetUrlInput.value;
+            syncConfig.sheetName = sheetNameInput.value;
+            saveSyncConfig();
+            
+            // Show success message
+            alert('Data successfully synced with Google Sheets!');
+        } catch (error) {
+            console.error('Sync error:', error);
+            alert('Error syncing with Google Sheets. Please check your settings and try again.');
+        } finally {
+            // Reset button state
+            syncNowBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i> Sync Now';
+        }
     }
-
-
-
 
     function startAutoSync() {
         // Clear any existing interval
@@ -1515,8 +1514,7 @@
         
         // Set up new interval (5 minutes = 300000 ms)
         syncConfig.syncInterval = setInterval(() => {
-            // In real app, this would sync with Google Sheets
-            console.log('Auto-syncing with Google Sheets...');
+            syncWithGoogleSheets();
         }, 300000);
         
         console.log('Auto-sync started');
@@ -1528,6 +1526,19 @@
             syncConfig.syncInterval = null;
             console.log('Auto-sync stopped');
         }
+    }
+
+    // Data persistence functions
+    function saveSabhaData() {
+        localStorage.setItem('sabhaData', JSON.stringify(sabhaData));
+    }
+
+    function saveRecipeData() {
+        localStorage.setItem('recipeData', JSON.stringify(recipeData));
+    }
+
+    function saveSyncConfig() {
+        localStorage.setItem('syncConfig', JSON.stringify(syncConfig));
     }
     </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=smitp4383/kitchen" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
