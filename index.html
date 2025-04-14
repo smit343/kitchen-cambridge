@@ -1241,39 +1241,6 @@ window.addEventListener("DOMContentLoaded", fetchSabhaData);
         loadSabhaData();
     }
 
-    function saveSabha() {
-        const id = document.getElementById('sabha-id').value;
-        const sabha = {
-            id: id || Date.now().toString(),
-            date: document.getElementById('sabha-date').value,
-            event: document.getElementById('special-event').value,
-            pujyaSanto: document.getElementById('pujya-santo').value,
-            totalBhaktas: parseInt(document.getElementById('total-bhaktas').value) || 0,
-            gents: parseInt(document.getElementById('gents').value) || 0,
-            ladies: parseInt(document.getElementById('ladies').value) || 0,
-            menu: document.getElementById('menu').value,
-            ingredients: document.getElementById('ingredients').value,
-            leftoverFood: document.getElementById('leftover-food').value,
-            remadeItems: document.getElementById('remade-items').value,
-            note: document.getElementById('note').value,
-            file: null // Would need file upload handling
-        };
-        
-        if (id) {
-            // Update existing sabha
-            const index = sabhaData.findIndex(s => s.id === id);
-            if (index !== -1) {
-                sabhaData[index] = sabha;
-            }
-        } else {
-            // Add new sabha
-            sabhaData.push(sabha);
-        }
-        
-        loadSabhaData();
-        document.getElementById('sabha-modal').classList.add('hidden');
-    }
-
     // Recipe CRUD Operations
     function openRecipeModal(id = null) {
         const modal = document.getElementById('recipe-modal');
