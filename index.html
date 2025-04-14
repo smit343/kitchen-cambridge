@@ -1476,38 +1476,74 @@
         syncModal.classList.remove('hidden');
     }
 
+    <script>
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbxj75vvLsPMqWffxTHIkavcp47Venefqr6OUpODFvvPrz4jUYEbHk117uXbznUNwBHv/exec";
+
+    // Sync to Google Sheet
     async function syncWithGoogleSheets() {
-        // Show loading state
-        syncNowBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
-        
         try {
-            // In a real implementation, this would:
-            // 1. Validate the Google Sheet URL and name
-            // 2. Use Google Sheets API to read/write data
-            // 3. Handle authentication (likely through a backend service)
-            
-            // For this demo, we'll simulate the sync process
-            console.log('Syncing with Google Sheets...');
-            
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // Update sync config
-            syncConfig.sheetUrl = sheetUrlInput.value;
-            syncConfig.sheetName = sheetNameInput.value;
-            saveSyncConfig();
-            
-            // Show success message
-            alert('Data successfully synced with Google Sheets!');
+            if (!Array.isArray(sabhaData) || sabhaData.length === 0) {
+            alert("No sabha data to sync.");
+            return;
+            }
+
+            for (const row of sabhaData) {
+                const response = await fetch(webAppUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(row)
+                });
+                const text = await response.text();
+                console.log("Synced:", text);
+            }
+
+            alert("Data successfully synced to Google Sheet!");
         } catch (error) {
-            console.error('Sync error:', error);
-            alert('Error syncing with Google Sheets. Please check your settings and try again.');
-        } finally {
-            // Reset button state
-            syncNowBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i> Sync Now';
+        console.error("Sync error:", error);
+        alert("Error syncing with Google Sheet.");
         }
     }
 
+// Read from Google Sheet and update sabhaData
+    async function fetchSabhaDataFromSheet() {
+        try {
+            const response = await fetch(webAppUrl);
+            const data = await response.json();
+
+        // Replace existing sabhaData with what's on the Sheet
+            sabhaData = data.map((item, index) => ({
+                id: (index + 1).toString(),
+                date: item["Date"] || "",
+                event: item["Event"] || "",
+                pujyaSanto: item["Pujya Santo"] || "",
+                totalBhaktas: parseInt(item["Total Bhaktas"]) || 0,
+                gents: parseInt(item["Gents"]) || 0,
+                ladies: parseInt(item["Ladies"]) || 0,
+                menu: item["Menu"] || "",
+                ingredients: item["Ingredients"] || "",
+                leftoverFood: item["Leftover Food"] || "",
+                remadeItems: item["Remade Items"] || "",
+                note: item["Note"] || "",
+                file: null
+            }));
+
+            console.log("Fetched sabhaData from sheet:", sabhaData);
+            loadSabhaData(); // Refresh table
+        } catch (error) {
+            console.error("Error reading from Google Sheet:", error);
+        }
+    }
+
+// Call on page load
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchSabhaDataFromSheet();
+    });
+    
+
+
+        
     function startAutoSync() {
         // Clear any existing interval
         stopAutoSync();
@@ -1540,6 +1576,7 @@
     function saveSyncConfig() {
         localStorage.setItem('syncConfig', JSON.stringify(syncConfig));
     }
+    </script>
     </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=smitp4383/kitchen" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
