@@ -1489,14 +1489,18 @@
         sabhaData.forEach(row => {
             fetch(webAppUrl, {
                 method: "POST",
-                body: JSON.stringify(row),
                 headers: {
                     "Content-Type": "application/json"
-                }
+                },
+                body: JSON.stringify(row)
              })
              .then(res => res.text())
-             .then(msg => console.log("Sheet Sync:", msg))
-             .catch(err => console.error("Sync error:", err));
+             .then(response => {
+                 console.log("Sheet sync response:", response);
+             })
+             .catch(err => {
+                 console.error("Sync error:", err);
+             });
         });
 
         alert("Data synced to Google Sheet!");
