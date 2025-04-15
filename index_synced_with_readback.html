@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabha Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        
+        .neumorphic {
+            border-radius: 12px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            box-shadow:  8px 8px 16px #d9d9d9,
+                        -8px -8px 16px #ffffff;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .floating-btn {
+            animation: bounce 3s infinite;
+        }
+        
+        .chat-bubble {
+            position: relative;
+            border-radius: 18px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            max-width: 70%;
+        }
+        
+        .user-bubble {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-bubble {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #6366f1;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-card fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-om text-2xl text-purple-600"></i>
+            <h1 class="text-xl font-bold text-purple-800">Sabha Manager Pro</h1>
+        </div>
+        <div class="flex space-x-4">
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 transition">
+                <i class="fas fa-moon text-gray-700"></i>
+            </button>
+            <button id="sync-btn" class="p-2 rounded-full hover:bg-gray-200 transition" title="Sync with Google Sheets">
+                <i class="fas fa-sync-alt text-gray-700"></i>
+            </button>
+            <button id="user-menu" class="p-2 rounded-full hover:bg-gray-200 transition">
+                <i class="fas fa-user-circle text-xl text-gray-700"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 pt-24 pb-20">
+        <!-- Tabs -->
+        <div class="flex overflow-x-auto mb-8 glass-card p-2 rounded-xl">
+            <button data-tab="sabha" class="tab-btn active px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-calendar-alt mr-2 text-purple-600"></i> Sabha Data
+            </button>
+            <button data-tab="recipes" class="tab-btn px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-utensils mr-2 text-purple-600"></i> Recipes
+            </button>
+            <button data-tab="search" class="tab-btn px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-search mr-2 text-purple-600"></i> Search
+            </button>
+            <button data-tab="ai" class="tab-btn px-6 py-3 font-medium rounded-lg hover:bg-purple-50 transition flex items-center">
+                <i class="fas fa-robot mr-2 text-purple-600"></i> AI Assistant
+            </button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="tab-contents">
+            <!-- Sabha Data Tab -->
+            <div id="sabha" class="tab-content active">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-purple-900">Sabha Events</h2>
+                    <button id="add-sabha-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center transition">
+                        <i class="fas fa-plus mr-2"></i> Add Event
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="glass-card p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                            <input type="date" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Special Event</label>
+                            <select class="w-full p-2 border rounded-lg">
+                                <option value="">All Events</option>
+                                <option value="Janmashtami">Janmashtami</option>
+                                <option value="Gurupurnima">Gurupurnima</option>
+                                <option value="Annakut">Annakut</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                            <input type="text" placeholder="Search events..." class="w-full p-2 border rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="glass-card p-4 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pujya Santo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sabha-data" class="bg-white divide-y divide-gray-200">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="glass-card p-4">
+                        <h3 class="text-lg font-semibold mb-4">Attendance Trend</h3>
+                        <canvas id="attendanceChart" height="250"></canvas>
+                    </div>
+                    <div class="glass-card p-4">
+                        <h3 class="text-lg font-semibold mb-4">Food Preparation</h3>
+                        <canvas id="foodChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipes Tab -->
+            <div id="recipes" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-purple-900">Kitchen Recipes</h2>
+                    <button id="add-recipe-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center transition">
+                        <i class="fas fa-plus mr-2"></i> Add Recipe
+                    </button>
+                </div>
+
+                <!-- Recipe Search -->
+                <div class="glass-card p-4 mb-6">
+                    <div class="relative">
+                        <input type="text" placeholder="Search recipes by name, ingredient or process..." 
+                            class="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Recipe Cards -->
+                <div id="recipe-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Recipe cards will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Search Tab -->
+            <div id="search" class="tab-content">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-purple-900 mb-2">Ingredient Search</h2>
+                    <p class="text-gray-600">Find specific ingredients or measurements across all sabhas and recipes</p>
+                </div>
+
+                <div class="glass-card p-6 mb-8">
+                    <div class="relative">
+                        <input type="text" id="ingredient-search" placeholder="Search for ingredients or measurements (e.g. 'Find kichadi quantity')" 
+                            class="w-full p-4 pl-12 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg">
+                        <i class="fas fa-search absolute left-4 top-4.5 text-gray-400 text-xl"></i>
+                        <button id="search-btn" class="absolute right-2 top-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div id="search-results" class="space-y-4">
+                    <!-- Results will appear here -->
+                </div>
+            </div>
+
+            <!-- AI Assistant Tab -->
+            <div id="ai" class="tab-content">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-purple-900 mb-2">AI Assistant</h2>
+                    <p class="text-gray-600">Ask questions about sabha data, recipes, or get suggestions for your next event</p>
+                </div>
+
+                <div class="glass-card p-6 mb-8">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full mr-4">
+                            <i class="fas fa-robot text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Sabha AI Assistant</h3>
+                            <p class="text-gray-600 text-sm">Powered by ChatGPT</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Container -->
+                    <div id="chat-container" class="h-96 overflow-y-auto mb-4 space-y-4 flex flex-col p-2">
+                        <!-- AI Welcome Message -->
+                        <div class="chat-bubble ai-bubble">
+                            <p>Hello! I'm your Sabha AI Assistant. How can I help you today? Here are some things you can ask:</p>
+                            <ul class="list-disc list-inside mt-2 pl-4">
+                                <li>What was the average attendance last month?</li>
+                                <li>Find recipes that use potatoes</li>
+                                <li>Show me the ingredient list for 100 people kichadi</li>
+                                <li>Analyze our food preparation trends</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="flex space-x-2">
+                        <input type="text" id="ai-input" placeholder="Ask me anything about sabhas or recipes..." 
+                            class="flex-1 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <button id="send-ai-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+
+                    <!-- Quick Questions -->
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-500 mb-2">Try asking:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="quick-question bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm transition">
+                                Average attendance?
+                            </button>
+                            <button class="quick-question bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm transition">
+                                Popular recipes?
+                            </button>
+                            <button class="quick-question bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm transition">
+                                Food cost analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fixed bottom-8 right-8 z-50">
+        <div class="relative">
+            <button id="fab-main" class="floating-btn w-14 h-14 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl transition transform hover:scale-110">
+                <i class="fas fa-plus"></i>
+            </button>
+            <div id="fab-menu" class="absolute bottom-16 right-0 hidden space-y-2">
+                <button class="w-12 h-12 bg-purple-500 text-white rounded-full shadow flex items-center justify-center transition transform hover:scale-110">
+                    <i class="fas fa-calendar-plus"></i>
+                </button>
+                <button class="w-12 h-12 bg-indigo-500 text-white rounded-full shadow flex items-center justify-center transition transform hover:scale-110">
+                    <i class="fas fa-utensils"></i>
+                </button>
+                <button class="w-12 h-12 bg-pink-500 text-white rounded-full shadow flex items-center justify-center transition transform hover:scale-110">
+                    <i class="fas fa-question"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add/Edit Sabha Modal -->
+    <div id="sabha-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="sabha-modal-title">Add New Sabha Event</h3>
+                <button id="close-sabha-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="sabha-form" class="space-y-4">
+                <input type="hidden" id="sabha-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sabha Date</label>
+                        <input type="date" id="sabha-date" class="w-full p-2 border rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Special Event</label>
+                        <input type="text" id="special-event" placeholder="Event name" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pujya Santo's Presence</label>
+                    <input type="text" id="pujya-santo" placeholder="Names of saints" class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Bhaktas</label>
+                        <input type="number" id="total-bhaktas" placeholder="Count" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gents</label>
+                        <input type="number" id="gents" placeholder="Count" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ladies</label>
+                        <input type="number" id="ladies" placeholder="Count" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Menu</label>
+                    <textarea id="menu" placeholder="List all food items" class="w-full p-2 border rounded-lg" rows="2"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ingredients Quantity</label>
+                    <textarea id="ingredients" placeholder="List all ingredients with quantities" class="w-full p-2 border rounded-lg" rows="3"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Left-Over Food</label>
+                        <input type="text" id="leftover-food" placeholder="Details" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Any Item Re-Made</label>
+                        <input type="text" id="remade-items" placeholder="Details" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                    <textarea id="note" placeholder="Additional notes" class="w-full p-2 border rounded-lg" rows="2"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Photo/File</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                        <div class="space-y-1 text-center">
+                            <div class="flex text-sm text-gray-600">
+                                <label class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input type="file" id="sabha-file" class="sr-only">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancel-sabha-btn" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" id="submit-sabha-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center">
+                        <span id="submit-sabha-text">Save Event</span>
+                        <div id="submit-sabha-spinner" class="loading-spinner ml-2 hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Sabha Modal -->
+    <div id="view-sabha-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="view-sabha-title">Sabha Event Details</h3>
+                <button id="close-view-sabha-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <p id="view-sabha-date" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Special Event</label>
+                        <p id="view-special-event" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pujya Santo's Presence</label>
+                    <p id="view-pujya-santo" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Bhaktas</label>
+                        <p id="view-total-bhaktas" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gents</label>
+                        <p id="view-gents" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ladies</label>
+                        <p id="view-ladies" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Menu</label>
+                    <p id="view-menu" class="p-2 bg-gray-50 rounded-lg whitespace-pre-line"></p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ingredients Quantity</label>
+                    <p id="view-ingredients" class="p-2 bg-gray-50 rounded-lg whitespace-pre-line"></p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Left-Over Food</label>
+                        <p id="view-leftover-food" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Any Item Re-Made</label>
+                        <p id="view-remade-items" class="p-2 bg-gray-50 rounded-lg"></p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                    <p id="view-note" class="p-2 bg-gray-50 rounded-lg whitespace-pre-line"></p>
+                </div>
+                
+                <div id="view-file-container" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Uploaded File</label>
+                    <div class="p-2 bg-gray-50 rounded-lg">
+                        <a id="view-file-link" href="#" target="_blank" class="text-purple-600 hover:underline">
+                            <i class="fas fa-file-alt mr-2"></i> View File
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button id="edit-sabha-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        <i class="fas fa-edit mr-2"></i> Edit
+                    </button>
+                    <button id="delete-sabha-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class="fas fa-trash mr-2"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Recipe Modal -->
+    <div id="recipe-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="recipe-modal-title">Add New Recipe</h3>
+                <button id="close-recipe-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="recipe-form" class="space-y-4">
+                <input type="hidden" id="recipe-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                    <input type="text" id="recipe-name" placeholder="Recipe name" class="w-full p-2 border rounded-lg" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Process</label>
+                    <textarea id="recipe-process" placeholder="Step-by-step instructions" class="w-full p-2 border rounded-lg" rows="5" required></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ingredients</label>
+                        <textarea id="recipe-ingredients" placeholder="List all ingredients with quantities" class="w-full p-2 border rounded-lg" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cooking Time</label>
+                        <input type="text" id="recipe-time" placeholder="e.g. 45 minutes" class="w-full p-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input type="file" id="recipe-file" class="sr-only" accept="image/*">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancel-recipe-btn" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" id="submit-recipe-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Recipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Recipe Modal -->
+    <div id="view-recipe-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="view-recipe-title">Recipe Details</h3>
+                <button id="close-view-recipe-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="h-64 bg-gray-200 rounded-lg overflow-hidden mb-4">
+                        <img id="view-recipe-image" src="https://via.placeholder.com/400x300" alt="Recipe" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex items-center text-gray-600 space-x-4">
+                        <span><i class="fas fa-clock mr-1"></i> <span id="view-recipe-time">45 mins</span></span>
+                        <span><i class="fas fa-utensils mr-1"></i> <span id="view-recipe-serves">Serves 50</span></span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-2">Ingredients:</h4>
+                    <p id="view-recipe-ingredients" class="p-2 bg-gray-50 rounded-lg whitespace-pre-line mb-4"></p>
+                    
+                    <h4 class="font-bold mb-2">Process:</h4>
+                    <p id="view-recipe-process" class="p-2 bg-gray-50 rounded-lg whitespace-pre-line"></p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6">
+                <button id="edit-recipe-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center">
+                    <i class="fas fa-edit mr-2"></i> Edit
+                </button>
+                <button id="delete-recipe-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center">
+                    <i class="fas fa-trash mr-2"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Modal -->
+    <div id="sync-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Sync with Google Sheets</h3>
+                <button id="close-sync-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Google Sheet URL</label>
+                    <input type="text" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sheet Name</label>
+                    <input type="text" id="sheet-name" placeholder="Sheet1" class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="auto-sync" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                    <label for="auto-sync" class="ml-2 block text-sm text-gray-700">Enable auto-sync every 5 minutes</label>
+                </div>
+                
+                <div class="pt-4">
+                    <button id="sync-now-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sync-alt mr-2"></i> Sync Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage with localStorage persistence
+        let sabhaData = JSON.parse(localStorage.getItem('sabhaData')) || [];
+        let recipeData = JSON.parse(localStorage.getItem('recipeData')) || [];
+        
+        // Google Sheets sync configuration
+        let syncConfig = JSON.parse(localStorage.getItem('syncConfig')) || {
+            sheetUrl: '',
+            sheetName: 'Sheet1',
+            autoSync: false,
+            syncInterval: null
+        };
+
+        // Current viewing/editing IDs
+        let currentSabhaId = null;
+        let currentRecipeId = null;
+
+        // DOM Elements
+        const sabhaDataTable = document.getElementById('sabha-data');
+        const recipeCardsContainer = document.getElementById('recipe-cards');
+        const searchResultsContainer = document.getElementById('search-results');
+        const chatContainer = document.getElementById('chat-container');
+        const aiInput = document.getElementById('ai-input');
+        const sendAiBtn = document.getElementById('send-ai-btn');
+        const quickQuestions = document.querySelectorAll('.quick-question');
+        const searchBtn = document.getElementById('search-btn');
+        const ingredientSearch = document.getElementById('ingredient-search');
+        const syncBtn = document.getElementById('sync-btn');
+        const syncModal = document.getElementById('sync-modal');
+        const closeSyncModal = document.getElementById('close-sync-modal');
+        const syncNowBtn = document.getElementById('sync-now-btn');
+        const sheetUrlInput = document.getElementById('sheet-url');
+        const sheetNameInput = document.getElementById('sheet-name');
+        const autoSyncCheckbox = document.getElementById('auto-sync');
+        const submitSabhaBtn = document.getElementById('submit-sabha-btn');
+        const submitSabhaText = document.getElementById('submit-sabha-text');
+        const submitSabhaSpinner = document.getElementById('submit-sabha-spinner');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSabhaData();
+            loadRecipeData();
+            initCharts();
+            setupEventListeners();
+            
+            // Check if we have sync config and start auto-sync if enabled
+            if (syncConfig.autoSync) {
+                startAutoSync();
+            }
+        });
+
+        // Load Sabha Data into table
+        function loadSabhaData() {
+            sabhaDataTable.innerHTML = '';
+            
+            sabhaData.forEach(sabha => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${formatDate(sabha.date)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${sabha.event || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${sabha.pujyaSanto || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${sabha.totalBhaktas || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap flex space-x-2">
+                        <button class="view-sabha text-blue-600 hover:text-blue-800" data-id="${sabha.id}"><i class="fas fa-eye"></i></button>
+                        <button class="edit-sabha text-green-600 hover:text-green-800" data-id="${sabha.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-sabha text-red-600 hover:text-red-800" data-id="${sabha.id}"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                sabhaDataTable.appendChild(row);
+            });
+            
+            // Add event listeners to the buttons
+            document.querySelectorAll('.view-sabha').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    viewSabha(id);
+                });
+            });
+            
+            document.querySelectorAll('.edit-sabha').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    editSabha(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-sabha').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    deleteSabha(id);
+                });
+            });
+        }
+
+        // Load Recipe Data into cards
+        function loadRecipeData() {
+            recipeCardsContainer.innerHTML = '';
+            
+            recipeData.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'neumorphic rounded-xl overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1';
+                card.innerHTML = `
+                    <div class="h-48 bg-gray-200 relative">
+                        <img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">
+                        <div class="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-2">
+                            <i class="fas fa-ellipsis-v text-gray-700"></i>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold mb-2">${recipe.name}</h3>
+                        <p class="text-gray-600 mb-4 line-clamp-2">${recipe.process.split('\n')[0]}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500"><i class="fas fa-clock mr-1"></i> ${recipe.time}</span>
+                            <button class="view-recipe text-purple-600 hover:text-purple-800 font-medium" data-id="${recipe.id}">View Recipe</button>
+                        </div>
+                    </div>
+                `;
+                recipeCardsContainer.appendChild(card);
+            });
+            
+            // Add "Add Recipe" card
+            const addCard = document.createElement('div');
+            addCard.className = 'neumorphic rounded-xl overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center min-h-[300px] cursor-pointer';
+            addCard.innerHTML = `
+                <div class="text-center p-4">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-plus text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-purple-800">Add New Recipe</h3>
+                    <p class="text-gray-500 mt-1">Click to create a new recipe card</p>
+                </div>
+            `;
+            addCard.addEventListener('click', () => {
+                openRecipeModal();
+            });
+            recipeCardsContainer.appendChild(addCard);
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-recipe').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    viewRecipe(id);
+                });
+            });
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-IN', options);
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Attendance Chart
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(attendanceCtx, {
+                type: 'line',
+                data: {
+                    labels: sabhaData.map(s => formatDate(s.date)),
+                    datasets: [{
+                        label: 'Monthly Attendance',
+                        data: sabhaData.map(s => s.totalBhaktas),
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Food Chart
+            const foodCtx = document.getElementById('foodChart').getContext('2d');
+            new Chart(foodCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Kichadi', 'Sabudana', 'Puri', 'Sabji', 'Halwa', 'Other'],
+                    datasets: [{
+                        label: 'Times Prepared',
+                        data: [12, 8, 10, 15, 7, 5],
+                        backgroundColor: [
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(99, 102, 241, 0.7)',
+                            'rgba(236, 72, 153, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(75, 85, 99, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(99, 102, 241, 1)',
+                            'rgba(236, 72, 153, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(75, 85, 99, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked button
+                btn.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = btn.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Floating Action Button
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        
+        fabMain.addEventListener('click', () => {
+            fabMenu.classList.toggle('hidden');
+        });
+
+        // Sabha Modal
+        const addSabhaBtn = document.getElementById('add-sabha-btn');
+        const sabhaModal = document.getElementById('sabha-modal');
+        const closeSabhaModal = document.getElementById('close-sabha-modal');
+        const cancelSabhaBtn = document.getElementById('cancel-sabha-btn');
+        const sabhaForm = document.getElementById('sabha-form');
+        
+        addSabhaBtn.addEventListener('click', () => {
+            openSabhaModal();
+        });
+        
+        closeSabhaModal.addEventListener('click', () => {
+            sabhaModal.classList.add('hidden');
+        });
+        
+        cancelSabhaBtn.addEventListener('click', () => {
+            sabhaModal.classList.add('hidden');
+        });
+        
+        sabhaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveSabha();
+        });
+
+        // View Sabha Modal
+        const viewSabhaModal = document.getElementById('view-sabha-modal');
+        const closeViewSabhaModal = document.getElementById('close-view-sabha-modal');
+        const editSabhaBtn = document.getElementById('edit-sabha-btn');
+        const deleteSabhaBtn = document.getElementById('delete-sabha-btn');
+        
+        closeViewSabhaModal.addEventListener('click', () => {
+            viewSabhaModal.classList.add('hidden');
+        });
+        
+        editSabhaBtn.addEventListener('click', () => {
+            viewSabhaModal.classList.add('hidden');
+            editSabha(currentSabhaId);
+        });
+        
+        deleteSabhaBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this sabha event?')) {
+                deleteSabha(currentSabhaId);
+                viewSabhaModal.classList.add('hidden');
+            }
+        });
+
+        // Recipe Modal
+        const addRecipeBtn = document.getElementById('add-recipe-btn');
+        const recipeModal = document.getElementById('recipe-modal');
+        const closeRecipeModal = document.getElementById('close-recipe-modal');
+        const cancelRecipeBtn = document.getElementById('cancel-recipe-btn');
+        const recipeForm = document.getElementById('recipe-form');
+        
+        addRecipeBtn.addEventListener('click', () => {
+            openRecipeModal();
+        });
+        
+        closeRecipeModal.addEventListener('click', () => {
+            recipeModal.classList.add('hidden');
+        });
+        
+        cancelRecipeBtn.addEventListener('click', () => {
+            recipeModal.classList.add('hidden');
+        });
+        
+        recipeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveRecipe();
+        });
+
+        // View Recipe Modal
+        const viewRecipeModal = document.getElementById('view-recipe-modal');
+        const closeViewRecipeModal = document.getElementById('close-view-recipe-modal');
+        const editRecipeBtn = document.getElementById('edit-recipe-btn');
+        const deleteRecipeBtn = document.getElementById('delete-recipe-btn');
+        
+        closeViewRecipeModal.addEventListener('click', () => {
+            viewRecipeModal.classList.add('hidden');
+        });
+        
+        editRecipeBtn.addEventListener('click', () => {
+            viewRecipeModal.classList.add('hidden');
+            editRecipe(currentRecipeId);
+        });
+        
+        deleteRecipeBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this recipe?')) {
+                deleteRecipe(currentRecipeId);
+                viewRecipeModal.classList.add('hidden');
+            }
+        });
+
+        // Sync Modal
+        syncBtn.addEventListener('click', () => {
+            openSyncModal();
+        });
+        
+        closeSyncModal.addEventListener('click', () => {
+            syncModal.classList.add('hidden');
+        });
+        
+        syncNowBtn.addEventListener('click', () => {
+            syncWithGoogleSheets();
+        });
+        
+        autoSyncCheckbox.addEventListener('change', (e) => {
+            syncConfig.autoSync = e.target.checked;
+            saveSyncConfig();
+            if (syncConfig.autoSync) {
+                startAutoSync();
+            } else {
+                stopAutoSync();
+            }
+        });
+
+        // AI Chat
+        sendAiBtn.addEventListener('click', sendMessageToAI);
+        
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessageToAI();
+            }
+        });
+        
+        quickQuestions.forEach(btn => {
+            btn.addEventListener('click', () => {
+                aiInput.value = btn.textContent.trim();
+                sendMessageToAI();
+            });
+        });
+
+        // Search
+        searchBtn.addEventListener('click', performSearch);
+        
+        ingredientSearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === sabhaModal) {
+                sabhaModal.classList.add('hidden');
+            }
+            if (e.target === viewSabhaModal) {
+                viewSabhaModal.classList.add('hidden');
+            }
+            if (e.target === recipeModal) {
+                recipeModal.classList.add('hidden');
+            }
+            if (e.target === viewRecipeModal) {
+                viewRecipeModal.classList.add('hidden');
+            }
+            if (e.target === syncModal) {
+                syncModal.classList.add('hidden');
+            }
+        });
+    }
+
+    // Sabha CRUD Operations
+    function openSabhaModal(id = null) {
+        const modal = document.getElementById('sabha-modal');
+        const title = document.getElementById('sabha-modal-title');
+        const form = document.getElementById('sabha-form');
+        
+        if (id) {
+            // Edit mode
+            title.textContent = 'Edit Sabha Event';
+            const sabha = sabhaData.find(s => s.id === id);
+            
+            if (sabha) {
+                document.getElementById('sabha-id').value = sabha.id;
+                document.getElementById('sabha-date').value = sabha.date;
+                document.getElementById('special-event').value = sabha.event || '';
+                document.getElementById('pujya-santo').value = sabha.pujyaSanto || '';
+                document.getElementById('total-bhaktas').value = sabha.totalBhaktas || '';
+                document.getElementById('gents').value = sabha.gents || '';
+                document.getElementById('ladies').value = sabha.ladies || '';
+                document.getElementById('menu').value = sabha.menu || '';
+                document.getElementById('ingredients').value = sabha.ingredients || '';
+                document.getElementById('leftover-food').value = sabha.leftoverFood || '';
+                document.getElementById('remade-items').value = sabha.remadeItems || '';
+                document.getElementById('note').value = sabha.note || '';
+                // File handling would need more complex implementation
+            }
+        } else {
+            // Add mode
+            title.textContent = 'Add New Sabha Event';
+            form.reset();
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function viewSabha(id) {
+        const sabha = sabhaData.find(s => s.id === id);
+        
+        if (sabha) {
+            currentSabhaId = id;
+            
+            document.getElementById('view-sabha-title').textContent = `Sabha Event - ${sabha.event || 'General Sabha'}`;
+            document.getElementById('view-sabha-date').textContent = formatDate(sabha.date);
+            document.getElementById('view-special-event').textContent = sabha.event || '-';
+            document.getElementById('view-pujya-santo').textContent = sabha.pujyaSanto || '-';
+            document.getElementById('view-total-bhaktas').textContent = sabha.totalBhaktas || '-';
+            document.getElementById('view-gents').textContent = sabha.gents || '-';
+            document.getElementById('view-ladies').textContent = sabha.ladies || '-';
+            document.getElementById('view-menu').textContent = sabha.menu || '-';
+            document.getElementById('view-ingredients').textContent = sabha.ingredients || '-';
+            document.getElementById('view-leftover-food').textContent = sabha.leftoverFood || '-';
+            document.getElementById('view-remade-items').textContent = sabha.remadeItems || '-';
+            document.getElementById('view-note').textContent = sabha.note || '-';
+            
+            // Handle file display
+            const fileContainer = document.getElementById('view-file-container');
+            const fileLink = document.getElementById('view-file-link');
+            
+            if (sabha.file) {
+                fileContainer.classList.remove('hidden');
+                fileLink.href = sabha.file.url;
+                fileLink.innerHTML = `<i class="fas fa-file-${sabha.file.type === 'image' ? 'image' : 'alt'} mr-2"></i> ${sabha.file.name}`;
+            } else {
+                fileContainer.classList.add('hidden');
+            }
+            
+            document.getElementById('view-sabha-modal').classList.remove('hidden');
+        }
+    }
+
+    function editSabha(id) {
+        currentSabhaId = id;
+        openSabhaModal(id);
+    }
+
+    function deleteSabha(id) {
+        sabhaData = sabhaData.filter(s => s.id !== id);
+        saveSabhaData();
+        loadSabhaData();
+        syncWithGoogleSheets(); // Sync after deletion
+    }
+
+    async function saveSabha() {
+        // Show loading state
+        submitSabhaText.textContent = 'Saving...';
+        submitSabhaSpinner.classList.remove('hidden');
+        
+        const id = document.getElementById('sabha-id').value;
+        const sabha = {
+            id: id || Date.now().toString(),
+            date: document.getElementById('sabha-date').value,
+            event: document.getElementById('special-event').value,
+            pujyaSanto: document.getElementById('pujya-santo').value,
+            totalBhaktas: parseInt(document.getElementById('total-bhaktas').value) || 0,
+            gents: parseInt(document.getElementById('gents').value) || 0,
+            ladies: parseInt(document.getElementById('ladies').value) || 0,
+            menu: document.getElementById('menu').value,
+            ingredients: document.getElementById('ingredients').value,
+            leftoverFood: document.getElementById('leftover-food').value,
+            remadeItems: document.getElementById('remade-items').value,
+            note: document.getElementById('note').value,
+            file: null // Would need file upload handling
+        };
+        
+        if (id) {
+            // Update existing sabha
+            const index = sabhaData.findIndex(s => s.id === id);
+            if (index !== -1) {
+                sabhaData[index] = sabha;
+            }
+        } else {
+            // Add new sabha
+            sabhaData.push(sabha);
+        }
+        
+        saveSabhaData();
+        loadSabhaData();
+        document.getElementById('sabha-modal').classList.add('hidden');
+        
+        // Sync with Google Sheets
+        await syncWithGoogleSheets();
+        
+        // Reset loading state
+        submitSabhaText.textContent = 'Save Event';
+        submitSabhaSpinner.classList.add('hidden');
+    }
+
+    // Recipe CRUD Operations
+    function openRecipeModal(id = null) {
+        const modal = document.getElementById('recipe-modal');
+        const title = document.getElementById('recipe-modal-title');
+        const form = document.getElementById('recipe-form');
+        
+        if (id) {
+            // Edit mode
+            title.textContent = 'Edit Recipe';
+            const recipe = recipeData.find(r => r.id === id);
+            
+            if (recipe) {
+                document.getElementById('recipe-id').value = recipe.id;
+                document.getElementById('recipe-name').value = recipe.name;
+                document.getElementById('recipe-process').value = recipe.process;
+                document.getElementById('recipe-ingredients').value = recipe.ingredients;
+                document.getElementById('recipe-time').value = recipe.time;
+                // Image handling would need more complex implementation
+            }
+        } else {
+            // Add mode
+            title.textContent = 'Add New Recipe';
+            form.reset();
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function viewRecipe(id) {
+        const recipe = recipeData.find(r => r.id === id);
+        
+        if (recipe) {
+            currentRecipeId = id;
+            
+            document.getElementById('view-recipe-title').textContent = recipe.name;
+            document.getElementById('view-recipe-image').src = recipe.image;
+            document.getElementById('view-recipe-image').alt = recipe.name;
+            document.getElementById('view-recipe-time').textContent = recipe.time;
+            document.getElementById('view-recipe-ingredients').textContent = recipe.ingredients;
+            document.getElementById('view-recipe-process').textContent = recipe.process;
+            
+            document.getElementById('view-recipe-modal').classList.remove('hidden');
+        }
+    }
+
+    function editRecipe(id) {
+        currentRecipeId = id;
+        openRecipeModal(id);
+    }
+
+    function deleteRecipe(id) {
+        recipeData = recipeData.filter(r => r.id !== id);
+        saveRecipeData();
+        loadRecipeData();
+    }
+
+    function saveRecipe() {
+        const id = document.getElementById('recipe-id').value;
+        const recipe = {
+            id: id || Date.now().toString(),
+            name: document.getElementById('recipe-name').value,
+            process: document.getElementById('recipe-process').value,
+            ingredients: document.getElementById('recipe-ingredients').value,
+            time: document.getElementById('recipe-time').value,
+            image: 'https://via.placeholder.com/400x300' // Would need actual image upload handling
+        };
+        
+        if (id) {
+            // Update existing recipe
+            const index = recipeData.findIndex(r => r.id === id);
+            if (index !== -1) {
+                recipeData[index] = recipe;
+            }
+        } else {
+            // Add new recipe
+            recipeData.push(recipe);
+        }
+        
+        saveRecipeData();
+        loadRecipeData();
+        document.getElementById('recipe-modal').classList.add('hidden');
+    }
+
+    // Search Functionality
+    function performSearch() {
+        const query = ingredientSearch.value.toLowerCase();
+        searchResultsContainer.innerHTML = '';
+        
+        if (!query) {
+            searchResultsContainer.innerHTML = `
+                <div class="text-center py-8'>
+                    <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">Enter a search term to find ingredients or recipes</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Search in sabha data
+        const sabhaResults = sabhaData.filter(sabha => 
+            sabha.menu.toLowerCase().includes(query) || 
+            sabha.ingredients.toLowerCase().includes(query)
+        );
+        
+        // Search in recipe data
+        const recipeResults = recipeData.filter(recipe => 
+            recipe.name.toLowerCase().includes(query) || 
+            recipe.ingredients.toLowerCase().includes(query) || 
+            recipe.process.toLowerCase().includes(query)
+        );
+        
+        if (sabhaResults.length === 0 && recipeResults.length === 0) {
+            searchResultsContainer.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No results found for "${query}"</p>
+                    <p class="text-sm text-gray-500 mt-2">Try searching for "kichadi quantity" or "sabudana recipe"</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Display sabha results
+        sabhaResults.forEach(sabha => {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'glass-card p-4 rounded-xl hover:shadow-md transition';
+            resultDiv.innerHTML = `
+                <div class="flex items-start">
+                    <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                        <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">${sabha.event || 'General Sabha'} - ${formatDate(sabha.date)}</h3>
+                        <p class="text-gray-600 mb-2">Found in Sabha Events</p>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="font-medium">Menu:</p>
+                            <p class="text-sm text-gray-700 whitespace-pre-line">${sabha.menu || '-'}</p>
+                            <p class="font-medium mt-2">Ingredients:</p>
+                            <p class="text-sm text-gray-700 whitespace-pre-line">${sabha.ingredients || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            searchResultsContainer.appendChild(resultDiv);
+        });
+        
+        // Display recipe results
+        recipeResults.forEach(recipe => {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'glass-card p-4 rounded-xl hover:shadow-md transition';
+            resultDiv.innerHTML = `
+                <div class="flex items-start">
+                    <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                        <i class="fas fa-utensils text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">${recipe.name}</h3>
+                        <p class="text-gray-600 mb-2">Found in Recipes</p>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="font-medium">Ingredients:</p>
+                            <p class="text-sm text-gray-700 whitespace-pre-line">${recipe.ingredients}</p>
+                            <p class="font-medium mt-2">Process:</p>
+                            <p class="text-sm text-gray-700 line-clamp-2">${recipe.process.split('\n')[0]}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            searchResultsContainer.appendChild(resultDiv);
+        });
+    }
+
+    // AI Assistant
+    async function sendMessageToAI() {
+        const message = aiInput.value.trim();
+        if (message) {
+            addUserMessage(message);
+            aiInput.value = '';
+            
+            try {
+                // In a real implementation, you would call your backend API which then calls OpenAI API
+                // For this demo, we'll simulate a response
+                const response = await simulateChatGPTResponse(message);
+                addAiResponse(response);
+            } catch (error) {
+                addAiResponse("Sorry, I encountered an error. Please try again later.");
+                console.error("AI Error:", error);
+            }
+        }
+    }
+
+    function addUserMessage(message) {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble user-bubble';
+        bubble.innerHTML = `<p>${message}</p>`;
+        chatContainer.appendChild(bubble);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function addAiResponse(response) {
+        // Simulate typing effect
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ai-bubble';
+        chatContainer.appendChild(bubble);
+        
+        let i = 0;
+        const speed = 20;
+        const typingEffect = setInterval(() => {
+            if (i < response.length) {
+                bubble.innerHTML = `<p>${response.substring(0, i)}</p>`;
+                i++;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } else {
+                clearInterval(typingEffect);
+            }
+        }, speed);
+    }
+
+    // Simulate ChatGPT response based on the data
+    async function simulateChatGPTResponse(query) {
+        // In a real implementation, you would:
+        // 1. Send the query to your backend
+        // 2. Backend calls OpenAI API with proper authentication
+        // 3. Backend processes the response and sends it back to frontend
+        
+        // For this demo, we'll simulate responses based on the local data
+        query = query.toLowerCase();
+        
+        if (query.includes('average') && query.includes('attendance')) {
+            const total = sabhaData.reduce((sum, sabha) => sum + (sabha.totalBhaktas || 0), 0);
+            const average = sabhaData.length > 0 ? Math.round(total / sabhaData.length) : 0;
+            return `The average attendance across all sabhas is ${average} devotees.`;
+        }
+        
+        if (query.includes('popular') && query.includes('recipe')) {
+            // Simple simulation - in real app you'd analyze actual data
+            return "Based on our records, the most popular recipes are:\n1. Kichadi\n2. Sabudana Khichdi\n3. Puri-Sabji\nWould you like details on any of these?";
+        }
+        
+        if (query.includes('kichadi') && query.includes('ingredient')) {
+            const kichadiRecipe = recipeData.find(r => r.name.toLowerCase() === 'kichadi');
+            if (kichadiRecipe) {
+                return `Here are the ingredients for Kichadi:\n${kichadiRecipe.ingredients}`;
+            }
+            return "I couldn't find the Kichadi recipe details.";
+        }
+        
+        if (query.includes('cost') || query.includes('budget')) {
+            // Simple simulation
+            return "Based on recent sabhas, the average food cost per devotee is approximately ₹35. This includes all ingredients and preparation costs.";
+        }
+        
+        // Default response if no specific match
+        return "I can help you with information about sabha events, recipes, and ingredient quantities. For more specific answers, try questions like:\n- What was the average attendance last month?\n- Show me the kichadi recipe\n- How much rice do we need for 100 people?";
+    }
+
+    // Google Sheets Sync
+    function openSyncModal() {
+        sheetUrlInput.value = syncConfig.sheetUrl;
+        sheetNameInput.value = syncConfig.sheetName;
+        autoSyncCheckbox.checked = syncConfig.autoSync;
+        syncModal.classList.remove('hidden');
+    }
+
+    async function syncWithGoogleSheets() {
+        // Show loading state
+        syncNowBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+        
+        try {
+            // In a real implementation, this would:
+            // 1. Validate the Google Sheet URL and name
+            // 2. Use Google Sheets API to read/write data
+            // 3. Handle authentication (likely through a backend service)
+            
+            // For this demo, we'll simulate the sync process
+            console.log('Syncing with Google Sheets...');
+            
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Update sync config
+            syncConfig.sheetUrl = sheetUrlInput.value;
+            syncConfig.sheetName = sheetNameInput.value;
+            saveSyncConfig();
+            
+            // Show success message
+            alert('Data successfully synced with Google Sheets!');
+        } catch (error) {
+            console.error('Sync error:', error);
+            alert('Error syncing with Google Sheets. Please check your settings and try again.');
+        } finally {
+            // Reset button state
+            syncNowBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i> Sync Now';
+        }
+    }
+
+    function startAutoSync() {
+        // Clear any existing interval
+        stopAutoSync();
+        
+        // Set up new interval (5 minutes = 300000 ms)
+        syncConfig.syncInterval = setInterval(() => {
+            syncWithGoogleSheets();
+        }, 300000);
+        
+        console.log('Auto-sync started');
+    }
+
+    function stopAutoSync() {
+        if (syncConfig.syncInterval) {
+            clearInterval(syncConfig.syncInterval);
+            syncConfig.syncInterval = null;
+            console.log('Auto-sync stopped');
+        }
+    }
+
+    // Data persistence functions
+    function saveSabhaData() {
+        localStorage.setItem('sabhaData', JSON.stringify(sabhaData));
+    }
+
+    function saveRecipeData() {
+        localStorage.setItem('recipeData', JSON.stringify(recipeData));
+    }
+
+    function saveSyncConfig() {
+        localStorage.setItem('syncConfig', JSON.stringify(syncConfig));
+    }
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=smitp4383/kitchen" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p>
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbw7iOtQmRtVIWsaJ38zXq_tu2gOMzVPSgwoFsK_snAR7Kz5x0ooNz-kUDIKtSzQnk5c/exec";
+
+// Handle Sabha Form submission
+const sabhaForm = document.getElementById("sabhaForm");
+if (sabhaForm) {
+  sabhaForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const formData = new FormData(sabhaForm);
+    fetch(scriptURL, { method: "POST", body: formData })
+      .then(response => alert("✅ Sabha data submitted!"))
+      .catch(error => alert("❌ Submission failed."));
+  });
+}
+
+// Handle Recipe Form submission
+const recipeForm = document.getElementById("recipeForm");
+if (recipeForm) {
+  recipeForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const formData = new FormData(recipeForm);
+    fetch(scriptURL, { method: "POST", body: formData })
+      .then(response => alert("✅ Recipe data submitted!"))
+      .catch(error => alert("❌ Submission failed."));
+  });
+}
+</script>
+
+<section>
+  <h2 class="text-xl font-bold mt-10">📊 Sabha Sheet Data</h2>
+  <div class="overflow-auto">
+    <table id="sabhaDataTable" class="w-full text-sm table-auto border border-gray-300 mt-2"></table>
+  </div>
+</section>
+
+<section>
+  <h2 class="text-xl font-bold mt-10">📋 Recipe Sheet Data</h2>
+  <div class="overflow-auto">
+    <table id="recipeDataTable" class="w-full text-sm table-auto border border-gray-300 mt-2"></table>
+  </div>
+</section>
+
+
+<script>
+async function fetchSheetData(sheetName, tableId) {
+  const apiKey = "AIzaSyBXBIUG3E1LtKk0NfBCN_8NsufcfxSqhYc";
+  const sheetId = "1e3G643bDe61k3G78JhbjfpSktDL0E5lcOpo-XmmpfxA";
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data || !data.values) return;
+    renderTable(data.values, tableId);
+  } catch (err) {
+    console.error("Error fetching data from Google Sheets", err);
+  }
+}
+
+function renderTable(data, tableId) {
+  const table = document.getElementById(tableId);
+  if (!table || !data.length) return;
+
+  const [headers, ...rows] = data;
+  table.innerHTML = "";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    headers.forEach((_, i) => {
+      const td = document.createElement("td");
+      td.textContent = row[i] || "";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  fetchSheetData("Form responses 1", "sabhaDataTable");
+  fetchSheetData("Recipes", "recipeDataTable");
+});
+</script>
+
+</body>
+
+</html>
