@@ -1481,35 +1481,50 @@
     const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
 
     try {
-        // Send sabha data
-        await fetch(endpoint, {
+        // Sync Sabha data
+        const sabhaRes = await fetch(endpoint, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 type: 'sabha',
                 data: sabhaData
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            })
         });
 
-        // Send recipe data
-        await fetch(endpoint, {
+        const sabhaText = await sabhaRes.text();
+        if (!sabhaRes.ok || !sabhaText.includes("Success")) {
+            throw new Error("Failed to sync sabha: " + sabhaText);
+        }
+
+        // Sync Recipe data
+        const recipeRes = await fetch(endpoint, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 type: 'recipe',
                 data: recipeData
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            })
         });
 
-        alert("✅ Synced to Google Sheets!");
+        const recipeText = await recipeRes.text();
+        if (!recipeRes.ok || !recipeText.includes("Success")) {
+            throw new Error("Failed to sync recipe: " + recipeText);
+        }
+
+        alert("✅ Sync successful!");
     } catch (err) {
-        alert("❌ Sync Failed: " + err.message);
+        alert("❌ Sync failed: " + err.message);
+        console.error(err);
     }
 }
+
+
+    
+
 
 async function loadFromGoogleSheets() {
     const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
