@@ -1478,11 +1478,12 @@
     }
 
     async function syncWithGoogleSheets() {
-    const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
+      const proxy = "https://corsproxy.io/?";
+      const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
 
     try {
         // Sync Sabha data
-        const sabhaRes = await fetch(endpoint, {
+        const sabhaRes = await fetch(`${proxy}${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1499,7 +1500,7 @@
         }
 
         // Sync Recipe data
-        const recipeRes = await fetch(endpoint, {
+        const recipeRes = await fetch(`${proxy}${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1524,14 +1525,16 @@
 
 
 async function loadFromGoogleSheets() {
+  const proxy = "https://corsproxy.io/?";
   const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
 
+
   try {
-    const sabhaRes = await fetch(`${endpoint}?type=sabha`);
+    const sabhaRes = await fetch(`${proxy}${endpoint}?type=sabha`);
     sabhaData = await sabhaRes.json();
     console.log("Sabha Data Loaded:", sabhaData);
 
-    const recipeRes = await fetch(`${endpoint}?type=recipe`);
+    const recipeRes = await fetch(`${proxy}${endpoint}?type=recipe`);
     recipeData = await recipeRes.json();
     console.log("Recipe Data Loaded:", recipeData);
 
