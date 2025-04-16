@@ -1523,31 +1523,27 @@
 }
 
 
-    
-
-
 async function loadFromGoogleSheets() {
-    const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
+  const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
 
-    try {
-        // Fetch sabha data
-        const sabhaRes = await fetch(`${endpoint}?type=sabha`);
-        sabhaData = await sabhaRes.json();
+  try {
+    const sabhaRes = await fetch(`${endpoint}?type=sabha`);
+    sabhaData = await sabhaRes.json();
+    console.log("Sabha Data Loaded:", sabhaData);
 
-        // Fetch recipe data
-        const recipeRes = await fetch(`${endpoint}?type=recipe`);
-        recipeData = await recipeRes.json();
+    const recipeRes = await fetch(`${endpoint}?type=recipe`);
+    recipeData = await recipeRes.json();
+    console.log("Recipe Data Loaded:", recipeData);
 
-        // Save locally
-        saveSabhaData();
-        saveRecipeData();
+    saveSabhaData();
+    saveRecipeData();
 
-        // Refresh UI
-        loadSabhaData();
-        loadRecipeData();
-    } catch (err) {
-        alert("❌ Failed to load from Google Sheets: " + err.message);
-    }
+    loadSabhaData();
+    loadRecipeData();
+  } catch (err) {
+    console.error("❌ Google Sheets Fetch Error:", err);
+    alert("❌ Failed to load from Google Sheets: " + err.message);
+  }
 }
 
     function startAutoSync() {
