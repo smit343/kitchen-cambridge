@@ -116,6 +116,10 @@
             <h1 class="text-xl font-bold text-purple-800">Sabha Manager Pro</h1>
         </div>
         <div class="flex space-x-4">
+            <button onclick="syncAllData()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                Sync to Google Sheet
+            </button>
+            
             <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 transition">
                 <i class="fas fa-moon text-gray-700"></i>
             </button>
@@ -1746,6 +1750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSabhaFromSheet();
 });
 </script>
+<script src="sync.js"></script>
 
 </body>
 
