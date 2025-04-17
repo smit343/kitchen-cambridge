@@ -106,6 +106,45 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Toast notification styles */
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast-success {
+            background-color: #10B981;
+            color: white;
+        }
+
+        .toast-error {
+            background-color: #EF4444;
+            color: white;
+        }
+
+        .toast-info {
+            background-color: #3B82F6;
+            color: white;
+        }
+
+        .toast-warning {
+            background-color: #F59E0B;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -667,6 +706,9 @@
         let sabhaData = JSON.parse(localStorage.getItem('sabhaData')) || [];
         let recipeData = JSON.parse(localStorage.getItem('recipeData')) || [];
         
+        // Google Sheets configuration - REPLACE WITH YOUR DEPLOYED SCRIPT URL
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
+        
         // Google Sheets sync configuration
         let syncConfig = JSON.parse(localStorage.getItem('syncConfig')) || {
             sheetUrl: '',
@@ -702,7 +744,7 @@
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
-    loadFromGoogleSheets(); // Load from Google Sheets
+            loadFromGoogleSheets(); // Load from Google Sheets
             loadSabhaData();
             loadRecipeData();
             initCharts();
@@ -1469,7 +1511,7 @@
         return "I can help you with information about sabha events, recipes, and ingredient quantities. For more specific answers, try questions like:\n- What was the average attendance last month?\n- Show me the kichadi recipe\n- How much rice do we need for 100 people?";
     }
 
-    // Google Sheets Sync
+    // Google Sheets Sync Functions
     function openSyncModal() {
         sheetUrlInput.value = syncConfig.sheetUrl;
         sheetNameInput.value = syncConfig.sheetName;
@@ -1478,76 +1520,84 @@
     }
 
     async function syncWithGoogleSheets() {
-      const proxy = "";
-      const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
-
-    try {
-        // Sync Sabha data
-        const sabhaRes = await fetch(`${proxy}${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'sabha',
-                data: sabhaData
-            })
-        });
-
-        const sabhaText = await sabhaRes.text();
-        if (!sabhaRes.ok || !sabhaText.includes("Success")) {
-            throw new Error("Failed to sync sabha: " + sabhaText);
+        try {
+            // Show loading state
+            showToast('⏳ Syncing data with Google Sheets...', 'info');
+            
+            // Sync Sabha data
+            const sabhaRes = await fetch(`${GOOGLE_SCRIPT_URL}?type=sabha`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'sync',
+                    data: sabhaData
+                })
+            });
+            
+            if (!sabhaRes.ok) {
+                throw new Error(`Sabha sync failed: ${await sabhaRes.text()}`);
+            }
+            
+            // Sync Recipe data
+            const recipeRes = await fetch(`${GOOGLE_SCRIPT_URL}?type=recipe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'sync',
+                    data: recipeData
+                })
+            });
+            
+            if (!recipeRes.ok) {
+                throw new Error(`Recipe sync failed: ${await recipeRes.text()}`);
+            }
+            
+            // Show success
+            showToast('✅ Data synced successfully!', 'success');
+            
+        } catch (error) {
+            console.error('Sync error:', error);
+            showToast(`❌ Sync failed: ${error.message}`, 'error');
         }
-
-        // Sync Recipe data
-        const recipeRes = await fetch(`${proxy}${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'recipe',
-                data: recipeData
-            })
-        });
-
-        const recipeText = await recipeRes.text();
-        if (!recipeRes.ok || !recipeText.includes("Success")) {
-            throw new Error("Failed to sync recipe: " + recipeText);
-        }
-
-        alert("✅ Sync successful!");
-    } catch (err) {
-        alert("❌ Sync failed: " + err.message);
-        console.error(err);
     }
-}
 
-
-async function loadFromGoogleSheets() {
-  const proxy = "";
-  const endpoint = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec";
-
-
-  try {
-    const sabhaRes = await fetch(`${proxy}${endpoint}?type=sabha`);
-    sabhaData = await sabhaRes.json();
-    console.log("Sabha Data Loaded:", sabhaData);
-
-    const recipeRes = await fetch(`${proxy}${endpoint}?type=recipe`);
-    recipeData = await recipeRes.json();
-    console.log("Recipe Data Loaded:", recipeData);
-
-    saveSabhaData();
-    saveRecipeData();
-
-    loadSabhaData();
-    loadRecipeData();
-  } catch (err) {
-    console.error("❌ Google Sheets Fetch Error:", err);
-    alert("❌ Failed to load from Google Sheets: " + err.message);
-  }
-}
+    async function loadFromGoogleSheets() {
+        try {
+            // Show loading indicator
+            showToast('⏳ Loading data from Google Sheets...', 'info');
+            
+            // Load Sabha data
+            const sabhaRes = await fetch(`${GOOGLE_SCRIPT_URL}?type=sabha`);
+            if (!sabhaRes.ok) throw new Error('Failed to load sabha data');
+            sabhaData = await sabhaRes.json();
+            
+            // Load Recipe data
+            const recipeRes = await fetch(`${GOOGLE_SCRIPT_URL}?type=recipe`);
+            if (!recipeRes.ok) throw new Error('Failed to load recipe data');
+            recipeData = await recipeRes.json();
+            
+            // Save to local storage
+            saveSabhaData();
+            saveRecipeData();
+            
+            // Update UI
+            loadSabhaData();
+            loadRecipeData();
+            
+            showToast('✅ Data loaded successfully!', 'success');
+        } catch (error) {
+            console.error('Load error:', error);
+            showToast(`❌ Failed to load: ${error.message}`, 'error');
+            
+            // Fallback to local data if online load fails
+            sabhaData = JSON.parse(localStorage.getItem('sabhaData')) || [];
+            recipeData = JSON.parse(localStorage.getItem('recipeData')) || [];
+        }
+    }
 
     function startAutoSync() {
         // Clear any existing interval
@@ -1569,6 +1619,29 @@ async function loadFromGoogleSheets() {
         }
     }
 
+    // Helper function to show toast notifications
+    function showToast(message, type = 'info') {
+        // Remove any existing toasts
+        const existingToasts = document.querySelectorAll('.toast');
+        existingToasts.forEach(toast => toast.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                               type === 'error' ? 'fa-exclamation-circle' : 
+                               type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'} mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
     // Data persistence functions
     function saveSabhaData() {
         localStorage.setItem('sabhaData', JSON.stringify(sabhaData));
@@ -1582,5 +1655,5 @@ async function loadFromGoogleSheets() {
         localStorage.setItem('syncConfig', JSON.stringify(syncConfig));
     }
     </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=smitp4383/kitchen" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</body>
 </html>
