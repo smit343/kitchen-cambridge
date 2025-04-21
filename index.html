@@ -1,24 +1,1441 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sabha Manager</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/recharts@2.1.16/umd/Recharts.js"></script>
-  <script src="https://unpkg.com/lucide-react@latest"></script>
-  <script src="sabha-recipe-manager.tsx" type="text/babel"></script>
-  <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabha Manager – Event & Recipe Organizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --text: #1f2937;
+            --bg: #f9fafb;
+        }
+        .dark {
+            --primary: #6366f1;
+            --secondary: #34d399;
+            --accent: #fbbf24;
+            --text: #f3f4f6;
+            --bg: #111827;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .recipe-card {
+            transition: all 0.3s ease;
+        }
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .toast {
+            animation: slideIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+        }
+        .tag {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .tag-remove {
+            cursor: pointer;
+            color: #4f46e5;
+        }
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-upload-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .preview-image {
+            max-width: 150px;
+            max-height: 150px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        .search-highlight {
+            background-color: #fef08a;
+            color: #000;
+        }
+    </style>
 </head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<SabhaRecipeManager />);
-  </script>
-</body>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Sabha Manager</h1>
+                <p class="text-gray-500 dark:text-gray-400">Event & Recipe Organizer</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                <button id="export-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-download mr-2"></i>Export Data
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="mb-8">
+            <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </button>
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="add-event">
+                    <i class="fas fa-plus-circle mr-2"></i>Add Event
+                </button>
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
+                    <i class="fas fa-calendar-alt mr-2"></i>Sabha Event Data
+                </button>
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="add-recipe">
+                    <i class="fas fa-plus-circle mr-2"></i>Add Recipe
+                </button>
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
+                    <i class="fas fa-book mr-2"></i>Recipe Book
+                </button>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast fixed right-4 top-4 hidden px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="toast-message">Operation successful!</span>
+            </div>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="tab-contents">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h2 class="text-2xl font-bold mb-6">Dashboard Overview</h2>
+                
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 mr-4">
+                                <i class="fas fa-calendar-check text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Events</p>
+                                <h3 class="text-2xl font-bold" id="total-events">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 mr-4">
+                                <i class="fas fa-users text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Bhaktas</p>
+                                <h3 class="text-2xl font-bold" id="total-bhaktas">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 mr-4">
+                                <i class="fas fa-utensils text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Recipes</p>
+                                <h3 class="text-2xl font-bold" id="total-recipes">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 mr-4">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Latest Event</p>
+                                <h3 class="text-2xl font-bold" id="latest-event">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Bhakta Attendance Chart -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <h3 class="text-lg font-semibold mb-4">Bhakta Attendance Over Time</h3>
+                        <canvas id="attendanceChart" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Gents vs Ladies Chart -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <h3 class="text-lg font-semibold mb-4">Gents vs Ladies Ratio</h3>
+                        <canvas id="genderChart" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Events -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Recent Sabha Events</h3>
+                        <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('event-data')">View All</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Topic</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Recent events will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Popular Recipes -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Popular Recipes</h3>
+                        <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('recipe-book')">View All</a>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="popular-recipes">
+                        <!-- Popular recipes will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Event Tab -->
+            <div id="add-event" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">Add New Sabha Event</h2>
+                
+<form id="event-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="event-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+            <input type="date" id="event-date" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+        </div>
+        <div>
+            <label for="event-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Name</label>
+            <input type="text" id="event-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+        </div>
+        <div>
+            <label for="event-saints" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pujya Santo Present</label>
+            <input type="text" id="event-saints" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-bhaktas" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Bhaktas</label>
+            <input type="number" id="event-bhaktas" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
+        </div>
+        <div>
+            <label for="event-gents" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gents</label>
+            <input type="number" id="event-gents" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
+        </div>
+        <div>
+            <label for="event-ladies" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ladies</label>
+            <input type="number" id="event-ladies" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
+        </div>
+        <div>
+            <label for="event-menu" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Menu</label>
+            <input type="text" id="event-menu" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
+            <textarea id="event-ingredients" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Enter ingredients, one per line"></textarea>
+        </div>
+        <div>
+            <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leftover Food (optional)</label>
+            <input type="text" id="event-leftover" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Re-made Items (optional)</label>
+            <input type="text" id="event-remade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <label for="event-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+        <textarea id="event-notes" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
+    </div>
+
+    <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Image/File (optional)</label>
+        <div class="file-upload">
+            <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <i class="fas fa-upload mr-2"></i>Upload
+            </button>
+            <input type="file" id="event-file" class="file-upload-input" accept="image/*,.pdf,.doc,.docx">
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">Cancel</button>
+        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            <i class="fas fa-save mr-2"></i>Save Event
+        </button>
+    </div>
+</form>
+
+            </div>
+
+            <!-- Event Data Tab -->
+            <div id="event-data" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Sabha Event Data</h2>
+                    <div class="relative w-64">
+                        <input type="text" id="event-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
+                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Topic</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- All events will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Recipe Tab -->
+            <div id="add-recipe" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">Add New Recipe</h2>
+                <form id="recipe-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="recipe-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Name</label>
+                            <input type="text" id="recipe-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Enter recipe name" required>
+                        </div>
+                        <div>
+                            <label for="recipe-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                            <select id="recipe-category" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
+                                <option value="Main Course">Main Course</option>
+                                <option value="Dessert">Dessert</option>
+                                <option value="Snack">Snack</option>
+                                <option value="Drink">Drink</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="recipe-prep-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preparation Time (min)</label>
+                            <input type="number" id="recipe-prep-time" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Preparation time in minutes" min="0">
+                        </div>
+                        <div>
+                            <label for="recipe-cook-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cooking Time (min)</label>
+                            <input type="number" id="recipe-cook-time" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Cooking time in minutes" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="recipe-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
+                        <div class="tag-input" id="ingredients-container">
+                            <input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="recipe-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
+                        <textarea id="recipe-instructions" rows="5" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Step-by-step instructions" required></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="recipe-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+                        <textarea id="recipe-notes" rows="2" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Additional notes about the recipe"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Image</label>
+                        <div class="file-upload">
+                            <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-upload mr-2"></i>Upload Image
+                            </button>
+                            <input type="file" id="recipe-image" class="file-upload-input" accept="image/*">
+                        </div>
+                        <div id="recipe-image-preview" class="mt-4"></div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-save mr-2"></i>Save Recipe
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recipe Book Tab -->
+            <div id="recipe-book" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Recipe Book</h2>
+                    <div class="relative w-64">
+                        <input type="text" id="recipe-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search recipes...">
+                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
+                    <!-- All recipes will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Modal -->
+    <div id="recipe-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="modal-recipe-name"></h3>
+                        <button type="button" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" onclick="closeModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            <span class="mr-4"><i class="fas fa-clock mr-1"></i> <span id="modal-prep-time"></span> min prep</span>
+                            <span><i class="fas fa-fire mr-1"></i> <span id="modal-cook-time"></span> min cook</span>
+                            <span class="ml-4 px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-xs" id="modal-category"></span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Ingredients</h4>
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300" id="modal-ingredients"></ul>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Instructions</h4>
+                                <ol class="list-decimal pl-5 space-y-2 text-gray-700 dark:text-gray-300" id="modal-instructions"></ol>
+                            </div>
+                        </div>
+                        <div class="mt-4" id="modal-notes-container">
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Notes</h4>
+                            <p class="text-gray-700 dark:text-gray-300" id="modal-notes"></p>
+                        </div>
+                        <div class="mt-4" id="modal-image-container">
+                            <img src="" alt="Recipe" class="rounded-lg w-full h-48 object-cover" id="modal-image">
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
+        let recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
+        
+        // DOM elements
+        const themeToggle = document.getElementById('theme-toggle');
+        const exportBtn = document.getElementById('export-btn');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        
+        // Forms
+        const eventForm = document.getElementById('event-form');
+        const recipeForm = document.getElementById('recipe-form');
+        
+        // Search inputs
+        const eventSearch = document.getElementById('event-search');
+        const recipeSearch = document.getElementById('recipe-search');
+        
+        // Modal elements
+        const recipeModal = document.getElementById('recipe-modal');
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!navigator.onLine) {
+             // fallback to localStorage
+               events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
+               recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
+            } else {
+                events = await loadFromGoogleSheet("SabhaEvents");
+                events.forEach(e => {
+                    e.gents = parseInt(e.gents) || 0;
+                    e.ladies = parseInt(e.ladies) || 0;
+                    e.totalBhaktas = e.gents + e.ladies;
+                    e.ingredients = (e.ingredients || '').split('\n');
+                });
+
+                recipes = await loadFromGoogleSheet("Recipes");
+                recipes.forEach(r => {
+                    r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
+                });
+            }
+
+            saveEvents();
+            saveRecipes();
+            updateDashboard();
+            renderAllEvents();
+            renderAllRecipes();
+            setupEventListeners();
+            initCharts();
+        });
+
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // Export button
+            exportBtn.addEventListener('click', exportData);
+            
+            // Tab navigation
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => showTab(btn.dataset.tab));
+            });
+            
+            // Event form submission
+            eventForm.addEventListener('submit', handleEventSubmit);
+            
+            // Recipe form submission
+            recipeForm.addEventListener('submit', handleRecipeSubmit);
+            
+            // Ingredients input
+            const ingredientsInput = document.getElementById('recipe-ingredients');
+            ingredientsInput.addEventListener('keydown', handleIngredientInput);
+            
+            // Event search
+            eventSearch.addEventListener('input', () => filterEvents(eventSearch.value));
+            
+            // Recipe search
+            recipeSearch.addEventListener('input', () => filterRecipes(recipeSearch.value));
+            
+            // File uploads
+            document.getElementById('event-photos').addEventListener('change', handleEventPhotosUpload);
+            document.getElementById('recipe-image').addEventListener('change', handleRecipeImageUpload);
+        }
+        
+        // Toggle dark/light theme
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Show tab content
+        function showTab(tabId) {
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            tabBtns.forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'dark:border-indigo-400', 'text-indigo-600', 'dark:text-indigo-400');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-indigo-600', 'dark:border-indigo-400', 'text-indigo-600', 'dark:text-indigo-400');
+            }
+            
+            // Update specific tabs when shown
+            if (tabId === 'dashboard') {
+                updateDashboard();
+                initCharts();
+            } else if (tabId === 'event-data') {
+                renderAllEvents();
+            } else if (tabId === 'recipe-book') {
+                renderAllRecipes();
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Update dashboard statistics
+        function updateDashboard() {
+            // Total events
+            document.getElementById('total-events').textContent = events.length;
+            
+            // Total bhaktas
+            const totalBhaktas = events.reduce((sum, event) => sum + (event.gents || 0) + (event.ladies || 0), 0);
+            document.getElementById('total-bhaktas').textContent = totalBhaktas;
+            
+            // Total recipes
+            document.getElementById('total-recipes').textContent = recipes.length;
+            
+            // Latest event
+            if (events.length > 0) {
+                const latestEvent = events[events.length - 1];
+                document.getElementById('latest-event').textContent = latestEvent.topic || 'No topic';
+            } else {
+                document.getElementById('latest-event').textContent = '-';
+            }
+            
+            // Recent events (last 5)
+            const recentEventsContainer = document.getElementById('recent-events');
+            recentEventsContainer.innerHTML = '';
+            
+            const recentEvents = [...events].reverse().slice(0, 5);
+            recentEvents.forEach(event => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.topic || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.speaker || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${(event.gents || 0) + (event.ladies || 0)}</td>
+                `;
+                recentEventsContainer.appendChild(row);
+            });
+            
+            // Popular recipes (first 6)
+            const popularRecipesContainer = document.getElementById('popular-recipes');
+            popularRecipesContainer.innerHTML = '';
+            
+            const popularRecipes = recipes.slice(0, 6);
+            popularRecipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'recipe-card bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden';
+                card.innerHTML = `
+                    <div class="h-40 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-utensils text-4xl"></i></div>'}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1">${recipe.name}</h3>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
+                            <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${recipe.ingredients.slice(0, 3).map(ing => `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${ing}</span>`).join('')}
+                            ${recipe.ingredients.length > 3 ? '<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">+' + (recipe.ingredients.length - 3) + ' more</span>' : ''}
+                        </div>
+                        <button onclick="openRecipeModal('${recipe.id}')" class="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
+                            View Recipe
+                        </button>
+                    </div>
+                `;
+                popularRecipesContainer.appendChild(card);
+            });
+        }
+        
+        // Initialize charts
+        function initCharts() {
+            if (events.length === 0) return;
+            
+            // Sort events by date
+            const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Attendance chart
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            const attendanceLabels = sortedEvents.map(event => formatDate(event.date, true));
+            const attendanceData = sortedEvents.map(event => (event.gents || 0) + (event.ladies || 0));
+            
+            new Chart(attendanceCtx, {
+                type: 'line',
+                data: {
+                    labels: attendanceLabels,
+                    datasets: [{
+                        label: 'Total Attendance',
+                        data: attendanceData,
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Gender ratio chart
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            const totalGents = sortedEvents.reduce((sum, event) => sum + (event.gents || 0), 0);
+            const totalLadies = sortedEvents.reduce((sum, event) => sum + (event.ladies || 0), 0);
+            
+            new Chart(genderCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Gents', 'Ladies'],
+                    datasets: [{
+                        data: [totalGents, totalLadies],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(244, 114, 182, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(244, 114, 182, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Handle event form submission
+        function handleEventSubmit(e) {
+           e.preventDefault();
+
+           const isUpdate = eventForm.dataset.mode === 'update';
+           const eventId = isUpdate ? eventForm.dataset.id : Date.now().toString();
+
+           const gents = parseInt(document.getElementById('event-gents').value) || 0;
+           const ladies = parseInt(document.getElementById('event-ladies').value) || 0;
+
+           const event = {
+               
+               id: eventId,
+               date: document.getElementById('event-date').value,
+               topic: document.getElementById('event-name').value,
+               speaker: document.getElementById('event-saints').value,
+               gents: gents,
+               ladies: ladies,
+               totalBhaktas: gents + ladies,
+               menu: document.getElementById('event-menu').value,
+               ingredients: document.getElementById('event-ingredients').value.split('\n'),
+               leftover: document.getElementById('event-leftover').value,
+               remade: document.getElementById('event-remade').value,
+               notes: document.getElementById('event-notes').value,
+               photos: []
+        
+            };
+            // Collect photo previews
+            const photoPreviews = document.getElementById('event-photo-preview')?.querySelectorAll('img') || [];
+            event.photos = Array.from(photoPreviews).map(img => img.src); // base64 or hosted links
+
+            if (isUpdate) {
+               const index = events.findIndex(ev => ev.id === eventId);
+               if (index !== -1) events[index] = event;
+            } else {
+                events.push(event);
+            }
+
+            // Save & Sync
+            saveEvents();
+
+            // Reset form
+            eventForm.reset();
+            eventForm.removeAttribute('data-mode');
+            eventForm.removeAttribute('data-id');
+            document.getElementById('event-photo-preview').innerHTML = '';
+
+            // Show confirmation and return to dashboard
+            showToast(isUpdate ? 'Event updated successfully!' : 'Event added successfully!');
+            showTab('event-data');
+         }
+
+
+        
+        // Handle recipe form submission
+        function handleRecipeSubmit(e) {
+            e.preventDefault();
+            
+            const recipe = {
+                id: Date.now().toString(),
+                name: document.getElementById('recipe-name').value,
+                category: document.getElementById('recipe-category').value,
+                prepTime: parseInt(document.getElementById('recipe-prep-time').value) || 0,
+                cookTime: parseInt(document.getElementById('recipe-cook-time').value) || 0,
+                ingredients: Array.from(document.querySelectorAll('#ingredients-container .tag')).map(tag => tag.textContent.trim().replace('×', '')),
+                instructions: document.getElementById('recipe-instructions').value,
+                notes: document.getElementById('recipe-notes').value,
+                image: document.getElementById('recipe-image-preview').querySelector('img')?.src || ''
+            };
+            
+            recipes.push(recipe);
+            saveRecipes();
+            
+            // Reset form
+            recipeForm.reset();
+            document.getElementById('ingredients-container').innerHTML = '<input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">';
+            document.getElementById('recipe-image-preview').innerHTML = '';
+            
+            // Re-attach event listener to ingredients input
+            document.getElementById('recipe-ingredients').addEventListener('keydown', handleIngredientInput);
+            
+            // Show success message
+            showToast('Recipe added successfully!');
+            
+            // Return to dashboard
+            showTab('dashboard');
+        }
+        
+        // Handle ingredient input
+        function handleIngredientInput(e) {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                e.preventDefault();
+                
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `
+                    ${e.target.value.trim()}
+                    <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
+                `;
+                
+                const container = document.getElementById('ingredients-container');
+                container.insertBefore(tag, e.target);
+                e.target.value = '';
+            }
+        }
+        
+        // Handle event photos upload
+        function handleEventPhotosUpload(e) {
+            const files = e.target.files;
+            const previewContainer = document.getElementById('event-photo-preview');
+            previewContainer.innerHTML = '';
+            
+            if (files) {
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'preview-image';
+                            previewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+        
+        // Handle recipe image upload
+        function handleRecipeImageUpload(e) {
+            const file = e.target.files[0];
+            const previewContainer = document.getElementById('recipe-image-preview');
+            previewContainer.innerHTML = '';
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-image';
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Render all events in the event data tab
+        function renderAllEvents() {
+            const container = document.getElementById('all-events');
+            container.innerHTML = '';
+            
+            if (events.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No events found. Add your first event!</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Sort events by date (newest first)
+            const sortedEvents = [...events].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedEvents.forEach(event => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.topic || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.speaker || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                        <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
+                        <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="viewEventDetails('${event.id}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-500 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editEvent('${event.id}')" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-500 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteEvent('${event.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-500">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                container.appendChild(row);
+            });
+        }
+        
+        // Render all recipes in the recipe book tab
+        function renderAllRecipes() {
+            const container = document.getElementById('all-recipes');
+            container.innerHTML = '';
+            
+            if (recipes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <i class="fas fa-utensils text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400">No recipes found. Add your first recipe!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            recipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'recipe-card bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden';
+                card.innerHTML = `
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-utensils text-4xl"></i></div>'}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1">${recipe.name}</h3>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
+                            <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
+                            <span class="ml-auto px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-xs">${recipe.category}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${recipe.ingredients.slice(0, 3).map(ing => `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${ing}</span>`).join('')}
+                            ${recipe.ingredients.length > 3 ? '<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">+' + (recipe.ingredients.length - 3) + ' more</span>' : ''}
+                        </div>
+                        <div class="flex justify-between">
+                            <button onclick="openRecipeModal('${recipe.id}')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
+                                View Recipe
+                            </button>
+                            <div>
+                                <button onclick="editRecipe('${recipe.id}')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteRecipe('${recipe.id}')" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Filter events based on search query
+          function filterEvents(query) {
+              const container = document.getElementById('all-events');
+              container.innerHTML = '';
+
+              if (!query) {
+                 renderAllEvents();
+                 return;
+              }
+
+              const filteredEvents = events.filter(event => {
+                  const fullText = Object.values(event)
+                      .flat()
+                      .join(' ')
+                      .toLowerCase();
+
+                   return fullText.includes(query.toLowerCase());
+              });
+
+              if (filteredEvents.length === 0) {
+                 container.innerHTML = `
+                     <tr>
+                          <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No events match your search.</td>
+                     </tr>
+        `         ;
+                 return;
+              }
+
+              filteredEvents.forEach(event => {
+                  const row = document.createElement('tr');
+                  row.innerHTML = `
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
+                      <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.topic || '-'}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.speaker || '-'}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                          <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
+                          <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button onclick="viewEventDetails('${event.id}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-500 mr-3">
+                             <i class="fas fa-eye"></i>
+                          </button>
+                          <button onclick="editEvent('${event.id}')" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-500 mr-3">
+                              <i class="fas fa-edit"></i>
+                          </button>
+                          <button onclick="deleteEvent('${event.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-500">
+                             <i class="fas fa-trash"></i>
+                          </button>
+                      </td>
+        `         ;
+                 container.appendChild(row);
+              });
+            }
+        
+        // Filter recipes based on search query
+        function filterRecipes(query) {
+            if (!query) {
+                renderAllRecipes();
+                return;
+            }
+            
+            const filteredRecipes = recipes.filter(recipe => {
+                const searchableFields = [
+                    recipe.name,
+                    recipe.category,
+                    recipe.ingredients.join(' '),
+                    recipe.instructions,
+                    recipe.notes
+                ].join(' ').toLowerCase();
+                
+                return searchableFields.includes(query.toLowerCase());
+            });
+            
+            const container = document.getElementById('all-recipes');
+            container.innerHTML = '';
+            
+            if (filteredRecipes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <i class="fas fa-utensils text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400">No recipes match your search.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            filteredRecipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'recipe-card bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden';
+                
+                // Highlight matching text in name
+                const name = highlightMatches(recipe.name, query);
+                
+                card.innerHTML = `
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-utensils text-4xl"></i></div>'}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1">${name}</h3>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
+                            <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
+                            <span class="ml-auto px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-xs">${recipe.category}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${recipe.ingredients.slice(0, 3).map(ing => {
+                                const highlightedIng = highlightMatches(ing, query);
+                                return `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${highlightedIng}</span>`;
+                            }).join('')}
+                            ${recipe.ingredients.length > 3 ? '<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">+' + (recipe.ingredients.length - 3) + ' more</span>' : ''}
+                        </div>
+                        <div class="flex justify-between">
+                            <button onclick="openRecipeModal('${recipe.id}')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
+                                View Recipe
+                            </button>
+                            <div>
+                                <button onclick="editRecipe('${recipe.id}')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteRecipe('${recipe.id}')" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Highlight matching text in search results
+        function highlightMatches(text, query) {
+            if (!text || !query) return text;
+            
+            const regex = new RegExp(query, 'gi');
+            return text.toString().replace(regex, match => `<span class="search-highlight">${match}</span>`);
+        }
+        
+        // View event details
+        function viewEventDetails(id) {
+            const event = events.find(e => e.id === id);
+            if (!event) return;
+
+            alert(`Event Details:\n
+Date: ${formatDate(event.date)}\n
+Event Name: ${event.topic || 'N/A'}\n
+Pujya Santo: ${event.speaker || 'N/A'}\n
+Bhaktas: ${(event.gents || 0) + (event.ladies || 0)} (Gents: ${event.gents || 0}, Ladies: ${event.ladies || 0})\n
+Menu: ${event.menu || 'N/A'}\n
+Ingredients: ${(event.ingredients || []).join(', ')}\n
+Notes: ${event.notes || 'N/A'}\n
+Leftovers: ${event.leftover || 'N/A'}\n
+Remade: ${event.remade || 'N/A'}`);
+         }
+
+        
+         function editEvent(id) {
+             const event = events.find(e => e.id === id);
+             if (!event) return;
+
+             document.getElementById('event-date').value = event.date;
+             document.getElementById('event-name').value = event.topic || '';
+             document.getElementById('event-saints').value = event.speaker || '';
+             document.getElementById('event-gents').value = event.gents || '';
+             document.getElementById('event-ladies').value = event.ladies || '';
+             document.getElementById('event-menu').value = event.menu || '';
+             document.getElementById('event-ingredients').value = (event.ingredients || []).join('\n');
+             document.getElementById('event-leftover').value = event.leftover || '';
+             document.getElementById('event-remade').value = event.remade || '';
+             document.getElementById('event-notes').value = event.notes || '';
+
+    // Show tab and set update mode
+             showTab('add-event');
+             eventForm.dataset.mode = 'update';
+             eventForm.dataset.id = id;
+
+    // Change submit button text
+             const submitBtn = eventForm.querySelector('button[type="submit"]');
+             submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Event';
+         }
+
+        // Delete event
+        function deleteEvent(id) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                events = events.filter(e => e.id !== id);
+                saveEvents();
+                renderAllEvents();
+                updateDashboard();
+                showToast('Event deleted successfully!');
+            }
+        }
+        
+        // Open recipe modal
+        function openRecipeModal(id) {
+            const recipe = recipes.find(r => r.id === id);
+            if (!recipe) return;
+            
+            // Populate modal
+            document.getElementById('modal-recipe-name').textContent = recipe.name;
+            document.getElementById('modal-prep-time').textContent = recipe.prepTime || 0;
+            document.getElementById('modal-cook-time').textContent = recipe.cookTime || 0;
+            document.getElementById('modal-category').textContent = recipe.category;
+            
+            // Ingredients
+            const ingredientsList = document.getElementById('modal-ingredients');
+            ingredientsList.innerHTML = '';
+            recipe.ingredients.forEach(ing => {
+                const li = document.createElement('li');
+                li.textContent = ing;
+                ingredientsList.appendChild(li);
+            });
+            
+            // Instructions
+            const instructionsList = document.getElementById('modal-instructions');
+            instructionsList.innerHTML = '';
+            const instructions = recipe.instructions.split('\n').filter(step => step.trim());
+            instructions.forEach((step, index) => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                instructionsList.appendChild(li);
+            });
+            
+            // Notes
+            const notesContainer = document.getElementById('modal-notes-container');
+            const notesElement = document.getElementById('modal-notes');
+            if (recipe.notes) {
+                notesElement.textContent = recipe.notes;
+                notesContainer.style.display = 'block';
+            } else {
+                notesContainer.style.display = 'none';
+            }
+            
+            // Image
+            const imageContainer = document.getElementById('modal-image-container');
+            const imageElement = document.getElementById('modal-image');
+            if (recipe.image) {
+                imageElement.src = recipe.image;
+                imageContainer.style.display = 'block';
+            } else {
+                imageContainer.style.display = 'none';
+            }
+            
+            // Show modal
+            recipeModal.classList.remove('hidden');
+        }
+        
+        // Close modal
+        function closeModal() {
+            recipeModal.classList.add('hidden');
+        }
+        
+        // Edit recipe
+        function editRecipe(id) {
+            const recipe = recipes.find(r => r.id === id);
+            if (!recipe) return;
+            
+            // Populate the form with recipe data
+            document.getElementById('recipe-name').value = recipe.name;
+            document.getElementById('recipe-category').value = recipe.category;
+            document.getElementById('recipe-prep-time').value = recipe.prepTime || '';
+            document.getElementById('recipe-cook-time').value = recipe.cookTime || '';
+            document.getElementById('recipe-instructions').value = recipe.instructions || '';
+            document.getElementById('recipe-notes').value = recipe.notes || '';
+            
+            // Handle ingredients
+            const ingredientsContainer = document.getElementById('ingredients-container');
+            ingredientsContainer.innerHTML = '';
+            
+            recipe.ingredients.forEach(ing => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `
+                    ${ing}
+                    <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
+                `;
+                ingredientsContainer.appendChild(tag);
+            });
+            
+            // Add the input field back
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'recipe-ingredients';
+            input.className = 'flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800';
+            input.placeholder = 'Add ingredients (press Enter)';
+            ingredientsContainer.appendChild(input);
+            
+            // Re-attach event listener
+            input.addEventListener('keydown', handleIngredientInput);
+            
+            // Handle image
+            const previewContainer = document.getElementById('recipe-image-preview');
+            previewContainer.innerHTML = '';
+            
+            if (recipe.image) {
+                const img = document.createElement('img');
+                img.src = recipe.image;
+                img.className = 'preview-image';
+                previewContainer.appendChild(img);
+            }
+            
+            // Show the add recipe tab
+            showTab('add-recipe');
+            
+            // Change the form to update mode
+            const form = document.getElementById('recipe-form');
+            form.dataset.mode = 'update';
+            form.dataset.id = id;
+            
+            // Change the submit button text
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Recipe';
+        }
+        
+        // Delete recipe
+        function deleteRecipe(id) {
+            if (confirm('Are you sure you want to delete this recipe?')) {
+                recipes = recipes.filter(r => r.id !== id);
+                saveRecipes();
+                renderAllRecipes();
+                updateDashboard();
+                showToast('Recipe deleted successfully!');
+            }
+        }
+        
+        // Save events to localStorage
+        function saveEvents() {
+            localStorage.setItem('sabhaEvents', JSON.stringify(events));
+            syncToGoogleSheet("SabhaEvents", events);
+        }
+
+        function saveRecipes() {
+            localStorage.setItem('sabhaRecipes', JSON.stringify(recipes));
+            syncToGoogleSheet("Recipes", recipes);
+        }
+
+        
+        // Export data as JSON
+        function exportData() {
+            const data = {
+                events: events,
+                recipes: recipes,
+                exportedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sabha-manager-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Data exported successfully!');
+        }
+
+
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec"; // <-- replace with actual URL
+
+        async function syncToGoogleSheet(sheetName, dataArray) {
+            try {
+                await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`, {
+                    method: "POST",
+                    body: JSON.stringify(dataArray),
+                    headers: { "Content-Type": "application/json" }
+                });
+            } catch (err) {
+                console.error("Sync to Google Sheet failed:", err);
+            }
+        }
+
+        async function loadFromGoogleSheet(sheetName) {
+            try {
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`);
+                const data = await res.json();
+                return data;
+            } catch (err) {
+                console.error("Failed to load from Google Sheet:", err);
+                return [];
+            }
+        }
+
+
+
+
+
+        
+
+
+
+
+
+        // Format date for display
+        function formatDate(dateString, short = false) {
+            if (!dateString) return '-';
+            
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            
+            if (short) {
+                return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            }
+            
+            return date.toLocaleDateString(undefined, { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
