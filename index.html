@@ -111,6 +111,52 @@
             color: #000;
         }
     </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
+    authDomain: "kitchen-data-61ecd.firebaseapp.com",
+    projectId: "kitchen-data-61ecd",
+    storageBucket: "kitchen-data-61ecd.firebasestorage.app",
+    messagingSenderId: "225092587820",
+    appId: "1:225092587820:web:4b896b9f9387718c1f9c89",
+    measurementId: "G-YRVFHF4ME9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+
+  async function syncToFirebase(collectionName, dataArray) {
+    try {
+      const batchPromises = dataArray.map(item => {
+        return setDoc(doc(window.db, collectionName, item.id), item);
+      });
+      await Promise.all(batchPromises);
+      console.log(`Synced ${dataArray.length} documents to ${collectionName}`);
+    } catch (err) {
+      console.error("Sync to Firebase failed:", err);
+    }
+  }
+
+  async function loadFromFirebase(collectionName) {
+    try {
+      const querySnapshot = await getDocs(collection(window.db, collectionName));
+      const data = [];
+      querySnapshot.forEach(doc => data.push(doc.data()));
+      return data;
+    } catch (err) {
+      console.error("Failed to load from Firebase:", err);
+      return [];
+    }
+  }
+
+  window.syncToFirebase = syncToFirebase;
+  window.loadFromFirebase = loadFromFirebase;
+</script>
+
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
@@ -536,7 +582,7 @@
                events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
                recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
             } else {
-                events = await loadFromGoogleSheet("SabhaEvents");
+                events = await loadFromFirebase("SabhaEvents");
                 events.forEach(e => {
                     e.gents = parseInt(e.gents) || 0;
                     e.ladies = parseInt(e.ladies) || 0;
@@ -544,7 +590,7 @@
                     e.ingredients = (e.ingredients || '').split('\n');
                 });
 
-                recipes = await loadFromGoogleSheet("Recipes");
+                recipes = await loadFromFirebase("Recipes");
                 recipes.forEach(r => {
                     r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
                 });
@@ -1351,12 +1397,12 @@ Remade: ${event.remade || 'N/A'}`);
         // Save events to localStorage
         function saveEvents() {
             localStorage.setItem('sabhaEvents', JSON.stringify(events));
-            syncToGoogleSheet("SabhaEvents", events);
+            syncToFirebase("SabhaEvents", events);
         }
 
         function saveRecipes() {
             localStorage.setItem('sabhaRecipes', JSON.stringify(recipes));
-            syncToGoogleSheet("Recipes", recipes);
+            syncToFirebase("Recipes", recipes);
         }
 
         
@@ -1383,32 +1429,7 @@ Remade: ${event.remade || 'N/A'}`);
         }
 
 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiOTm5Bj4ej0YZLT8wCd0GfsoZz54qnly6qKKm1uxkLDgWeQ62tksxZwOTFOsdhmYp/exec"; // <-- replace with actual URL
-
-        async function syncToGoogleSheet(sheetName, dataArray) {
-            try {
-                await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`, {
-                    method: "POST",
-                    body: JSON.stringify(dataArray),
-                    headers: { "Content-Type": "application/json" }
-                });
-            } catch (err) {
-                console.error("Sync to Google Sheet failed:", err);
-            }
-        }
-
-        async function loadFromGoogleSheet(sheetName) {
-            try {
-                const res = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`);
-                const data = await res.json();
-                return data;
-            } catch (err) {
-                console.error("Failed to load from Google Sheet:", err);
-                return [];
-            }
-        }
-
-
+        
 
 
 
