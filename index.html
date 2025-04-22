@@ -113,14 +113,18 @@
     </style>
 
 <script type="module">
+    
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+  const storage = getStorage(app);
+  window.storage = storage;
 
   const firebaseConfig = {
     apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
     authDomain: "kitchen-data-61ecd.firebaseapp.com",
     projectId: "kitchen-data-61ecd",
-    storageBucket: "kitchen-data-61ecd.firebasestorage.app",
+    storageBucket: "kitchen-data-61ecd.appspot.com",
     messagingSenderId: "225092587820",
     appId: "1:225092587820:web:4b896b9f9387718c1f9c89",
     measurementId: "G-YRVFHF4ME9"
@@ -936,44 +940,45 @@
         }
         
         // Handle event photos upload
-        function handleEventPhotosUpload(e) {
-            const files = e.target.files;
-            const previewContainer = document.getElementById('event-photo-preview');
+        async function handleEventPhotosUpload(e) {
+            const files = e.target.files[0];
+            const previewContainer = document.getElementById('event-image-preview');
             previewContainer.innerHTML = '';
             
-            if (files) {
-                Array.from(files).forEach(file => {
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'preview-image';
-                            previewContainer.appendChild(img);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-        }
+            if (file && file.type.startsWith('image/')) {
+               // Upload to Firebase Storage
+               const storageRef = ref(window.storage, 'event-images/' + Date.now() + '-' + file.name);
+               await uploadBytes(storageRef, file);
+               const downloadURL = await getDownloadURL(storageRef);
+
+               // Preview image
+               const img = document.createElement('img');
+               img.src = downloadURL;
+               img.className = 'preview-image';
+               previewContainer.appendChild(img);
+              }
+          }
+                
         
         // Handle recipe image upload
-        function handleRecipeImageUpload(e) {
+        async function handleRecipeImageUpload(e) {
             const file = e.target.files[0];
             const previewContainer = document.getElementById('recipe-image-preview');
             previewContainer.innerHTML = '';
             
             if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-image';
-                    previewContainer.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+                const storageRef = ref(window.storage, 'recipe-images/' + Date.now() + '-' + file.name);
+                await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(storageRef);
+
+                // Preview image
+                const img = document.createElement('img');
+                img.src = downloadURL;
+                img.className = 'preview-image';
+                previewContainer.appendChild(img);
+             }
+         }
+                
         
         // Render all events in the event data tab
         function renderAllEvents() {
