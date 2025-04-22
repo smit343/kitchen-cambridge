@@ -373,8 +373,9 @@
             <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                 <i class="fas fa-upload mr-2"></i>Upload
             </button>
-            <input type="file" id="event-file" class="file-upload-input" accept="image/*,.pdf,.doc,.docx">
+            <input type="file" id="event-photos" class="file-upload-input" multiple accept="image/*,.pdf,.doc,.docx">
         </div>
+        <div id="event-photo-preview" class="mt-4 flex flex-wrap gap-4"></div>
     </div>
 
     <div class="flex justify-end">
@@ -942,22 +943,36 @@
         // Handle event photos upload
         async function handleEventPhotosUpload(e) {
             const files = e.target.files[0];
-            const previewContainer = document.getElementById('event-image-preview');
+            const previewContainer = document.getElementById('event-photo-preview');
             previewContainer.innerHTML = '';
             
-            if (file && file.type.startsWith('image/')) {
-               // Upload to Firebase Storage
-               const storageRef = ref(window.storage, 'event-images/' + Date.now() + '-' + file.name);
-               await uploadBytes(storageRef, file);
-               const downloadURL = await getDownloadURL(storageRef);
+            if (files) {
+                for (let file of files) {
+                    try {
+                        const storageRef = ref(window.storage, 'event-uploads/' + Date.now() + '-' + file.name);
+                        await uploadBytes(storageRef, file);
+                        const downloadURL = await getDownloadURL(storageRef);
 
-               // Preview image
-               const img = document.createElement('img');
-               img.src = downloadURL;
-               img.className = 'preview-image';
-               previewContainer.appendChild(img);
-              }
-          }
+                        if (file.type.startsWith('image/')) {
+                           const img = document.createElement('img');
+                           img.src = downloadURL;
+                           img.className = 'preview-image';
+                           previewContainer.appendChild(img);
+                        } else {
+                            const link = document.createElement('a');
+                            link.href = downloadURL;
+                            link.textContent = file.name;
+                            link.target = "_blank";
+                            link.className = 'block text-sm text-blue-600 mt-2';
+                            previewContainer.appendChild(link);
+                        }
+                    } catch (error) {
+                        console.error('File upload failed:', error);
+                        showToast('Failed to upload one or more files.');
+                    }
+                }
+            }
+         }
                 
         
         // Handle recipe image upload
@@ -967,16 +982,21 @@
             previewContainer.innerHTML = '';
             
             if (file && file.type.startsWith('image/')) {
-                const storageRef = ref(window.storage, 'recipe-images/' + Date.now() + '-' + file.name);
-                await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(storageRef);
+                try {
+                    const storageRef = ref(window.storage, 'recipe-images/' + Date.now() + '-' + file.name);
+                    await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(storageRef);
 
-                // Preview image
-                const img = document.createElement('img');
-                img.src = downloadURL;
-                img.className = 'preview-image';
-                previewContainer.appendChild(img);
-             }
+                    // Preview image
+                    const img = document.createElement('img');
+                    img.src = downloadURL;
+                    img.className = 'preview-image';
+                    previewContainer.appendChild(img);
+                } catch (error) {
+                    console.error('Image upload failed:', error);
+                    showToast('Failed to upload image.');
+                }
+            }
          }
                 
         
