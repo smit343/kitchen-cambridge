@@ -587,7 +587,7 @@
                     e.gents = parseInt(e.gents) || 0;
                     e.ladies = parseInt(e.ladies) || 0;
                     e.totalBhaktas = e.gents + e.ladies;
-                    e.ingredients = (e.ingredients || '').split('\n');
+                    e.ingredients = (e.ingredients || '').tostring().split('\n');
                 });
 
                 recipes = await loadFromFirebase("Recipes");
