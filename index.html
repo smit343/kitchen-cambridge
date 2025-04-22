@@ -117,8 +117,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-  const storage = getStorage(app);
-  window.storage = storage;
 
   const firebaseConfig = {
     apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
@@ -131,6 +129,8 @@
   };
 
   const app = initializeApp(firebaseConfig);
+  const storage = getStorage(app);
+  window.storage = storage;
   window.db = getFirestore(app);
 
   async function syncToFirebase(collectionName, dataArray) {
