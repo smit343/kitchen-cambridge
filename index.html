@@ -190,15 +190,11 @@
                 <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </button>
-                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="add-event">
-                    <i class="fas fa-plus-circle mr-2"></i>Add Event
-                </button>
+            
                 <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
                     <i class="fas fa-calendar-alt mr-2"></i>Sabha Event Data
                 </button>
-                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="add-recipe">
-                    <i class="fas fa-plus-circle mr-2"></i>Add Recipe
-                </button>
+             
                 <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
                     <i class="fas fa-book mr-2"></i>Recipe Book
                 </button>
@@ -390,19 +386,29 @@
 </form>
 
             </div>
+            <!-- Add Event Form Tab -->
+            <div id="add-event" class="tab-content" style="display: none;">
+            <!-- your existing form for adding events -->
+            </div>
+          
+
 
             <!-- Event Data Tab -->
             <div id="event-data" class="tab-content">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold">Sabha Event Data</h2>
-                    <div class="relative w-64">
-                        <input type="text" id="event-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
-                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                            <i class="fas fa-search"></i>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showAddEventForm()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-plus mr-2"></i>Add Event
+                        </button>
+                        <div class="relative w-64">
+                            <input type="text" id="event-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
+                            <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                                <i class="fas fa-search"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -424,7 +430,7 @@
             </div>
 
             <!-- Add Recipe Tab -->
-            <div id="add-recipe" class="tab-content">
+            <div id="add-recipe" class="tab-content" style="display: none;">
                 <h2 class="text-2xl font-bold mb-6">Add New Recipe</h2>
                 <form id="recipe-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -493,22 +499,21 @@
 
             <!-- Recipe Book Tab -->
             <div id="recipe-book" class="tab-content">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Recipe Book</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Recipe Book</h2>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showAddRecipeForm()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                        <i class="fas fa-plus mr-2"></i>Add Recipe
+                    </button>
                     <div class="relative w-64">
                         <input type="text" id="recipe-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search recipes...">
                         <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
-                    <!-- All recipes will be populated here -->
-                </div>
+                 </div>
             </div>
-        </div>
-    </div>
+
 
     <!-- Recipe Modal -->
     <div id="recipe-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
@@ -944,6 +949,8 @@
             eventForm.removeAttribute('data-mode');
             eventForm.removeAttribute('data-id');
             document.getElementById('event-photo-preview').innerHTML = '';
+            document.getElementById('add-event').style.display = 'none';
+
 
             // Show confirmation and return to dashboard
             showToast(isUpdate ? 'Event updated successfully!' : 'Event added successfully!');
@@ -986,6 +993,8 @@
             document.getElementById('ingredients-container').innerHTML = '<input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">';
             document.getElementById('recipe-ingredients').addEventListener('keydown', handleIngredientInput);
             document.getElementById('recipe-image-preview').innerHTML = '';
+            document.getElementById('add-recipe').style.display = 'none';
+
 
             showToast(isUpdate ? 'Recipe updated successfully!' : 'Recipe added successfully!');
             showTab('dashboard');
@@ -1591,6 +1600,16 @@
                 day: 'numeric' 
             });
         }
+        function showAddEventForm() {
+            document.getElementById('add-event').style.display = 'block';
+            showTab('add-event');
+        }
+
+        function showAddRecipeForm() {
+            document.getElementById('add-recipe').style.display = 'block';
+            showTab('add-recipe');
+        }
+
     </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
