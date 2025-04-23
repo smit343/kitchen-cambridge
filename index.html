@@ -581,34 +581,39 @@
         const recipeModal = document.getElementById('recipe-modal');
         
         // Initialize the app
+        
         document.addEventListener('DOMContentLoaded', async () => {
-            if (!navigator.onLine) {
-             // fallback to localStorage
-               events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
-               recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-            } else {
-                events = await loadFromFirebase("SabhaEvents");
-                events.forEach(e => {
-                    e.gents = parseInt(e.gents) || 0;
-                    e.ladies = parseInt(e.ladies) || 0;
-                    e.totalBhaktas = e.gents + e.ladies;
-                    e.ingredients = (e.ingredients || '').toString().split('\n');
-                });
+         if (!navigator.onLine) {
+           events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
+           recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
+        } else {
+          events = await loadFromFirebase("SabhaEvents");
+          events.forEach(e => {
+            e.gents = parseInt(e.gents) || 0;
+            e.ladies = parseInt(e.ladies) || 0;
+            e.totalBhaktas = e.gents + e.ladies;
+            e.ingredients = (e.ingredients || '').toString().split('\n');
+          });
 
-                recipes = await loadFromFirebase("Recipes");
-                recipes.forEach(r => {
-                    r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
-                });
-            }
+          recipes = await loadFromFirebase("Recipes");
+          recipes.forEach(r => {
+            r.ingredients = (r.ingredients || '').split(',');
+          });
 
-            saveEvents();
-            saveRecipes();
-            updateDashboard();
-            renderAllEvents();
-            renderAllRecipes();
-            setupEventListeners();
-            initCharts();
-        });
+          // Save to localStorage only (don't sync back to Firebase)
+          localStorage.setItem('sabhaEvents', JSON.stringify(events));
+          localStorage.setItem('sabhaRecipes', JSON.stringify(recipes));
+        }
+
+        updateDashboard();
+        renderAllEvents();
+        renderAllRecipes();
+        setupEventListeners();
+        initCharts();
+       });
+
+        
+           
 
         
         // Set up event listeners
