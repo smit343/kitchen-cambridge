@@ -143,17 +143,20 @@
     }
   }
 
-  async function loadFromFirebase(collectionName) {
-    try {
-      const querySnapshot = await getDocs(collection(window.db, collectionName));
-      const data = [];
-      querySnapshot.forEach(doc => data.push(doc.data()));
-      return data;
-    } catch (err) {
-      console.error("Failed to load from Firebase:", err);
-      return [];
-    }
+  import { onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  function loadFromFirebase(collectionName, callback) {
+      const colRef = collection(window.db, collectionName);
+      onSnapshot(colRef, (snapshot) => {
+          const data = [];
+          snapshot.forEach(doc => data.push(doc.data()));
+          callback(data);
+       }, (error) => {
+           console.error(`Real-time sync error from ${collectionName}:`, error);
+       });
   }
+
+
+
 
   window.syncToFirebase = syncToFirebase;
   window.loadFromFirebase = loadFromFirebase;
@@ -622,7 +625,13 @@
                     events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
                     recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
                  } else {
-                     events = await loadFromFirebase("SabhaEvents");
+                     loadFromFirebaseRealtime("SabhaEvents", data => {
+                         events = data;
+                         updateDashboard();
+                         renderAllEvents();
+                         initCharts();
+                       });
+
                      events.forEach(e => {
                          e.gents = parseInt(e.gents) || 0;
                          e.ladies = parseInt(e.ladies) || 0;
@@ -638,7 +647,11 @@
                      });
 
 
-                     recipes = await loadFromFirebase("Recipes");
+                     loadFromFirebaseRealtime("Recipes", data => {
+                         recipes = data;
+                         renderAllRecipes();
+                      });
+
                      recipes.forEach(r => {
                          if (typeof r.ingredients === 'string') {
                              r.ingredients = r.ingredients.split(',');
@@ -646,7 +659,11 @@
                              r.ingredients = [];
                          }
                      });
-                     recipes = await loadFromFirebase("Recipes");
+                     loadFromFirebaseRealtime("Recipes", data => {
+                         recipes = data;
+                         renderAllRecipes();
+                      });
+
                      recipes.forEach(r => {
                          if (typeof r.ingredients === 'string') {
                              r.ingredients = r.ingredients.split(',');
