@@ -577,33 +577,38 @@
         
         // Initialize the app
         document.addEventListener('DOMContentLoaded', async () => {
-            if (!navigator.onLine) {
+            try {
+                if (!navigator.onLine) {
              // fallback to localStorage
-               events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
-               recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-            } else {
-                events = await loadFromFirebase("SabhaEvents");
-                events.forEach(e => {
-                    e.gents = parseInt(e.gents) || 0;
-                    e.ladies = parseInt(e.ladies) || 0;
-                    e.totalBhaktas = e.gents + e.ladies;
-                    e.ingredients = (e.ingredients || '').split('\n');
-                });
+                    events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
+                    recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
+                 } else {
+                     events = await loadFromFirebase("SabhaEvents");
+                     events.forEach(e => {
+                         e.gents = parseInt(e.gents) || 0;
+                         e.ladies = parseInt(e.ladies) || 0;
+                         e.totalBhaktas = e.gents + e.ladies;
+                         e.ingredients = (e.ingredients || '').split('\n');
+                     });
 
-                recipes = await loadFromFirebase("Recipes");
-                recipes.forEach(r => {
-                    r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
-                });
-            }
+                     recipes = await loadFromFirebase("Recipes");
+                     recipes.forEach(r => {
+                         r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
+                     });
+                  }
 
-            saveEvents();
-            saveRecipes();
-            updateDashboard();
-            renderAllEvents();
-            renderAllRecipes();
-            setupEventListeners();
-            initCharts();
-        });
+                  await saveEvents();
+                  await saveRecipes();
+                  updateDashboard();
+                  renderAllEvents();
+                  renderAllRecipes();
+                  setupEventListeners();
+                  initCharts();
+              } catch (err) {
+                  console.error("Error initializing app:", err);
+                  showToast("Failed to load data. Check console for details.");
+              }
+         });
 
         
         // Set up event listeners
