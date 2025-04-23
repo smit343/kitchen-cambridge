@@ -591,6 +591,9 @@
         // Data storage
         let events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
         let recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
+        let attendanceChartInstance; 
+        let genderChartInstance;
+
         
         // DOM elements
         const themeToggle = document.getElementById('theme-toggle');
