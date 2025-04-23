@@ -342,8 +342,9 @@
         </div>
         <div>
             <label for="event-menu" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Menu</label>
-            <input type="text" id="event-menu" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            <textarea id="event-menu" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="List the menu items..."></textarea>
         </div>
+
         <div>
             <label for="event-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
             <textarea id="event-ingredients" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Enter ingredients, one per line"></textarea>
@@ -551,6 +552,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Sabha Event Modal -->
+    <div id="event-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+        <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-2xl w-full z-10">
+          <div class="px-6 py-4">
+            <div class="flex justify-between items-center">
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="modal-event-title">Event Details</h3>
+              <button onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="mt-4 space-y-3 text-gray-700 dark:text-gray-300">
+              <p><strong>Date:</strong> <span id="modal-event-date"></span></p>
+              <p><strong>Speaker:</strong> <span id="modal-event-speaker"></span></p>
+              <p><strong>Total Bhaktas:</strong> <span id="modal-event-bhaktas"></span></p>
+              <p><strong>Menu:</strong> <span id="modal-event-menu"></span></p>
+              <p><strong>Ingredients:</strong> <span id="modal-event-ingredients"></span></p>
+              <p><strong>Notes:</strong> <span id="modal-event-notes"></span></p>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-3" id="modal-event-photos"></div>
+         </div>
+         <div class="px-6 py-3 text-right">
+           <button onclick="closeEventModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">Close</button>
+         </div>
+       </div>
+     </div>
+   </div>
+
 
     <script>
         // Data storage
@@ -920,9 +951,11 @@
         // Handle recipe form submission
         function handleRecipeSubmit(e) {
             e.preventDefault();
+            const isUpdate = recipeForm.dataset.mode === 'update';
+            const recipeId = isUpdate ? recipeForm.dataset.id : Date.now().toString();
             
             const recipe = {
-                id: Date.now().toString(),
+                id: recipeId,
                 name: document.getElementById('recipe-name').value,
                 category: document.getElementById('recipe-category').value,
                 prepTime: parseInt(document.getElementById('recipe-prep-time').value) || 0,
@@ -932,24 +965,29 @@
                 notes: document.getElementById('recipe-notes').value,
                 image: document.getElementById('recipe-image-preview').querySelector('img')?.src || ''
             };
-            
-            recipes.push(recipe);
+            if (isUpdate) {
+                const index = recipes.findIndex(r => r.id === recipeId);
+                if (index !== -1) recipes[index] = recipe;
+            } else {
+                recipes.push(recipe);
+            }
+        
             saveRecipes();
             
             // Reset form
             recipeForm.reset();
+            recipeForm.removeAttribute('data-mode');
+            recipeForm.removeAttribute('data-id');
             document.getElementById('ingredients-container').innerHTML = '<input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">';
-            document.getElementById('recipe-image-preview').innerHTML = '';
-            
-            // Re-attach event listener to ingredients input
             document.getElementById('recipe-ingredients').addEventListener('keydown', handleIngredientInput);
-            
-            // Show success message
-            showToast('Recipe added successfully!');
-            
-            // Return to dashboard
+            document.getElementById('recipe-image-preview').innerHTML = '';
+
+            showToast(isUpdate ? 'Recipe updated successfully!' : 'Recipe added successfully!');
             showTab('dashboard');
         }
+
+            
+           
         
         // Handle ingredient input
         function handleIngredientInput(e) {
@@ -1246,18 +1284,34 @@
         function viewEventDetails(id) {
             const event = events.find(e => e.id === id);
             if (!event) return;
+            document.getElementById('modal-event-title').textContent = event.topic || 'Untitled';
+            document.getElementById('modal-event-date').textContent = formatDate(event.date);
+            document.getElementById('modal-event-speaker').textContent = event.speaker || '-';
+            document.getElementById('modal-event-bhaktas').textContent = (event.gents || 0) + (event.ladies || 0);
+            document.getElementById('modal-event-menu').textContent = event.menu || '-';
+            document.getElementById('modal-event-ingredients').textContent = (event.ingredients || []).join(', ');
+            document.getElementById('modal-event-notes').textContent = event.notes || '-';
 
-            alert(`Event Details:\n
-Date: ${formatDate(event.date)}\n
-Event Name: ${event.topic || 'N/A'}\n
-Pujya Santo: ${event.speaker || 'N/A'}\n
-Bhaktas: ${(event.gents || 0) + (event.ladies || 0)} (Gents: ${event.gents || 0}, Ladies: ${event.ladies || 0})\n
-Menu: ${event.menu || 'N/A'}\n
-Ingredients: ${(event.ingredients || []).join(', ')}\n
-Notes: ${event.notes || 'N/A'}\n
-Leftovers: ${event.leftover || 'N/A'}\n
-Remade: ${event.remade || 'N/A'}`);
+            // Show uploaded photos
+            const photoContainer = document.getElementById('modal-event-photos');
+            photoContainer.innerHTML = '';
+            if (event.photos && event.photos.length > 0) {
+              event.photos.forEach(src => {
+                const img = document.createElement('img');
+                img.src = src;
+                img.className = 'preview-image';
+                photoContainer.appendChild(img);
+              });
+            }
+            document.getElementById('event-modal').classList.remove('hidden');
          }
+
+         function closeEventModal() {
+           document.getElementById('event-modal').classList.add('hidden');
+         }
+
+
+          
 
         
          function editEvent(id) {
