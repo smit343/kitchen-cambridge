@@ -931,9 +931,7 @@
             } else {
                 events.push(event);
             }
-
-            // Save & Sync
-            saveEvents();
+            await saveEvents();
 
             // Reset form
             eventForm.reset();
@@ -972,7 +970,7 @@
                 recipes.push(recipe);
             }
         
-            saveRecipes();
+            await saveRecipes();
             
             // Reset form
             recipeForm.reset();
