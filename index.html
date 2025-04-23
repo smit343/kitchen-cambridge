@@ -895,7 +895,7 @@
         }
         
         // Handle event form submission
-        function handleEventSubmit(e) {
+        async function handleEventSubmit(e) {
            e.preventDefault();
 
            const isUpdate = eventForm.dataset.mode === 'update';
@@ -947,7 +947,7 @@
 
         
         // Handle recipe form submission
-        function handleRecipeSubmit(e) {
+        async function handleRecipeSubmit(e) {
             e.preventDefault();
             const isUpdate = recipeForm.dataset.mode === 'update';
             const recipeId = isUpdate ? recipeForm.dataset.id : Date.now().toString();
