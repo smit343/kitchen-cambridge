@@ -1299,7 +1299,7 @@
         
         // View event details
         function viewEventDetails(id) {
-            console.log("Opening modal for event ID:", id); /
+            console.log("Opening modal for event ID:", id);
             const event = events.find(e => e.id === id);
             if (!event) return;
             document.getElementById('modal-event-title').textContent = event.topic || 'Untitled';
