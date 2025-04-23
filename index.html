@@ -143,20 +143,17 @@
     }
   }
 
-  import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  function loadFromFirebase(collectionName, callback) {
-      const colRef = collection(window.db, collectionName);
-      onSnapshot(colRef, (snapshot) => {
-          const data = [];
-          snapshot.forEach(doc => data.push(doc.data()));
-          callback(data);
-       }, (error) => {
-           console.error(`Real-time sync error from ${collectionName}:`, error);
-       });
+  async function loadFromFirebase(collectionName) {
+    try {
+      const querySnapshot = await getDocs(collection(window.db, collectionName));
+      const data = [];
+      querySnapshot.forEach(doc => data.push(doc.data()));
+      return data;
+    } catch (err) {
+      console.error("Failed to load from Firebase:", err);
+      return [];
+    }
   }
-
-
-
 
   window.syncToFirebase = syncToFirebase;
   window.loadFromFirebase = loadFromFirebase;
@@ -190,11 +187,15 @@
                 <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </button>
-            
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="add-event">
+                    <i class="fas fa-plus-circle mr-2"></i>Add Event
+                </button>
                 <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
                     <i class="fas fa-calendar-alt mr-2"></i>Sabha Event Data
                 </button>
-             
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="add-recipe">
+                    <i class="fas fa-plus-circle mr-2"></i>Add Recipe
+                </button>
                 <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
                     <i class="fas fa-book mr-2"></i>Recipe Book
                 </button>
@@ -386,29 +387,19 @@
 </form>
 
             </div>
-            <!-- Add Event Form Tab -->
-            <div id="add-event" class="tab-content" style="display: none;">
-            <!-- your existing form for adding events -->
-            </div>
-          
-
 
             <!-- Event Data Tab -->
             <div id="event-data" class="tab-content">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold">Sabha Event Data</h2>
-                    <div class="flex items-center space-x-4">
-                        <button onclick="showAddEventForm()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                            <i class="fas fa-plus mr-2"></i>Add Event
-                        </button>
-                        <div class="relative w-64">
-                            <input type="text" id="event-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
-                            <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                                <i class="fas fa-search"></i>
-                            </div>
+                    <div class="relative w-64">
+                        <input type="text" id="event-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
+                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-search"></i>
                         </div>
                     </div>
                 </div>
+                
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -428,8 +419,6 @@
                     </div>
                 </div>
             </div>
-            
-            <div id="add-recipe" class="tab-content" style="display: none;">
 
             <!-- Add Recipe Tab -->
             <div id="add-recipe" class="tab-content">
@@ -501,23 +490,22 @@
 
             <!-- Recipe Book Tab -->
             <div id="recipe-book" class="tab-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Recipe Book</h2>
-                <div class="flex items-center space-x-4">
-                    <button onclick="showAddRecipeForm()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                        <i class="fas fa-plus mr-2"></i>Add Recipe
-                    </button>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Recipe Book</h2>
                     <div class="relative w-64">
                         <input type="text" id="recipe-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search recipes...">
                         <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
-                 </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
+                    <!-- All recipes will be populated here -->
+                </div>
             </div>
-            <div id="all-recipes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-          </div>
-
+        </div>
+    </div>
 
     <!-- Recipe Modal -->
     <div id="recipe-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
@@ -570,7 +558,7 @@
     </div>
 
     <!-- Sabha Event Modal -->
-    <div id="event-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div id="event-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
       <div class="flex items-center justify-center min-h-screen px-4 text-center">
         <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
         <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-2xl w-full z-10">
@@ -603,9 +591,6 @@
         // Data storage
         let events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
         let recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-        let attendanceChartInstance; 
-        let genderChartInstance;
-
         
         // DOM elements
         const themeToggle = document.getElementById('theme-toggle');
@@ -633,45 +618,55 @@
              // fallback to localStorage
                     events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
                     recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-                    updateDashboard();
-                    renderAllEvents();
-                    renderAllRecipes();
-                    setupEventListeners();
-                    initCharts();
-                    return;
-                 }
-                 loadFromFirebase("SabhaEvents", data => {
-                     events = data.map(e => ({
-                         ...e,
-                         gents : parseInt(e.gents) || 0,
-                         ladies : parseInt(e.ladies) || 0,  
-                         totalBhaktas: (parseInt(e.gents) || 0) + (parseInt(e.ladies) || 0),
-                         ingredients: typeof e.ingredients === "string"
-                             ? e.ingredients.split('\n')
-                             : (Array.isArray(e.ingredients) ? e.ingredients : [])
-                      }));
-                      updateDashboard();
-                      renderAllEvents();
-                      initCharts();
-                 });
+                 } else {
+                     events = await loadFromFirebase("SabhaEvents");
+                     events.forEach(e => {
+                         e.gents = parseInt(e.gents) || 0;
+                         e.ladies = parseInt(e.ladies) || 0;
+                         e.totalBhaktas = e.gents + e.ladies;
 
-                 loadFromFirebase("Recipes", data => {
-                     recipes = data.map(r => ({
-                         ...r,
-                         ingredients: typeof r.ingredients === "string"
-                             ? r.ingredients.split(',')
-                             : (Array.isArray(r.ingredients) ? r.ingredients : [])
-                     }));
-                     renderAllRecipes();
-                 });
-                 setupEventListeners();
-            } catch (err) {
-                console.error("Error initializing app:", err);
-                showToast("Failed to load data. Check console for details.");
-            }
-        });
-        
-                         
+                         // Only split if it's a string
+                         if (typeof e.ingredients === 'string') {
+                             e.ingredients = e.ingredients.split('\n');
+                         } else if (!Array.isArray(e.ingredients)) {
+                             e.ingredients = [];
+                         }
+                     
+                     });
+
+
+                     recipes = await loadFromFirebase("Recipes");
+                     recipes.forEach(r => {
+                         if (typeof r.ingredients === 'string') {
+                             r.ingredients = r.ingredients.split(',');
+                         } else if (!Array.isArray(r.ingredients)) {
+                             r.ingredients = [];
+                         }
+                     });
+                     recipes = await loadFromFirebase("Recipes");
+                     recipes.forEach(r => {
+                         if (typeof r.ingredients === 'string') {
+                             r.ingredients = r.ingredients.split(',');
+                         } else if (!Array.isArray(r.ingredients)) {
+                             r.ingredients = [];
+                         }
+                      });
+                  }
+
+                  
+
+                  await saveEvents();
+                  await saveRecipes();
+                  updateDashboard();
+                  renderAllEvents();
+                  renderAllRecipes();
+                  setupEventListeners();
+                  initCharts();
+              } catch (err) {
+                  console.error("Error initializing app:", err);
+                  showToast("Failed to load data. Check console for details.");
+              }
+         });
 
         
         // Set up event listeners
@@ -953,8 +948,6 @@
             eventForm.removeAttribute('data-mode');
             eventForm.removeAttribute('data-id');
             document.getElementById('event-photo-preview').innerHTML = '';
-            document.getElementById('add-event').style.display = 'none';
-
 
             // Show confirmation and return to dashboard
             showToast(isUpdate ? 'Event updated successfully!' : 'Event added successfully!');
@@ -997,8 +990,6 @@
             document.getElementById('ingredients-container').innerHTML = '<input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">';
             document.getElementById('recipe-ingredients').addEventListener('keydown', handleIngredientInput);
             document.getElementById('recipe-image-preview').innerHTML = '';
-            document.getElementById('add-recipe').style.display = 'none';
-
 
             showToast(isUpdate ? 'Recipe updated successfully!' : 'Recipe added successfully!');
             showTab('dashboard');
@@ -1110,7 +1101,6 @@
         
         // Render all recipes in the recipe book tab
         function renderAllRecipes() {
-            console.log('Rendering recipes...');
             const container = document.getElementById('all-recipes');
             container.innerHTML = '';
             
@@ -1295,14 +1285,12 @@
         function highlightMatches(text, query) {
             if (!text || !query) return text;
             
-            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escapedQuery, 'gi');
+            const regex = new RegExp(query, 'gi');
             return text.toString().replace(regex, match => `<span class="search-highlight">${match}</span>`);
         }
         
         // View event details
         function viewEventDetails(id) {
-            console.log("Opening modal for event ID:", id);
             const event = events.find(e => e.id === id);
             if (!event) return;
             document.getElementById('modal-event-title').textContent = event.topic || 'Untitled';
@@ -1336,9 +1324,9 @@
             document.getElementById('event-modal').classList.remove('hidden');
          }
 
-        function closeEventModal() {
+         function closeEventModal() {
            document.getElementById('event-modal').classList.add('hidden');
-        }
+         }
 
 
           
@@ -1405,30 +1393,21 @@
             // Ingredients
             const ingredientsList = document.getElementById('modal-ingredients');
             ingredientsList.innerHTML = '';
-            if (Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
-                recipe.ingredients.forEach(ing => {
-                    const li = document.createElement('li');
-                    li.textContent = ing;
-                    ingredientsList.appendChild(li);
-                 });
-            } else {
-                ingredientsList.innerHTML = '<li>No ingredients available</li>';
-            }
-
+            recipe.ingredients.forEach(ing => {
+                const li = document.createElement('li');
+                li.textContent = ing;
+                ingredientsList.appendChild(li);
+            });
+            
             // Instructions
             const instructionsList = document.getElementById('modal-instructions');
             instructionsList.innerHTML = '';
-            const instructions = recipe.instructions ? recipe.instructions.split('\n').filter(step => step.trim()) : [];
-            if (instructions.length > 0) {
-                instructions.forEach((step, index) => {
-                    const li = document.createElement('li');
-                    li.textContent = step;
-                    instructionsList.appendChild(li);
-                });
-            } else {
-                instructionsList.innerHTML = '<li>No instructions available</li>';
-            }
-            
+            const instructions = recipe.instructions.split('\n').filter(step => step.trim());
+            instructions.forEach((step, index) => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                instructionsList.appendChild(li);
+            });
             
             // Notes
             const notesContainer = document.getElementById('modal-notes-container');
@@ -1475,22 +1454,16 @@
             // Handle ingredients
             const ingredientsContainer = document.getElementById('ingredients-container');
             ingredientsContainer.innerHTML = '';
-            if (Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
-                recipe.ingredients.forEach(ing => {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.innerHTML = `${ing} <span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
-                    ingredientsContainer.appendChild(tag);
-                });
-            } else {
-                const noIngredients = document.createElement('span');
-                noIngredients.className = 'text-gray-500';
-                noIngredients.textContent = 'No ingredients found';
-                ingredientsContainer.appendChild(noIngredients);
-            }
             
-      
-                    
+            recipe.ingredients.forEach(ing => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `
+                    ${ing}
+                    <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
+                `;
+                ingredientsContainer.appendChild(tag);
+            });
             
             // Add the input field back
             const input = document.createElement('input');
@@ -1498,30 +1471,33 @@
             input.id = 'recipe-ingredients';
             input.className = 'flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800';
             input.placeholder = 'Add ingredients (press Enter)';
-            input.addEventListener('keydown', handleIngredientInput);
             ingredientsContainer.appendChild(input);
             
+            // Re-attach event listener
+            input.addEventListener('keydown', handleIngredientInput);
+            
             // Handle image
-            const preview  = document.getElementById('recipe-image-preview');
-            preview.innerHTML = '';
+            const previewContainer = document.getElementById('recipe-image-preview');
+            previewContainer.innerHTML = '';
             
             if (recipe.image) {
                 const img = document.createElement('img');
                 img.src = recipe.image;
                 img.className = 'preview-image';
-                preview.appendChild(img);
+                previewContainer.appendChild(img);
             }
             
+            // Show the add recipe tab
+            showTab('add-recipe');
+            
             // Change the form to update mode
-            const recipeForm = document.getElementById('recipe-form');
-            recipeForm.dataset.mode = 'update';
-            recipeForm.dataset.id = id;
+            const form = document.getElementById('recipe-form');
+            form.dataset.mode = 'update';
+            form.dataset.id = id;
             
             // Change the submit button text
-            const submitBtn = recipeForm.querySelector('button[type="submit"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Recipe';
-
-            showTab('add-recipe');
         }
         
         // Delete recipe
@@ -1619,21 +1595,6 @@
                 day: 'numeric' 
             });
         }
-        function showAddEventForm() {
-            document.getElementById('add-event').style.display = 'block';
-            showTab('add-event');
-        }
-
-        function showAddRecipeForm() {
-            document.getElementById('add-recipe').style.display = 'block';
-            showTab('add-recipe');
-        }
-
-        window.viewEventDetails = viewEventDetails;
-        window.editEvent = editEvent;
-        window.deleteEvent = deleteEvent;
-
-
     </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
