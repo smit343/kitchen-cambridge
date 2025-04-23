@@ -873,7 +873,7 @@
             
             const totalGents = sortedEvents.reduce((sum, event) => sum + (event.gents || 0), 0);
             const totalLadies = sortedEvents.reduce((sum, event) => sum + (event.ladies || 0), 0);
-            const genderCtx = document.getElementById('genderChart').getContext('2d');
+  
             genderChartInstance = new Chart(genderCtx, {
                 type: 'doughnut',
                 data: {
