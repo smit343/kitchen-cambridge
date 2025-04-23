@@ -918,7 +918,7 @@
                leftover: document.getElementById('event-leftover').value,
                remade: document.getElementById('event-remade').value,
                notes: document.getElementById('event-notes').value,
-               photos: []
+               photos: Array.from(document.querySelectorAll('#event-photo-preview img')).map(img => img.src)
         
             };
             // Collect photo previews
