@@ -113,24 +113,20 @@
     </style>
 
 <script type="module">
-    
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
     authDomain: "kitchen-data-61ecd.firebaseapp.com",
     projectId: "kitchen-data-61ecd",
-    storageBucket: "kitchen-data-61ecd.appspot.com",
+    storageBucket: "kitchen-data-61ecd.firebasestorage.app",
     messagingSenderId: "225092587820",
     appId: "1:225092587820:web:4b896b9f9387718c1f9c89",
     measurementId: "G-YRVFHF4ME9"
   };
 
   const app = initializeApp(firebaseConfig);
-  const storage = getStorage(app);
-  window.storage = storage;
   window.db = getFirestore(app);
 
   async function syncToFirebase(collectionName, dataArray) {
@@ -373,9 +369,8 @@
             <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                 <i class="fas fa-upload mr-2"></i>Upload
             </button>
-            <input type="file" id="event-photos" class="file-upload-input" multiple accept="image/*,.pdf,.doc,.docx">
+            <input type="file" id="event-file" class="file-upload-input" accept="image/*,.pdf,.doc,.docx">
         </div>
-        <div id="event-photo-preview" class="mt-4 flex flex-wrap gap-4"></div>
     </div>
 
     <div class="flex justify-end">
@@ -581,39 +576,34 @@
         const recipeModal = document.getElementById('recipe-modal');
         
         // Initialize the app
-        
         document.addEventListener('DOMContentLoaded', async () => {
-         if (!navigator.onLine) {
-           events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
-           recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-        } else {
-          events = await loadFromFirebase("SabhaEvents");
-          events.forEach(e => {
-            e.gents = parseInt(e.gents) || 0;
-            e.ladies = parseInt(e.ladies) || 0;
-            e.totalBhaktas = e.gents + e.ladies;
-            e.ingredients = (e.ingredients || '').toString().split('\n');
-          });
+            if (!navigator.onLine) {
+             // fallback to localStorage
+               events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
+               recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
+            } else {
+                events = await loadFromFirebase("SabhaEvents");
+                events.forEach(e => {
+                    e.gents = parseInt(e.gents) || 0;
+                    e.ladies = parseInt(e.ladies) || 0;
+                    e.totalBhaktas = e.gents + e.ladies;
+                    e.ingredients = (e.ingredients || '').split('\n');
+                });
 
-          recipes = await loadFromFirebase("Recipes");
-          recipes.forEach(r => {
-            r.ingredients = (r.ingredients || '').split(',');
-          });
+                recipes = await loadFromFirebase("Recipes");
+                recipes.forEach(r => {
+                    r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
+                });
+            }
 
-          // Save to localStorage only (don't sync back to Firebase)
-          localStorage.setItem('sabhaEvents', JSON.stringify(events));
-          localStorage.setItem('sabhaRecipes', JSON.stringify(recipes));
-        }
-
-        updateDashboard();
-        renderAllEvents();
-        renderAllRecipes();
-        setupEventListeners();
-        initCharts();
-       });
-
-        
-           
+            saveEvents();
+            saveRecipes();
+            updateDashboard();
+            renderAllEvents();
+            renderAllRecipes();
+            setupEventListeners();
+            initCharts();
+        });
 
         
         // Set up event listeners
@@ -946,64 +936,44 @@
         }
         
         // Handle event photos upload
-        async function handleEventPhotosUpload(e) {
+        function handleEventPhotosUpload(e) {
             const files = e.target.files;
             const previewContainer = document.getElementById('event-photo-preview');
             previewContainer.innerHTML = '';
             
             if (files) {
-                for (let file of files) {
-                    try {
-                        const storageRef = ref(window.storage, 'event-uploads/' + Date.now() + '-' + file.name);
-                        await uploadBytes(storageRef, file);
-                        const downloadURL = await getDownloadURL(storageRef);
-
-                        if (file.type.startsWith('image/')) {
-                           const img = document.createElement('img');
-                           img.src = downloadURL;
-                           img.className = 'preview-image';
-                           previewContainer.appendChild(img);
-                        } else {
-                            const link = document.createElement('a');
-                            link.href = downloadURL;
-                            link.textContent = file.name;
-                            link.target = "_blank";
-                            link.className = 'block text-sm text-blue-600 mt-2';
-                            previewContainer.appendChild(link);
-                        }
-                    } catch (error) {
-                        console.error('File upload failed:', error);
-                        showToast('Failed to upload one or more files.');
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'preview-image';
+                            previewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
                     }
-                }
+                });
             }
-         }
-                
+        }
         
         // Handle recipe image upload
-        async function handleRecipeImageUpload(e) {
-            const file = e.target.files;
+        function handleRecipeImageUpload(e) {
+            const file = e.target.files[0];
             const previewContainer = document.getElementById('recipe-image-preview');
             previewContainer.innerHTML = '';
             
             if (file && file.type.startsWith('image/')) {
-                try {
-                    const storageRef = ref(window.storage, 'recipe-images/' + Date.now() + '-' + file.name);
-                    await uploadBytes(storageRef, file);
-                    const downloadURL = await getDownloadURL(storageRef);
-
-                    // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
                     const img = document.createElement('img');
-                    img.src = downloadURL;
+                    img.src = e.target.result;
                     img.className = 'preview-image';
                     previewContainer.appendChild(img);
-                } catch (error) {
-                    console.error('Image upload failed:', error);
-                    showToast('Failed to upload image.');
-                }
+                };
+                reader.readAsDataURL(file);
             }
-         }
-                
+        }
         
         // Render all events in the event data tab
         function renderAllEvents() {
