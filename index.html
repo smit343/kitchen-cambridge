@@ -588,14 +588,27 @@
                          e.gents = parseInt(e.gents) || 0;
                          e.ladies = parseInt(e.ladies) || 0;
                          e.totalBhaktas = e.gents + e.ladies;
-                         e.ingredients = (e.ingredients || '').split('\n');
+
+                         // Only split if it's a string
+                         if (typeof e.ingredients === 'string') {
+                             e.ingredients = e.ingredients.split('\n');
+                         } else if (!Array.isArray(e.ingredients)) {
+                             e.ingredients = [];
+                         }
+                     
                      });
+
 
                      recipes = await loadFromFirebase("Recipes");
                      recipes.forEach(r => {
-                         r.ingredients = (r.ingredients || '').split(','); // or '\n' depending on format
+                         if (typeof r.ingredients === 'string') {
+                             r.ingredients = r.ingredients.split(',');
+                         } else if (!Array.isArray(r.ingredients)) {
+                             r.ingredients = [];
+                         }
                      });
-                  }
+
+                  
 
                   await saveEvents();
                   await saveRecipes();
