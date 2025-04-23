@@ -1467,12 +1467,10 @@
             recipe.ingredients.forEach(ing => {
                 const tag = document.createElement('span');
                 tag.className = 'tag';
-                tag.innerHTML = `
-                    ${ing}
-                    <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
-                `;
+                tag.innerHTML = `${ing} <span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
                 ingredientsContainer.appendChild(tag);
             });
+                    
             
             // Add the input field back
             const input = document.createElement('input');
@@ -1480,33 +1478,30 @@
             input.id = 'recipe-ingredients';
             input.className = 'flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800';
             input.placeholder = 'Add ingredients (press Enter)';
+            input.addEventListener('keydown', handleIngredientInput);
             ingredientsContainer.appendChild(input);
             
-            // Re-attach event listener
-            input.addEventListener('keydown', handleIngredientInput);
-            
             // Handle image
-            const previewContainer = document.getElementById('recipe-image-preview');
-            previewContainer.innerHTML = '';
+            const preview  = document.getElementById('recipe-image-preview');
+            preview.innerHTML = '';
             
             if (recipe.image) {
                 const img = document.createElement('img');
                 img.src = recipe.image;
                 img.className = 'preview-image';
-                previewContainer.appendChild(img);
+                preview.appendChild(img);
             }
             
-            // Show the add recipe tab
-            showTab('add-recipe');
-            
             // Change the form to update mode
-            const form = document.getElementById('recipe-form');
-            form.dataset.mode = 'update';
-            form.dataset.id = id;
+            const recipeForm = document.getElementById('recipe-form');
+            recipeForm.dataset.mode = 'update';
+            recipeForm.dataset.id = id;
             
             // Change the submit button text
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const submitBtn = recipeForm.querySelector('button[type="submit"]');
             submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Recipe';
+
+            showTab('add-recipe');
         }
         
         // Delete recipe
