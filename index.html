@@ -663,7 +663,11 @@
             recipeSearch.addEventListener('input', () => filterRecipes(recipeSearch.value));
             
             // File uploads
-            document.getElementById('event-photos').addEventListener('change', handleEventPhotosUpload);
+            const eventPhotosInput = document.getElementById('event-photos');
+            if (eventPhotosInput) {
+                eventPhotosInput.addEventListener('change', handleEventPhotosUpload);
+            }
+
             document.getElementById('recipe-image').addEventListener('change', handleRecipeImageUpload);
         }
         
