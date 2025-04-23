@@ -1292,7 +1292,8 @@
         function highlightMatches(text, query) {
             if (!text || !query) return text;
             
-            const regex = new RegExp(query, 'gi');
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escapedQuery, 'gi');
             return text.toString().replace(regex, match => `<span class="search-highlight">${match}</span>`);
         }
         
