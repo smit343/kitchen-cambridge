@@ -143,7 +143,7 @@
     }
   }
 
-  import { onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   function loadFromFirebase(collectionName, callback) {
       const colRef = collection(window.db, collectionName);
       onSnapshot(colRef, (snapshot) => {
@@ -625,7 +625,7 @@
                     events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
                     recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
                  } else {
-                     loadFromFirebaseRealtime("SabhaEvents", data => {
+                     loadFromFirebase("SabhaEvents", data => {
                          events = data;
                          updateDashboard();
                          renderAllEvents();
@@ -647,7 +647,7 @@
                      });
 
 
-                     loadFromFirebaseRealtime("Recipes", data => {
+                     loadFromFirebase("Recipes", data => {
                          recipes = data;
                          renderAllRecipes();
                       });
@@ -659,7 +659,7 @@
                              r.ingredients = [];
                          }
                      });
-                     loadFromFirebaseRealtime("Recipes", data => {
+                     loadFromFirebase("Recipes", data => {
                          recipes = data;
                          renderAllRecipes();
                       });
