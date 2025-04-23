@@ -1395,14 +1395,28 @@ Remade: ${event.remade || 'N/A'}`);
         }
         
         // Save events to localStorage
-        function saveEvents() {
-            localStorage.setItem('sabhaEvents', JSON.stringify(events));
-            syncToFirebase("SabhaEvents", events);
+        async function saveEvents() {
+           localStorage.setItem('sabhaEvents', JSON.stringify(events));
+           try {
+               await syncToFirebase("SabhaEvents", events);
+               console.log("✅ Events synced to Firebase.");
+               showToast("Event saved & synced!");
+           } catch (err) {
+               console.error("❌ Firebase sync failed for events:", err);
+               showToast("Event saved locally, but sync failed!");
+           }
         }
 
-        function saveRecipes() {
+        async function saveRecipes() {
             localStorage.setItem('sabhaRecipes', JSON.stringify(recipes));
-            syncToFirebase("Recipes", recipes);
+            try {
+                await syncToFirebase("Recipes", recipes);
+                console.log("✅ Recipes synced to Firebase.");
+                showToast("Recipe saved & synced!");
+            } catch (err) {
+                console.error("❌ Firebase sync failed for recipes:", err);
+                showToast("Recipe saved locally, but sync failed!");
+            }
         }
 
         
