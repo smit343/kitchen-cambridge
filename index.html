@@ -634,8 +634,8 @@
                  loadFromFirebase("SabhaEvents", data => {
                      events = data.map(e => ({
                          ...e,
-                         gents = parseInt(e.gents) || 0,
-                         ladies = parseInt(e.ladies) || 0,  
+                         gents : parseInt(e.gents) || 0,
+                         ladies : parseInt(e.ladies) || 0,  
                          totalBhaktas: (parseInt(e.gents) || 0) + (parseInt(e.ladies) || 0),
                          ingredients: typeof e.ingredients === "string"
                              ? e.ingredients.split('\n')
