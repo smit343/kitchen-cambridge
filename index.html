@@ -128,6 +128,8 @@
 
   const app = initializeApp(firebaseConfig);
   window.db = getFirestore(app);
+  window.deleteDoc = deleteDoc;
+  window.firestoreDoc = doc;
 
   async function syncToFirebase(collectionName, dataArray) {
     try {
@@ -155,6 +157,8 @@
 
   window.syncToFirebase = syncToFirebase;
   window.loadFromFirebase = loadFromFirebase;
+ 
+
 </script>
 
 </head>
@@ -823,16 +827,20 @@
         // Initialize charts
         function initCharts() {
             if (events.length === 0) return;
+            // Destroy existing charts if they exist
+            if (attendanceChartInstance) attendanceChartInstance.destroy();
+            if (genderChartInstance) genderChartInstance.destroy();
             
             // Sort events by date
             const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
             
             // Attendance chart
             const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
             const attendanceLabels = sortedEvents.map(event => formatDate(event.date, true));
             const attendanceData = sortedEvents.map(event => (event.gents || 0) + (event.ladies || 0));
             
-            new Chart(attendanceCtx, {
+            attendanceChartInstance = new Chart(attendanceCtx, {
                 type: 'line',
                 data: {
                     labels: attendanceLabels,
@@ -862,11 +870,11 @@
             });
             
             // Gender ratio chart
-            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            
             const totalGents = sortedEvents.reduce((sum, event) => sum + (event.gents || 0), 0);
             const totalLadies = sortedEvents.reduce((sum, event) => sum + (event.ladies || 0), 0);
-            
-            new Chart(genderCtx, {
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            genderChartInstance = new Chart(genderCtx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Gents', 'Ladies'],
@@ -1356,7 +1364,7 @@
                 await saveEvents();
                  // Delete from Firebase
                 try {
-                    await deleteDoc(doc(window.db, "SabhaEvents", id));
+                    await window.deleteDoc(window.firestoreDoc(window.db, "SabhaEvents", id));
                     showToast('Event deleted successfully!');
                 } catch (err) {
                     console.error("Failed to delete from Firebase:", err);
@@ -1499,7 +1507,7 @@
                 await saveRecipes();
                 // Delete from Firebase
                 try {
-                    await deleteDoc(doc(window.db, "Recipes", id));
+                    await window.deleteDoc(window.firestoreDoc(window.db, "Recipes", id));
                     showToast('Recipe deleted successfully!');
                 } catch (err) {
                     console.error("Failed to delete recipe from Firebase:", err);
