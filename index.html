@@ -1110,6 +1110,7 @@
         
         // Render all recipes in the recipe book tab
         function renderAllRecipes() {
+            console.log('Rendering recipes...');
             const container = document.getElementById('all-recipes');
             container.innerHTML = '';
             
@@ -1404,21 +1405,30 @@
             // Ingredients
             const ingredientsList = document.getElementById('modal-ingredients');
             ingredientsList.innerHTML = '';
-            recipe.ingredients.forEach(ing => {
-                const li = document.createElement('li');
-                li.textContent = ing;
-                ingredientsList.appendChild(li);
-            });
-            
+            if (Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
+                recipe.ingredients.forEach(ing => {
+                    const li = document.createElement('li');
+                    li.textContent = ing;
+                    ingredientsList.appendChild(li);
+                 });
+            } else {
+                ingredientsList.innerHTML = '<li>No ingredients available</li>';
+            }
+
             // Instructions
             const instructionsList = document.getElementById('modal-instructions');
             instructionsList.innerHTML = '';
-            const instructions = recipe.instructions.split('\n').filter(step => step.trim());
-            instructions.forEach((step, index) => {
-                const li = document.createElement('li');
-                li.textContent = step;
-                instructionsList.appendChild(li);
-            });
+            const instructions = recipe.instructions ? recipe.instructions.split('\n').filter(step => step.trim()) : [];
+            if (instructions.length > 0) {
+                instructions.forEach((step, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = step;
+                    instructionsList.appendChild(li);
+                });
+            } else {
+                instructionsList.innerHTML = '<li>No instructions available</li>';
+            }
+            
             
             // Notes
             const notesContainer = document.getElementById('modal-notes-container');
@@ -1465,13 +1475,21 @@
             // Handle ingredients
             const ingredientsContainer = document.getElementById('ingredients-container');
             ingredientsContainer.innerHTML = '';
+            if (Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
+                recipe.ingredients.forEach(ing => {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.innerHTML = `${ing} <span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
+                    ingredientsContainer.appendChild(tag);
+                });
+            } else {
+                const noIngredients = document.createElement('span');
+                noIngredients.className = 'text-gray-500';
+                noIngredients.textContent = 'No ingredients found';
+                ingredientsContainer.appendChild(noIngredients);
+            }
             
-            recipe.ingredients.forEach(ing => {
-                const tag = document.createElement('span');
-                tag.className = 'tag';
-                tag.innerHTML = `${ing} <span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
-                ingredientsContainer.appendChild(tag);
-            });
+      
                     
             
             // Add the input field back
