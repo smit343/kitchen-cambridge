@@ -607,6 +607,15 @@
                              r.ingredients = [];
                          }
                      });
+                     recipes = await loadFromFirebase("Recipes");
+                     recipes.forEach(r => {
+                         if (typeof r.ingredients === 'string') {
+                             r.ingredients = r.ingredients.split(',');
+                         } else if (!Array.isArray(r.ingredients)) {
+                             r.ingredients = [];
+                         }
+                      });
+                  }
 
                   
 
