@@ -6,6 +6,7 @@
     <title>BAPS Cambridge Kitchen – Sabha & Recipe Data Organizer </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -162,41 +163,51 @@
 </script>
 
 </head>
+
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">BAPS Cambridge- Kitchen</h1>
-                <p class="text-gray-500 dark:text-gray-400">Sabha & Recipe Data Organizer</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                    <i class="fas fa-moon dark:hidden"></i>
-                    <i class="fas fa-sun hidden dark:block"></i>
+        <header class="bg-black text-white py-6 px-4 rounded-b-2xl shadow-md">
+            <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+              <!-- Left side: Logo + Title -->
+              <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+                <!-- Logo/Image -->
+                <img src="images.png" alt="Logo" class="w-12 h-12 rounded-full object-cover shadow-md border-2 border-white">
+                
+                <!-- Title Text -->
+                <div>
+                  <h1 class="text-2xl sm:text-4xl font-bold">BAPS Cambridge–Kitchen</h1>
+                  <p class="text-lg text-gray-300">Sabha & Recipe Data Organizer</p>
+                </div>
+              </div>
+          
+              <!-- Right side: Buttons -->
+              <div class="flex items-center space-x-4">
+                
+                <button id="export-btn" class="px-4 font-bold py-3 bg-orange-400 hover:bg-green-700 transition rounded-lg text-white">
+                  <i class="fas fa-download mr-2"></i>Export Data
                 </button>
-                <button id="export-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                    <i class="fas fa-download mr-2"></i>Export Data
-                </button>
+              </div>
             </div>
-        </header>
+          </header>
+
 
         <!-- Navigation Tabs -->
-        <div class="mb-8">
-            <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700 bg-black">
-                <button class="tab-btn px-6 py-3 text-xl border-b-2 border-transparent text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
+        <div class="sticky top-0 z-40 bg-gray-300">
+            <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700 bg-gray-300">
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </button>
              
         
-                <button class="tab-btn px-6 py-3 text-xl border-b-2 border-transparent text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
                     <i class="fas fa-calendar-alt mr-2"></i>Sabha Event Data
                 </button>
                 
-                <button class="tab-btn px-6 py-3 text-xl border-b-2 border-transparent text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
                     <i class="fas fa-book mr-2"></i>Recipe Book
                 </button>
-                <button class="tab-btn px-6 py-3 text-xl border-b-2 border-transparent text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="find-ai-recipe">
+                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="find-ai-recipe">
                     <i class="fas fa-robot mr-2"></i>Find Recipe With AI
                 </button>
         
@@ -217,15 +228,20 @@
         <div class="tab-contents">
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
+                <div class="w-full flex mt-6 mb-8">
+                    <img src="photo.jpeg" 
+                         alt="Profile" 
+                         class="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-lg">
+                </div>
+                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-lg">Dashboard Overview</h2>
                 <div class="flex space-x-4 mt-6">
-                    <button onclick="showTab('add-event')" class="px-6 py-3 bg-orange-400 text-black rounded-lg hover:bg-indigo-700 transition flex items-center">
+                    <button onclick="showTab('add-event')" class="px-6 mb-4 font-semibold bg-gray-200 text-black rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
                         <i class="fas fa-plus mr-2"></i> Add New Sabha Data
                     </button>
-                    <button onclick="showTab('add-recipe')" class="px-6 py-3 bg-orange-400 text-black rounded-lg hover:bg-green-700 transition flex items-center">
+                    <button onclick="showTab('add-recipe')" class="px-6 py-5 mb-4 font-semibold bg-gray-200 text-black rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
                         <i class="fas fa-plus mr-2"></i> Add New Recipe
                     </button>
                 </div>
-                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-lg">Dashboard Overview</h2>
                 
                 <!-- Stat Cards -->
                 
@@ -405,11 +421,16 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold">Sabha Event Data</h2>
                     <div class="relative w-64">
-                        <input type="text" id="event-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
+                        <input type="text" id="event-search" class="w-full mt-3 pl-10 pr-4 py-2 mb-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
                         <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
                             <i class="fas fa-search"></i>
-                        </div>
+                        </div>       
+                    
                     </div>
+                    <button onclick="showTab('add-event')" class="px-4 mt-3 py-4 font-bold bg-blue-500 hover:bg-orange-600 text-white rounded-lg shadow transition">
+                        <i class="fas fa-plus mr-2"></i>Add New Sabha Data
+                    </button>
+                    
                 </div>
                 
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
@@ -502,8 +523,9 @@
 
             <!-- Find Recipe With AI Tab Content -->
             <div id="find-ai-recipe" class="tab-content">
-                <h2 class="text-2xl font-bold mb-6">Welcome to AI Recipe Finder, Find Your Favourite Item Recipe Here</h2>
-                
+                <h2 class="text-2xl mt-4 font-bold text-blue-600">Welcome to AI Recipe Finder,</h2>
+                <h2 class="text-2xl font-bold mb-6 text-purple-600">Find Your Favorite Item Recipe Here :</h2>
+               
                 <!-- Recipe Search Form -->
                 <form id="recipe-form" class="space-y-4">
                     <div>
@@ -546,6 +568,11 @@
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
+                    <button onclick="showTab('add-recipe')" class="px-4 font-bold py-4 bg-blue-500 mt-4 hover:bg-orange-600 text-white rounded-lg shadow transition mb-4">
+                        <i class="fas fa-plus mr-2"></i>Add New Recipe
+                    </button>
+                    
+                    
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
@@ -720,10 +747,9 @@
         // Set up event listeners
         function setupEventListeners() {
             // Theme toggle
-            themeToggle.addEventListener('click', toggleTheme);
+           
             
-            // Export button
-            exportBtn.addEventListener('click', exportData);
+         
             
             // Tab navigation
             tabBtns.forEach(btn => {
@@ -756,18 +782,7 @@
             
 
         }
-        
-        // Toggle dark/light theme
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-        
+
         // Show tab content
         function showTab(tabId) {
             tabContents.forEach(content => {
@@ -775,15 +790,15 @@
             });
             
             tabBtns.forEach(btn => {
-                btn.classList.remove('bg-orange-100', 'text-black', 'border-indigo-600', 'dark:border-indigo-400');
-                btn.classList.add('text-white', 'bg-black'); // Ensure non-active tabs have black background and white text
+                btn.classList.remove('bg-orange-200', 'text-black', 'border-indigo-600', 'dark:border-indigo-400');
+                btn.classList.add('text-black', 'bg-gray-250'); // Ensure non-active tabs have black background and white text
             });
             
             document.getElementById(tabId).classList.add('active');
             
             const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
             if (activeBtn) {
-                activeBtn.classList.add('bg-orange-100', 'text-black', 'border-indigo-600'); // Active tab with white background and black text
+                activeBtn.classList.add('bg-orange-200', 'text-black', 'border-indigo-600'); // Active tab with white background and black text
             }
             
             // Update specific tabs when shown
@@ -1623,33 +1638,7 @@
         }
 
         
-        // Export data as JSON
-        function exportData() {
-            const data = {
-                events: events,
-                recipes: recipes,
-                exportedAt: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `sabha-manager-data-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showToast('Data exported successfully!');
-        }
-
-
-        
-
-
-
+       
         
 
 
@@ -1674,6 +1663,60 @@
                 day: 'numeric' 
             });
         }
+    
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const script = document.createElement('script');
+          script.src = "https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.full.min.js";
+          script.onload = function () {
+            console.log("✅ SheetJS loaded");
+      
+            const exportBtn = document.getElementById('export-btn');
+            if (!exportBtn) {
+              console.error("Export button not found!");
+              return;
+            }
+      
+            exportBtn.addEventListener('click', function () {
+              console.log("📦 Export started");
+      
+              const wb = XLSX.utils.book_new();
+      
+              const recipeSheet = XLSX.utils.json_to_sheet((window.recipes || []).map(r => ({
+                Name: r.name,
+                Category: r.category,
+                PrepTime: r.prepTime,
+                CookTime: r.cookTime,
+                Ingredients: (r.ingredients || []).join(", "),
+                Instructions: r.instructions,
+                Notes: r.notes
+              })));
+              XLSX.utils.book_append_sheet(wb, recipeSheet, "Recipes");
+      
+              const sabhaSheet = XLSX.utils.json_to_sheet((window.events || []).map(e => ({
+                Date: e.date,
+                Topic: e.topic,
+                Speaker: e.speaker,
+                Gents: e.gents,
+                Ladies: e.ladies,
+                TotalBhaktas: e.totalBhaktas,
+                Menu: e.menu,
+                Ingredients: (e.ingredients || []).join(", "),
+                Leftover: e.leftover,
+                Remade: e.remade,
+                Notes: e.notes
+              })));
+              XLSX.utils.book_append_sheet(wb, sabhaSheet, "Sabha Events");
+      
+              XLSX.writeFile(wb, "BAPS_Kitchen_Data.xlsx");
+            });
+          };
+      
+          document.body.appendChild(script);
+        });
+    </script>
+          
+
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
