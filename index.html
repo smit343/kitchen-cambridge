@@ -823,7 +823,8 @@
                 popularRecipesContainer.appendChild(card);
             });
         }
-        
+        let attendanceChartInstance;
+        let genderChartInstance;
         // Initialize charts
         function initCharts() {
             if (events.length === 0) return;
@@ -901,7 +902,7 @@
                 }
             });
         }
-        
+        document.addEventListener('DOMContentLoaded', initCharts);
         // Handle event form submission
         async function handleEventSubmit(e) {
            e.preventDefault();
