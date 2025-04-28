@@ -6,7 +6,8 @@
     <title>BAPS Cambridge Kitchen – Sabha & Recipe Data Organizer </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>   
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -772,11 +773,55 @@
         
         // Set up event listeners
         function setupEventListeners() {
-            // Theme toggle
-           
             
-         
+            // Export Button - Download PDFs
+            exportBtn.addEventListener('click', function() {
+              // Export Sabha Events
+              const sabhaSheetData = events.map(event => ({
+                Date: event.date || '-',
+                Topic: event.topic || '-',
+                Speaker: event.speaker || '-',
+                Gents: event.gents || 0,
+                Ladies: event.ladies || 0,
+                TotalBhaktas: event.totalBhaktas || 0,
+                Menu: event.menu || '-',
+                Ingredients: (event.ingredients || []).join(', '),
+                Leftover: event.leftover || '-',
+                Remade: event.remade || '-',
+                Notes: event.notes || '-',
+                Photos: (event.photos || []).join(', '), // multiple photos joined
+                
+              }));
+              const sabhaWorkbook = XLSX.utils.book_new();
+              const sabhaWorksheet = XLSX.utils.json_to_sheet(sabhaSheetData);
+              XLSX.utils.book_append_sheet(sabhaWorkbook, sabhaWorksheet, "Sabha Events");
+              XLSX.writeFile(sabhaWorkbook, "sabha-data.xlsx");
+
+              const recipeSheetData = recipes.map(recipe => ({
+                Name: recipe.name || '-',
+                Category: recipe.category || '-',
+                PrepTime_Minutes: recipe.prepTime || 0,
+                CookTime_Minutes: recipe.cookTime || 0,
+                Ingredients: (recipe.ingredients || []).join(', '),
+                Instructions: recipe.instructions || '-',
+                Notes: recipe.notes || '-',
+                ImageLink: recipe.image || '-',  // if you have image URLs
+              }));
+              const recipeWorkbook = XLSX.utils.book_new();
+              const recipeWorksheet = XLSX.utils.json_to_sheet(recipeSheetData);
+              XLSX.utils.book_append_sheet(recipeWorkbook, recipeWorksheet, "Recipes");
+              XLSX.writeFile(recipeWorkbook, "recipe-data.xlsx");
+              showToast('Downloaded Sabha & Recipe Data as Excel!');
+            });
+
+    
+
             
+            
+
+
+
+
             // Tab navigation
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', () => showTab(btn.dataset.tab));
