@@ -554,28 +554,38 @@
                 <h2 class="text-2xl font-bold mb-6 text-purple-600">Find Your Favorite Item Recipe Here :</h2>
                
                 <!-- Recipe Search Form -->
-                <form id="recipe-form" class="space-y-4">
+                <form id="ai-recipe-form" class="space-y-4">
                     <div>
-                        <label for="item-name" class="block text-sm font-medium text-gray-700">Enter Item Name</label>
-                        <input type="text" id="item-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+                      <label for="item-name" class="block text-sm font-medium text-gray-700">Enter Item Name :</label>
+                      <input type="text" id="item-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
                     </div>
-            
+                  
                     <div>
-                        <label for="num-people" class="block text-sm font-medium text-gray-700">For How Many People</label>
-                        <input type="number" id="num-people" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+                      <label for="num-people" class="block text-sm font-medium text-gray-700">For How Many People you want to make it ? </label>
+                      <input type="number" id="num-people" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
                     </div>
-            
+                  
                     <div>
-                        <label for="special-note" class="block text-sm font-medium text-gray-700">Special Notes (Optional)</label>
-                        <textarea id="special-note" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" rows="3"></textarea>
+                      <label for="special-note" class="block text-sm font-medium text-gray-700">Any Special Notes : (Optional)</label>
+                      <textarea id="special-note" class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
                     </div>
-            
+                  
+        
+
+                    <div>
+                        <label class="inline-flex items-center">
+                          <input type="checkbox" id="with-swaminarayan-diet" class="form-checkbox text-indigo-600" style="transform: scale(2.0);" >
+                          <span class="ml-2 text-gray-700 font-bold">Check This Box To Make It With Swaminarayan diet.</span>
+                        </label>
+                      </div>
+                  
                     <div class="flex justify-center">
-                        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                            Find Recipe
-                        </button>
+                      <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Find Recipe
+                      </button>
                     </div>
                 </form>
+                  
             
                 <!-- AI Recipe Response Display -->
                 <div id="ai-response" class="mt-6 text-gray-700 dark:text-gray-200">
@@ -1194,29 +1204,37 @@
 
         // Handle the AI Recipe Finder form submission
 
-        document.getElementById('recipe-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // AI Recipe Form Submit
+        document.getElementById('ai-recipe-form').addEventListener('submit', function(e) {
+          e.preventDefault();
 
-            const itemName = document.getElementById('item-name').value;
-            const numPeople = document.getElementById('num-people').value;
-            const specialNote = document.getElementById('special-note').value;
+          const itemName = document.getElementById('item-name').value;
+          const numPeople = document.getElementById('num-people').value;
+          const specialNote = document.getElementById('special-note').value;
+          const withswaminarayandiet = document.getElementById('with-swaminarayan-diet').checked;
+          let prompt = `Give me a detailed recipe for "${itemName}" for ${numPeople} people.${specialNote ? " Special Notes: " + specialNote : ""}`;
+          
+          if (withswaminarayandiet) {
+             prompt += " Please make it with swaminarayan hindu diet.";
+          }
 
-            const prompt = `Find a recipe for ${itemName} for ${numPeople} people. Special notes: ${specialNote || "None"}`;
+          if (specialNote.trim()) {
+             prompt += ` Special Notes: ${specialNote.trim()}`;
+          }
 
-            // Call ChatGPT API (Assuming you have a server-side function to handle the API request)
-            const response = await fetch('/get-ai-recipe', {  // Replace this with your backend API endpoint
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ prompt: prompt }),
-            });
+          prompt += " Please give me accurate measurements include with my all needs.";
 
-            const data = await response.json();
-
-            // Display the response in the AI Recipe section
-            const aiResponse = document.getElementById('ai-response');
-            aiResponse.innerHTML = `<h3 class="font-semibold">AI Generated Recipe:</h3><p>${data.recipe || "Sorry, no recipe found."}</p>`;
+          // Copy prompt to clipboard
+          navigator.clipboard.writeText(prompt)
+           .then(() => {
+             alert('Your question is copied to Clipboard ! Now click "OK" TO Open Chat-GPT & paste it there.');
+             // Open ChatGPT in new tab
+             window.open('https://chat.openai.com/', '_blank');
+           })
+           .catch(err => {
+             console.error('Failed to copy: ', err);
+             alert('Failed to copy prompt. Please try manually.');
+           });
         });
 
 
