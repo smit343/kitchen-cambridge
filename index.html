@@ -148,13 +148,39 @@
     try {
       const querySnapshot = await getDocs(collection(window.db, collectionName));
       const data = [];
-      querySnapshot.forEach(doc => data.push(doc.data()));
+      querySnapshot.forEach(doc => {
+        const obj = doc.data();
+        
+        // Ensure 'id' exists
+        if (!obj.id) {
+          obj.id = doc.id; // fallback to Firestore document ID
+        }
+
+        // Normalize special fields
+        if (collectionName === 'SabhaEvents') {
+          obj.gents = parseInt(obj.gents) || 0;
+          obj.ladies = parseInt(obj.ladies) || 0;
+          obj.totalBhaktas = obj.gents + obj.ladies;
+          if (!Array.isArray(obj.ingredients)) obj.ingredients = [];
+          if (!Array.isArray(obj.photos)) obj.photos = [];
+        } else if (collectionName === 'Recipes') {
+          if (!Array.isArray(obj.ingredients)) obj.ingredients = [];
+          if (!Array.isArray(obj.photos)) obj.photos = [];
+          obj.prepTime = parseInt(obj.prepTime) || 0;
+          obj.cookTime = parseInt(obj.cookTime) || 0;
+        }
+
+        data.push(obj);
+      });
       return data;
     } catch (err) {
       console.error("Failed to load from Firebase:", err);
       return [];
     }
   }
+
+
+
 
   window.syncToFirebase = syncToFirebase;
   window.loadFromFirebase = loadFromFirebase;
