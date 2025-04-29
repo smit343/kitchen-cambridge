@@ -222,6 +222,22 @@
               </div>
             </div>
           </header>
+      
+        <!-- Centered Prompt Copied Popup -->
+        <div id="custom-toast" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+            <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-xl rounded-xl px-6 py-5 text-center space-y-4 max-w-sm w-full">
+              <div class="text-green-600 text-2xl font-semibold">
+                <i class="fas fa-check-circle mr-2"></i> Prompt made & Copied to keyboard!
+              </div>
+              <p class="text-gray-700 dark:text-gray-300 text-base">Click the button below to open ChatGPT and just paste your prompt there.</p>
+              <button id="proceed-chatgpt-btn"
+                      class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg transition">
+                Go to ChatGPT
+              </button>
+            </div>
+        </div>
+  
+  
 
 
         <!-- Navigation Tabs -->
@@ -260,17 +276,19 @@
         <div class="tab-contents">
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
-                <div class="w-full flex mt-6 mb-8">
-                    <img src="photo.jpeg" 
-                         alt="Profile" 
-                         class="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-lg">
+                <div class="w-full mb-6">
+                    <img src="photo.jpg" alt="Seva Banner"
+                         class="w-full h-auto object-cover border-y-[8px] border-indigo-300 dark:border-indigo-300 shadow-md" />
                 </div>
+                  
+                  
+                  
                 <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-lg">Dashboard Overview</h2>
                 <div class="flex space-x-4 mt-6">
-                    <button onclick="showTab('add-event')" class="px-6 mb-4 font-semibold bg-gray-200 text-black rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
+                    <button onclick="showTab('add-event')" class="px-4 py-4 mb-4 font-bold bg-black text-white rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
                         <i class="fas fa-plus mr-2"></i> Add New Sabha Data
                     </button>
-                    <button onclick="showTab('add-recipe')" class="px-6 py-5 mb-4 font-semibold bg-gray-200 text-black rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
+                    <button onclick="showTab('add-recipe')" class="px-4 py-4 mb-4 font-bold bg-black text-white rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
                         <i class="fas fa-plus mr-2"></i> Add New Recipe
                     </button>
                 </div>
@@ -341,7 +359,7 @@
 
                 <!-- Image Gallery Section -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
-                  <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Gallery Highlights</h3>
+                  <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Seva Memories</h3>
                   <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <!-- Gallery images will go here -->
                   </div>
@@ -565,34 +583,55 @@
 
             <!-- Find Recipe With AI Tab Content -->
             <div id="find-ai-recipe" class="tab-content">
-                <h2 class="text-2xl mt-4 font-bold text-blue-600">Welcome to AI Recipe Finder,</h2>
-                <h2 class="text-2xl font-bold mb-6 text-purple-600">Find Your Favorite Item Recipe Here :</h2>
+                <div class="flex justify-center mb-6">
+                    <div class="text-2xl font-bold mb-4 mt-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-2 rounded-lg">
+                      Welcome to AI Recipe Finder – Find your favorite item recipe here!
+                    </div>
+                </div>                  
                
                 <!-- Recipe Search Form -->
-                <form id="ai-recipe-form" class="space-y-4">
+                <form id="ai-recipe-form" class="space-y-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Item Name -->
                     <div>
-                      <label for="item-name" class="block text-sm font-medium text-gray-700">Enter Item Name :</label>
-                      <input type="text" id="item-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                      <label for="item-name" class="block font-semibold text-sm font-medium text-gray-700 dark:text-gray-200">Item Name :</label>
+                      <input type="text" id="item-name" name="item-name"
+                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:bg-gray-700 dark:text-white px-4 py-3 text-base"
+                             placeholder="e.g. Paneer Butter Masala" />
+                    </div>
+                
+                    <!-- Number of People -->
+                    <div>
+                      <label for="num-people" class="block text-sm font-semibold font-medium text-gray-700 dark:text-gray-200">Number of Serving People :</label>
+                      <input type="number" id="num-people" name="num-people"
+                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:bg-gray-700 dark:text-white px-4 py-3 text-base"
+                             placeholder="e.g. 4" />
+                    </div>
+                
+                    <!-- Other Items -->
+                    <div>
+                      <label for="other-items" class="block text-sm font-semibold font-medium text-gray-700 dark:text-gray-200">
+                        Are you making any other items with this ?
+                      </label>
+                      <input type="text" id="other-items" name="other-items"
+                             class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:bg-gray-700 dark:text-white px-4 py-3 text-base"
+                             placeholder="e.g. rice, roti, dal" />
+                    </div>
+                
+                    <!-- Special Note -->
+                    <div>
+                      <label for="special-note" class="block font-semibold text-sm font-medium text-gray-700 dark:text-gray-200">Special Note (Optional) :</label>
+                      <input type="text" id="special-note" name="special-note"
+                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:bg-gray-700 dark:text-white px-4 py-3 text-base"
+                             placeholder="e.g. less spicy, no onion" />
                     </div>
                   
-                    <div>
-                      <label for="num-people" class="block text-sm font-medium text-gray-700">For How Many People you want to make it ? </label>
-                      <input type="number" id="num-people" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                    </div>
-                  
-                    <div>
-                      <label for="special-note" class="block text-sm font-medium text-gray-700">Any Special Notes : (Optional)</label>
-                      <textarea id="special-note" class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
-                    </div>
-                  
-        
-
-                    <div>
+                   <div>
                         <label class="inline-flex items-center">
                           <input type="checkbox" id="with-swaminarayan-diet" class="form-checkbox text-indigo-600" style="transform: scale(2.0);" >
                           <span class="ml-2 text-gray-700 font-bold">Check This Box To Make It With Swaminarayan diet.</span>
                         </label>
-                      </div>
+                    </div>
                   
                     <div class="flex justify-center">
                       <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -879,6 +918,24 @@
             
 
         }
+
+        function showToastMessage(message, url = null) {
+          const toast = document.getElementById('custom-toast');
+          const toastMsg = document.getElementById('custom-toast-message');
+          const button = document.getElementById('proceed-chatgpt-btn');
+        
+          toast.classList.remove('hidden');
+        
+          if (url) {
+            button.onclick = () => {
+              window.open(url, '_blank');
+              toast.classList.add('hidden');
+            };
+          }
+        }
+
+        
+        
 
         // Show tab content
         function showTab(tabId) {
@@ -1318,32 +1375,40 @@
           const itemName = document.getElementById('item-name').value;
           const numPeople = document.getElementById('num-people').value;
           const specialNote = document.getElementById('special-note').value;
+          const otherItems = document.getElementById('other-items').value.trim();
           const withswaminarayandiet = document.getElementById('with-swaminarayan-diet').checked;
-          let prompt = `Give me a detailed recipe for "${itemName}" for ${numPeople} people.${specialNote ? " Special Notes: " + specialNote : ""}`;
-          
+          let prompt = "";
+
+          if (itemName) {
+            prompt += `Give me a detailed recipe for "${itemName}" for ${numPeople} people.`;
+          }
+
+          if (otherItems) {
+            prompt += ` Please consider that the user is also preparing ${otherItems} with this, so adjust quantities and ingredients for "${itemName}" accordingly.`;
+          }
+        
+          if (specialNote) {
+            prompt += ` Special Notes: ${specialNote}.`;
+          }
+        
           if (withswaminarayandiet) {
-             prompt += " Please make it with swaminarayan hindu diet.";
+            prompt += " Please make it Pure Vegetarian & without Onion, Garlic, Asafoetida.";
           }
-
-          if (specialNote.trim()) {
-             prompt += ` Special Notes: ${specialNote.trim()}`;
-          }
-
-          prompt += " Please give me accurate measurements include with my all needs.";
-
-          // Copy prompt to clipboard
+        
+          prompt += " Please double check your response first & give accurate measurements and detailed steps.";
+        
           navigator.clipboard.writeText(prompt)
-           .then(() => {
-             alert('Your question is copied to Clipboard ! Now click "OK" TO Open Chat-GPT & paste it there.');
-             // Open ChatGPT in new tab
-             window.open('https://chat.openai.com/', '_blank');
-           })
-           .catch(err => {
-             console.error('Failed to copy: ', err);
-             alert('Failed to copy prompt. Please try manually.');
-           });
+            .then(() => {
+              showToastMessage('✅ Prompt made & copied to keyboard! Click below to open ChatGPT & just Paste there.', 'https://chat.openai.com/');
+            })
+            .catch(err => {
+              console.error('Failed to copy:', err);
+              showToastMessage('❌ Failed to copy prompt. Please try manually.');
+            });
         });
-
+        
+        
+                   
 
         
         // Render all events in the event data tab
@@ -1458,7 +1523,11 @@
             'image1.jpg',
             'image2.jpg',
             'image3.jpg',
-            'image4.jpg'
+            'image4.jpg',
+            'image5.jpg',
+            'image6.jpg',
+            'image7.jpg',
+            'image8.jpg'
           ];
         
           images.forEach(src => {
