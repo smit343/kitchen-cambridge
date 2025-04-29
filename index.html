@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -111,6 +113,9 @@
         .search-highlight {
             background-color: #fef08a;
             color: #000;
+        }
+        #gallery img:hover {
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
     </style>
 
@@ -333,6 +338,16 @@
                         <canvas id="genderChart" height="300"></canvas>
                     </div>
                 </div>
+
+                <!-- Image Gallery Section -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
+                  <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Gallery Highlights</h3>
+                  <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Gallery images will go here -->
+                  </div>
+                </div>
+
+
 
                 <!-- Recent Events -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
@@ -773,6 +788,7 @@
                   renderAllEvents();
                   renderAllRecipes();
                   setupEventListeners();
+                  renderGallery();
                   initCharts();
               } catch (err) {
                   console.error("Error initializing app:", err);
@@ -1140,9 +1156,100 @@
             showToast(isUpdate ? 'Recipe updated successfully!' : 'Recipe added successfully!');
             showTab('dashboard');
         }
-
-            
+        
+        async function downloadEventPDF(eventId) {
+           const event = events.find(ev => ev.id === eventId);
+           if (!event) return;
+         
+           const { jsPDF } = window.jspdf;
+           const doc = new jsPDF();
+         
+           // Title Banner
+           doc.setFillColor(251, 146, 60); // Orange
+           doc.rect(0, 0, 210, 30, 'F');
            
+           doc.setFontSize(22);
+           doc.setTextColor(255, 255, 255);
+           doc.text('Sabha Event Report', 105, 20, { align: 'center' });
+           let data = [
+             ['Date', formatDate(event.date)],
+             ['Topic', event.topic || '-'],
+             ['Speaker', event.speaker || '-'],
+             ['Gents', event.gents || '0'],
+             ['Ladies', event.ladies || '0'],
+             ['Total Bhaktas', event.totalBhaktas || '0'],
+             ['Menu', event.menu || '-'],
+             ['Notes', event.notes || '-']
+           ];
+         
+           const startY = 40;
+         
+           doc.autoTable({
+             startY: startY,
+             head: [['Field', 'Value']],
+             body: data,
+             theme: 'grid',
+             headStyles: { fillColor: [34, 197, 94] }, // Green header
+             alternateRowStyles: { fillColor: [243, 244, 246] }, // Light Gray
+             margin: { top: 10 },
+             styles: { fontSize: 12, cellPadding: 3 },
+           });
+         
+           // Ingredients table (if available)
+           if (event.ingredients && event.ingredients.length > 0) {
+             const ingStartY = doc.lastAutoTable.finalY + 10;
+         
+             const ingredientsData = event.ingredients.map((ing, index) => [index + 1, ing]);
+         
+             doc.autoTable({
+               startY: ingStartY,
+               head: [['#', 'Ingredient']],
+               body: ingredientsData,
+               theme: 'striped',
+               headStyles: { fillColor: [251, 146, 60] }, // Orange
+               margin: { top: 10 },
+               styles: { fontSize: 12, cellPadding: 3 },
+             });
+           }
+         
+           // Now insert uploaded image if available
+           if (event.imageUrl) { // Assuming you store image URL in event.imageUrl
+             try {
+               const img = await loadImage(event.imageUrl);
+         
+               const imgProps = doc.getImageProperties(img);
+               const pdfWidth = 150; // ~medium size
+               const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+               const imgY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : startY + 80;
+         
+               doc.addImage(img, 'JPEG', 30, imgY, pdfWidth, pdfHeight);
+             } catch (err) {
+               console.error("Failed to load image:", err);
+               // Skip image if loading fails
+             }
+           }
+         
+           // Save final PDF
+           doc.save(`SabhaEvent-${event.topic || 'Event'}.pdf`);
+         }
+         
+         // Helper to load external image
+        function loadImage(url) {
+           return new Promise((resolve, reject) => {
+             const img = new Image();
+             img.setAttribute('crossOrigin', 'anonymous');
+             img.onload = () => resolve(img);
+             img.onerror = reject;
+             img.src = url;
+           });
+        }
+
+
+        
+         
+         
+                     
+                    
         
         // Handle ingredient input
         function handleIngredientInput(e) {
@@ -1276,6 +1383,11 @@
                         <button onclick="deleteEvent('${event.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-500">
                             <i class="fas fa-trash"></i>
                         </button>
+                        <button onclick="downloadEventPDF('${event.id}')" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    
+
                     </td>
                 `;
                 container.appendChild(row);
@@ -1326,6 +1438,9 @@
                                 <button onclick="deleteRecipe('${recipe.id}')" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                    <button onclick="downloadRecipePDF('${recipe.id}')" class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-download"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1333,6 +1448,46 @@
                 container.appendChild(card);
             });
         }
+
+        function renderGallery() {
+          const galleryContainer = document.getElementById('gallery');
+          galleryContainer.innerHTML = '';
+        
+          // ✅ Add your 4 special images manually here
+          const images = [
+            'image1.jpg',
+            'image2.jpg',
+            'image3.jpg',
+            'image4.jpg'
+          ];
+        
+          images.forEach(src => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = "Special Gallery Image";
+            img.className = 'rounded-lg w-full h-40 object-cover hover:scale-105 transform transition shadow-md cursor-pointer border-4 border-gray-200 dark:border-gray-700';
+            img.addEventListener('click', () => openLightbox(src));
+            galleryContainer.appendChild(img);
+          });
+        }        
+        
+                
+        function openLightbox(src) {
+          const modal = document.getElementById('lightbox-modal');
+          const modalImg = document.getElementById('lightbox-image');
+          modalImg.src = src;
+          modal.classList.remove('hidden');
+        }
+        
+        function closeLightbox() {
+          const modal = document.getElementById('lightbox-modal');
+          modal.classList.add('hidden');
+        }
+
+
+
+
+
         
         // Filter events based on search query
           function filterEvents(query) {
@@ -1463,6 +1618,102 @@
                 container.appendChild(card);
             });
         }
+
+
+        async function downloadRecipePDF(recipeId) {
+          const recipe = recipes.find(r => r.id === recipeId);
+          if (!recipe) {
+            alert("Recipe not found!");
+            return;
+          }
+        
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+        
+          // Title
+          doc.setFillColor(79, 70, 229); // Indigo
+          doc.rect(0, 0, 210, 30, 'F');
+        
+          doc.setFontSize(22);
+          doc.setTextColor(255, 255, 255);
+          doc.text('Recipe Details', 105, 20, { align: 'center' });
+        
+          let data = [
+            ['Recipe Name', recipe.name || '-'],
+            ['Category', recipe.category || '-'],
+            ['Preparation Time (min)', recipe.prepTime || '0'],
+            ['Cooking Time (min)', recipe.cookTime || '0'],
+            ['Notes', recipe.notes || '-']
+          ];
+        
+          const startY = 40;
+        
+          doc.autoTable({
+            startY: startY,
+            head: [['Field', 'Value']],
+            body: data,
+            theme: 'grid',
+            headStyles: { fillColor: [79, 70, 229] }, // Indigo
+            alternateRowStyles: { fillColor: [243, 244, 246] }, // Light Gray
+            margin: { top: 10 },
+            styles: { fontSize: 12, cellPadding: 3 },
+          });
+        
+          // Ingredients Table
+          if (recipe.ingredients && recipe.ingredients.length > 0) {
+            const ingredientsStartY = doc.lastAutoTable.finalY + 10;
+            const ingredientsData = recipe.ingredients.map((ing, index) => [index + 1, ing]);
+        
+            doc.autoTable({
+              startY: ingredientsStartY,
+              head: [['#', 'Ingredient']],
+              body: ingredientsData,
+              theme: 'striped',
+              headStyles: { fillColor: [16, 185, 129] }, // Green
+              margin: { top: 10 },
+              styles: { fontSize: 12, cellPadding: 3 },
+            });
+          }
+        
+          // Instructions
+          if (recipe.instructions) {
+            const instructionsStartY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 70;
+            const instructionsText = recipe.instructions.split('\n').filter(Boolean);
+            
+            let instructionsData = instructionsText.map((inst, idx) => [idx + 1, inst]);
+        
+            doc.autoTable({
+              startY: instructionsStartY,
+              head: [['#', 'Instruction']],
+              body: instructionsData,
+              theme: 'grid',
+              headStyles: { fillColor: [245, 158, 11] }, // Amber
+              margin: { top: 10 },
+              styles: { fontSize: 12, cellPadding: 3 },
+            });
+          }
+        
+          // Image (optional)
+          if (recipe.image) {
+            try {
+              const img = await loadImage(recipe.image);
+              const imgProps = doc.getImageProperties(img);
+              const pdfWidth = 120;
+              const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+              const imgY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 150;
+              doc.addImage(img, 'JPEG', 45, imgY, pdfWidth, pdfHeight);
+            } catch (err) {
+              console.error("Failed to load recipe image:", err);
+            }
+          }
+        
+          // Save PDF
+          doc.save(`Recipe-${recipe.name || 'Recipe'}.pdf`);
+        }
+       
+       
+           
+   
         
         // Highlight matching text in search results
         function highlightMatches(text, query) {
@@ -1557,7 +1808,8 @@
                 
                 renderAllEvents();
                 updateDashboard();
-                
+                renderGallery();
+            
                 
             }
         }
@@ -1698,6 +1950,8 @@
                 }
                 renderAllRecipes();
                 updateDashboard();
+                renderGallery();
+
             }
         }
         
@@ -1806,6 +2060,16 @@
         });
     </script>
           
+<!-- Lightbox Modal -->
+<div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+    <div class="relative">
+      <img id="lightbox-image" class="max-w-full max-h-[90vh] rounded-lg shadow-lg" src="" alt="Enlarged">
+      <button onclick="closeLightbox()" class="absolute top-2 right-2 bg-white rounded-full p-2 text-black hover:bg-gray-100 transition">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+</div>
+  
 
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
