@@ -507,8 +507,8 @@
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Topic</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sabha Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pujya Santo's Present</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -674,7 +674,7 @@
                             </div>
                             <div>
                                 <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Instructions</h4>
-                                <ol class="list-decimal pl-5 space-y-2 text-gray-700 dark:text-gray-300" id="modal-instructions"></ol>
+                                <div class="whitespace-pre-line text-gray-700 dark:text-gray-300" id="modal-instructions"></div>
                             </div>
                         </div>
                         <div class="mt-4" id="modal-notes-container">
@@ -713,6 +713,8 @@
               <p><strong>Sabha Name:</strong> <span id="modal-event-title"></span></p>
               <p><strong>Pujya Santo's Present:</strong> <span id="modal-event-speaker"></span></p>
               <p><strong>Total Bhaktas:</strong> <span id="modal-event-bhaktas"></span></p>
+              <p><strong>Gents:</strong> <span id="modal-event-gents"></span></p>
+              <p><strong>Ladies:</strong> <span id="modal-event-ladies"></span></p>
               <p><strong>Menu:</strong> <span id="modal-event-menu"></span></p>
               <p><strong>Ingredients:</strong> <span id="modal-event-ingredients"></span></p>
               <p><strong>Total Grocery Cost:</strong> <span id="modal-event-grocery"></span></p>
@@ -1728,7 +1730,7 @@
             const instructionsStartY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 70;
             const instructionsText = recipe.instructions.split('\n').filter(Boolean);
             
-            let instructionsData = instructionsText.map((inst, idx) => [idx + 1, inst]);
+            let instructionsData = instructionsText.map(inst => [inst]);
         
             doc.autoTable({
               startY: instructionsStartY,
@@ -1784,6 +1786,8 @@
             document.getElementById('modal-event-notes').textContent = event.notes || '-';
             document.getElementById('modal-event-grocery').textContent = event.groceryCost || '-';
             document.getElementById('modal-event-costplate').textContent = event.costPerPlate || '-';
+            document.getElementById('modal-event-gents').textContent = event.gents || '0';
+            document.getElementById('modal-event-ladies').textContent = event.ladies || '0';
 
             // 🆕 Add leftover and remade
             let extraHtml = '';
@@ -1897,17 +1901,8 @@
             // Instructions
             const instructionsList = document.getElementById('modal-instructions');
             instructionsList.innerHTML = '';
+            instructionsList.textContent = recipe.instructions;
 
-            const instructions = (recipe.instructions || '')
-            .split('\n')
-            .map(step => step.trim())
-            .filter(step => step);
-          
-            instructions.forEach((step, index) => {
-                const li = document.createElement('li');
-                li.textContent = step;
-                instructionsList.appendChild(li);
-            });
             
             // Notes
             const notesContainer = document.getElementById('modal-notes-container');
