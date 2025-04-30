@@ -122,6 +122,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  
 
   const firebaseConfig = {
     apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
@@ -172,7 +173,6 @@
         } else if (collectionName === 'Recipes') {
           if (!Array.isArray(obj.ingredients)) obj.ingredients = [];
           if (!Array.isArray(obj.photos)) obj.photos = [];
-          obj.prepTime = parseInt(obj.prepTime) || 0;
           obj.cookTime = parseInt(obj.cookTime) || 0;
         }
 
@@ -378,7 +378,7 @@
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Topic</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
                                 </tr>
@@ -451,11 +451,11 @@
         </div>
         <div>
             <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Grocery Cost :</label>
-            <input type="text" id="event-leftover" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            <input type="text" id="event-grocery-cost" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
         </div>
         <div>
             <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost Per Plate :</label>
-            <input type="text" id="event-remade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            <input type="text" id="event-cost-per-plate" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
         </div>
     </div>
 
@@ -710,10 +710,13 @@
             </div>
             <div class="mt-4 space-y-3 text-gray-700 dark:text-gray-300">
               <p><strong>Date:</strong> <span id="modal-event-date"></span></p>
-              <p><strong>Speaker:</strong> <span id="modal-event-speaker"></span></p>
+              <p><strong>Sabha Name:</strong> <span id="modal-event-title"></span></p>
+              <p><strong>Pujya Santo's Present:</strong> <span id="modal-event-speaker"></span></p>
               <p><strong>Total Bhaktas:</strong> <span id="modal-event-bhaktas"></span></p>
               <p><strong>Menu:</strong> <span id="modal-event-menu"></span></p>
               <p><strong>Ingredients:</strong> <span id="modal-event-ingredients"></span></p>
+              <p><strong>Total Grocery Cost:</strong> <span id="modal-event-grocery"></span></p>
+              <p><strong>Cost Per Plate:</strong> <span id="modal-event-costplate"></span></p>    
               <p><strong>Notes:</strong> <span id="modal-event-notes"></span></p>
             </div>
             <div class="mt-4 flex flex-wrap gap-3" id="modal-event-photos"></div>
@@ -817,8 +820,8 @@
               // Export Sabha Events
               const sabhaSheetData = events.map(event => ({
                 Date: event.date || '-',
-                Topic: event.topic || '-',
-                Speaker: event.speaker || '-',
+                sabhaName: event.sabhaName || '-',
+                santosPresent: event.santosPresent || '-',
                 Gents: event.gents || 0,
                 Ladies: event.ladies || 0,
                 TotalBhaktas: event.totalBhaktas || 0,
@@ -826,6 +829,8 @@
                 Ingredients: (event.ingredients || []).join(', '),
                 Leftover: event.leftover || '-',
                 Remade: event.remade || '-',
+                GroceryCost: event.groceryCost || '-',
+                CostPerPlate: event.costPerPlate || '-',
                 Notes: event.notes || '-',
                 Photos: (event.photos || []).join(', '), // multiple photos joined
                 
@@ -837,8 +842,8 @@
 
               const recipeSheetData = recipes.map(recipe => ({
                 Name: recipe.name || '-',
-                Category: recipe.category || '-',
-                PrepTime_Minutes: recipe.prepTime || 0,
+               
+          
                 CookTime_Minutes: recipe.cookTime || 0,
                 Ingredients: (recipe.ingredients || []).join(', '),
                 Instructions: recipe.instructions || '-',
@@ -963,7 +968,7 @@
             // Latest event
             if (events.length > 0) {
                 const latestEvent = events[events.length - 1];
-                document.getElementById('latest-event').textContent = latestEvent.topic || 'No topic';
+                document.getElementById('latest-event').textContent = latestEvent.sabhaName || 'No topic';
             } else {
                 document.getElementById('latest-event').textContent = '-';
             }
@@ -977,8 +982,8 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.topic || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.speaker || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${(event.gents || 0) + (event.ladies || 0)}</td>
                 `;
                 recentEventsContainer.appendChild(row);
@@ -999,7 +1004,7 @@
                     <div class="p-4">
                         <h3 class="font-semibold text-lg mb-1">${recipe.name}</h3>
                         <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
+                            
                             <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
                         </div>
                         <div class="flex flex-wrap gap-1 mb-3">
@@ -1108,8 +1113,8 @@
                
                id: eventId,
                date: document.getElementById('event-date').value,
-               topic: document.getElementById('event-name').value,
-               speaker: document.getElementById('event-saints').value,
+               sabhaName: document.getElementById('event-name').value,
+               santosPresent: document.getElementById('event-saints').value,
                gents: gents,
                ladies: ladies,
                totalBhaktas: gents + ladies,
@@ -1118,8 +1123,10 @@
                leftover: document.getElementById('event-leftover').value,
                remade: document.getElementById('event-remade').value,
                notes: document.getElementById('event-notes').value,
-               photos: Array.from(document.querySelectorAll('#event-photo-preview img')).map(img => img.src)
-        
+               photos: Array.from(document.querySelectorAll('#event-photo-preview img')).map(img => img.src),
+               groceryCost: document.getElementById('event-grocery-cost').value,
+               costPerPlate: document.getElementById('event-cost-per-plate').value
+
             };
             // Collect photo previews
             const photoPreviews = document.getElementById('event-photo-preview')?.querySelectorAll('img') || [];
@@ -1157,8 +1164,6 @@
             const recipe = {
                 id: recipeId,
                 name: document.getElementById('recipe-name').value,
-                category: document.getElementById('recipe-category').value,
-                prepTime: parseInt(document.getElementById('recipe-prep-time').value) || 0,
                 cookTime: parseInt(document.getElementById('recipe-cook-time').value) || 0,
                 ingredients: Array.from(document.querySelectorAll('#ingredients-container .tag')).map(tag => tag.textContent.trim().replace('×', '')),
                 instructions: document.getElementById('recipe-instructions').value,
@@ -1203,12 +1208,14 @@
            doc.text('Sabha Event Report', 105, 20, { align: 'center' });
            let data = [
              ['Date', formatDate(event.date)],
-             ['Topic', event.topic || '-'],
-             ['Speaker', event.speaker || '-'],
+             ['Sabha Name', event.sabhaName || '-'],
+             ['Pujya Santo\'s Present', event.santosPresent || '-'],
              ['Gents', event.gents || '0'],
              ['Ladies', event.ladies || '0'],
              ['Total Bhaktas', event.totalBhaktas || '0'],
              ['Menu', event.menu || '-'],
+             ['Total Grocery Cost', event.groceryCost || '-'],
+             ['Cost Per Plate', event.costPerPlate || '-'],
              ['Notes', event.notes || '-']
            ];
          
@@ -1260,7 +1267,7 @@
            }
          
            // Save final PDF
-           doc.save(`SabhaEvent-${event.topic || 'Event'}.pdf`);
+           doc.save(`SabhaEvent-${event.sabhaName || 'Event'}.pdf`);
          }
          
          // Helper to load external image
@@ -1405,8 +1412,8 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.topic || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.speaker || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                         <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
                         <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
@@ -1457,9 +1464,9 @@
                     <div class="p-4">
                         <h3 class="font-semibold text-lg mb-1">${recipe.name}</h3>
                         <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
+                            
                             <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
-                            <span class="ml-auto px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-xs">${recipe.category}</span>
+                            
                         </div>
                         <div class="flex flex-wrap gap-1 mb-3">
                             ${recipe.ingredients.slice(0, 3).map(ing => `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${ing}</span>`).join('')}
@@ -1563,8 +1570,8 @@
                   const row = document.createElement('tr');
                   row.innerHTML = `
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
-                      <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.topic || '-'}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.speaker || '-'}</td>
+                      <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                           <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
                           <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
@@ -1595,7 +1602,7 @@
             const filteredRecipes = recipes.filter(recipe => {
                 const searchableFields = [
                     recipe.name,
-                    recipe.category,
+                   
                     recipe.ingredients.join(' '),
                     recipe.instructions,
                     recipe.notes
@@ -1633,7 +1640,7 @@
                         <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                             <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
                             <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
-                            <span class="ml-auto px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-xs">${recipe.category}</span>
+                           
                         </div>
                         <div class="flex flex-wrap gap-1 mb-3">
                             ${recipe.ingredients.slice(0, 3).map(ing => {
@@ -1682,8 +1689,7 @@
         
           let data = [
             ['Recipe Name', recipe.name || '-'],
-            ['Category', recipe.category || '-'],
-            ['Preparation Time (min)', recipe.prepTime || '0'],
+            
             ['Cooking Time (min)', recipe.cookTime || '0'],
             ['Notes', recipe.notes || '-']
           ];
@@ -1769,13 +1775,15 @@
         function viewEventDetails(id) {
             const event = events.find(e => e.id === id);
             if (!event) return;
-            document.getElementById('modal-event-title').textContent = event.topic || 'Untitled';
+            document.getElementById('modal-event-title').textContent = event.sabhaName || 'Untitled';
             document.getElementById('modal-event-date').textContent = formatDate(event.date);
-            document.getElementById('modal-event-speaker').textContent = event.speaker || '-';
+            document.getElementById('modal-event-speaker').textContent = event.santosPresent || '-';
             document.getElementById('modal-event-bhaktas').textContent = (event.gents || 0) + (event.ladies || 0);
             document.getElementById('modal-event-menu').textContent = event.menu || '-';
             document.getElementById('modal-event-ingredients').textContent = (event.ingredients || []).join(', ');
             document.getElementById('modal-event-notes').textContent = event.notes || '-';
+            document.getElementById('modal-event-grocery').textContent = event.groceryCost || '-';
+            document.getElementById('modal-event-costplate').textContent = event.costPerPlate || '-';
 
             // 🆕 Add leftover and remade
             let extraHtml = '';
@@ -1813,8 +1821,8 @@
              if (!event) return;
 
              document.getElementById('event-date').value = event.date;
-             document.getElementById('event-name').value = event.topic || '';
-             document.getElementById('event-saints').value = event.speaker || '';
+             document.getElementById('event-name').value = event.sabhaName || '';
+             document.getElementById('event-saints').value = event.santosPresent || '';
              document.getElementById('event-gents').value = event.gents || '';
              document.getElementById('event-ladies').value = event.ladies || '';
              document.getElementById('event-menu').value = event.menu || '';
@@ -1859,17 +1867,27 @@
         // Open recipe modal
         function openRecipeModal(id) {
             const recipe = recipes.find(r => r.id === id);
-            if (!recipe) return;
+            if (!recipe) {
+              console.error("Recipe not found for ID:", recipeId);
+              showToast("Recipe not found.");
+              return;
+            }
             
             // Populate modal
             document.getElementById('modal-recipe-name').textContent = recipe.name;
-            document.getElementById('modal-prep-time').textContent = recipe.prepTime || 0;
+           
             document.getElementById('modal-cook-time').textContent = recipe.cookTime || 0;
-            document.getElementById('modal-category').textContent = recipe.category;
+    
             
             // Ingredients
+            // Normalize ingredients safely
+            const ingredients = Array.isArray(recipe.ingredients)
+              ? recipe.ingredients
+              : (recipe.ingredients || '').split(',').map(i => i.trim()).filter(Boolean);
+
             const ingredientsList = document.getElementById('modal-ingredients');
             ingredientsList.innerHTML = '';
+
             recipe.ingredients.forEach(ing => {
                 const li = document.createElement('li');
                 li.textContent = ing;
@@ -1879,7 +1897,12 @@
             // Instructions
             const instructionsList = document.getElementById('modal-instructions');
             instructionsList.innerHTML = '';
-            const instructions = recipe.instructions.split('\n').filter(step => step.trim());
+
+            const instructions = (recipe.instructions || '')
+            .split('\n')
+            .map(step => step.trim())
+            .filter(step => step);
+          
             instructions.forEach((step, index) => {
                 const li = document.createElement('li');
                 li.textContent = step;
@@ -1922,8 +1945,7 @@
             
             // Populate the form with recipe data
             document.getElementById('recipe-name').value = recipe.name;
-            document.getElementById('recipe-category').value = recipe.category;
-            document.getElementById('recipe-prep-time').value = recipe.prepTime || '';
+           
             document.getElementById('recipe-cook-time').value = recipe.cookTime || '';
             document.getElementById('recipe-instructions').value = recipe.instructions || '';
             document.getElementById('recipe-notes').value = recipe.notes || '';
@@ -2081,8 +2103,8 @@
       
               const sabhaSheet = XLSX.utils.json_to_sheet((window.events || []).map(e => ({
                 Date: e.date,
-                Topic: e.topic,
-                Speaker: e.speaker,
+                Topic: e.sabhaName,
+                Speaker: e.santosPresent,
                 Gents: e.gents,
                 Ladies: e.ladies,
                 TotalBhaktas: e.totalBhaktas,
