@@ -73,26 +73,6 @@ p {
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script>
-  const SCRIPT_URL = 'https://corsproxy.io/?https://script.google.com/macros/s/AKfycbxn52uiQC7GAXpx4s4A5UvNYQT_NUeLgJw0uKXLlBDsZzb6mNa6NNdws9Mf5xUJeQpYDw/exec'; // Replace with your deployed Google Apps Script Web App URL
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
-    authDomain: "attendance-c8ae8.firebaseapp.com",
-    projectId: "attendance-c8ae8",
-    databaseURL: "https://attendance-c8ae8-default-rtdb.firebaseio.com",
-    storageBucket: "attendance-c8ae8.appspot.com",
-    messagingSenderId: "633592543701",
-    appId: "1:633592543701:web:ffc7fe9625b92b3dbda55c",
-    measurementId: "G-LJ5PBZ9XM0"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
-
-
-
-<script>
   const SHEET_ID = '1lT5MA8zNfc8i0h3qRq8I_sCsW2-Dv1Wale90m7NdOuY';
   const API_KEY = 'AIzaSyDmMM7OEIan9FdRhV4U9rDjwWOJcDTA1ic';
   const CLIENT_ID = '291026406454-qma5r1pj93q7o1l4u0p0ufbeg276a8hm.apps.googleusercontent.com';
@@ -123,58 +103,63 @@ p {
     }
   }
 
-  // Read attendance data from Google Sheet
-  async function syncFromSheet() {
-    try {
-      const response = await fetch(SCRIPT_URL);
-      const rows = await response.json();
-      if (!rows) return;
+  
 
-      attendanceData.people = [];
-      attendanceData.records = [];
 
-      for (const row of rows) {
-        const [id, name, recordJson] = row;
-        attendanceData.people.push({ id, name });
-        const records = JSON.parse(recordJson || '[]');
-        attendanceData.records.push(...records);
-      }
-
-      saveData();
-            syncToSheet(); // Save locally
-      renderPeopleList();
-      renderPersonSelect();
-      updateCounts();
-      renderCalendar();
-      console.log("Synced from Google Sheet");
-    } catch (e) {
-      console.error("Failed to sync from sheet", e);
-    }
-  }
-
-  // Write attendance data to Google Sheet
-  async function syncToSheet() {
-    try {
-      const rows = attendanceData.people.map(person => {
-        const personRecords = attendanceData.records.filter(r => r.personId === person.id);
-        return [person.id, person.name, JSON.stringify(personRecords)];
-      });
-
-      for (const row of rows) {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify(row),
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      console.log("Synced to Google Sheet");
-    } catch (e) {
-      console.error("Failed to sync to sheet", e);
-    }
-  }
 
   
+</script>
+
+
+<!-- Firestore SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
+    authDomain: "attendance-c8ae8.firebaseapp.com",
+    projectId: "attendance-c8ae8",
+    storageBucket: "attendance-c8ae8.appspot.com",
+    messagingSenderId: "633592543701",
+    appId: "1:633592543701:web:ffc7fe9625b92b3dbda55c",
+    measurementId: "G-LJ5PBZ9XM0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Function to save a single attendance record to Firestore
+  async function saveAttendanceToFirestore(personId, name, date, present) {
+    try {
+      await addDoc(collection(db, "AttendanceRecords"), {
+        personId,
+        name,
+        date,
+        present
+      });
+      console.log("Saved to Firestore:", name, date, present);
+    } catch (err) {
+      console.error("Failed to write to Firestore", err);
+    }
+  }
+
+  // Example function to fetch all records (you can customize)
+  async function fetchAttendanceFromFirestore() {
+    try {
+      const snapshot = await getDocs(collection(db, "AttendanceRecords"));
+      const data = [];
+      snapshot.forEach(doc => data.push(doc.data()));
+      console.log("Fetched from Firestore:", data);
+      return data;
+    } catch (err) {
+      console.error("Failed to fetch from Firestore", err);
+      return [];
+    }
+  }
+
+  window.saveAttendanceToFirestore = saveAttendanceToFirestore;
+  window.fetchAttendanceFromFirestore = fetchAttendanceFromFirestore;
 </script>
 
 </head>
@@ -386,12 +371,19 @@ p {
         });
 
         // Load data from localStorage
-        function loadData() {
-            const savedData = localStorage.getItem('attendanceData');
-            if (savedData) {
-                attendanceData = JSON.parse(savedData);
+        async function loadData() {
+            try {
+                const data = await fetchAttendanceFromFirestore();
+                attendanceData.records = data;
+            } catch (e) {
+                console.warn("Failed to fetch from Firestore, falling back to localStorage.");
+                const savedData = localStorage.getItem('attendanceData');
+                if (savedData) {
+                    attendanceData = JSON.parse(savedData);
+                }
             }
         }
+
 
         // Save data to localStorage
         function saveData() {
@@ -432,7 +424,7 @@ p {
             
             attendanceData.people.push(newPerson);
             saveData();
-            syncToSheet();
+           
             
             // Clear input
             elements.newPersonName.value = '';
@@ -524,7 +516,16 @@ p {
             });
             
             saveData();
-            syncToSheet();
+            
+
+            // Save to Firestore
+            
+            attendanceData.people.forEach(person => {
+                const record = attendanceData.records.find(r => r.personId === person.id && r.date === todayStr);
+                if (record) {
+                    saveAttendanceToFirestore(person.id, person.name, record.date, record.present);
+                }
+            });
             updateCounts();
             
             // Update the chart if a person is selected
@@ -845,7 +846,7 @@ p {
                 records: []
             };
             saveData();
-            syncToSheet();
+            
             
             // Update UI
             renderPeopleList();
