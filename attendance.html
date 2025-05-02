@@ -370,11 +370,7 @@ p {
             checkDarkModePreference();
         });
           
-        onSnapshot(collection(db, "AttendanceRecords"), snapshot => {
-          attendanceData.records = snapshot.docs.map(doc => doc.data());
-          renderPeopleList(); // or wherever the UI needs to update
-        });
-        
+       
         // Load data from localStorage
         async function loadData() {
           try {
