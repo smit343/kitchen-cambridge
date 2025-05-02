@@ -73,6 +73,8 @@ p {
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxn52uiQC7GAXpx4s4A5UvNYQT_NUeLgJw0uKXLlBDsZzb6mNa6NNdws9Mf5xUJeQpYDw/exec'; // Replace with your deployed Google Apps Script Web App URL
+
   const firebaseConfig = {
     apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
     authDomain: "attendance-c8ae8.firebaseapp.com",
@@ -97,33 +99,19 @@ p {
   const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
   let tokenClient;
 
-  function gapiInit() {
+  async function gapiInit() {
+    await syncFromSheet(); // directly call sync without gapi
     gapi.load('client', async () => {
       await gapi.client.init({
         apiKey: API_KEY,
         discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
       });
 
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: async (tokenResponse) => {
-          if (tokenResponse.error) {
-            console.error(tokenResponse);
-            return;
-          }
-          // Now authenticated, run syncFromSheet
-          await syncFromSheet();
-        },
-      });
-
-      tokenClient.requestAccessToken();
+      /* OAuth logic removed for public access */
     });
   }
 
-  window.onload = function () {
-    gapiInit();
-  };
+  
 
   function updateSigninStatus(isSignedIn) {
     if (isSignedIn) {
@@ -138,12 +126,8 @@ p {
   // Read attendance data from Google Sheet
   async function syncFromSheet() {
     try {
-      const response = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: 'Sheet1!A2:C',
-      });
-
-      const rows = response.result.values;
+      const response = await fetch(SCRIPT_URL);
+      const rows = await response.json();
       if (!rows) return;
 
       attendanceData.people = [];
@@ -176,14 +160,13 @@ p {
         return [person.id, person.name, JSON.stringify(personRecords)];
       });
 
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: SHEET_ID,
-        range: 'Sheet1!A2',
-        valueInputOption: 'RAW',
-        resource: {
-          values: rows
-        }
-      });
+      for (const row of rows) {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(row),
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
 
       console.log("Synced to Google Sheet");
     } catch (e) {
@@ -191,9 +174,7 @@ p {
     }
   }
 
-  window.onload = function () {
-    gapiInit();
-  };
+  
 </script>
 
 </head>
