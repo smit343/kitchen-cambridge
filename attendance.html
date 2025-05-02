@@ -372,18 +372,17 @@ p {
 
         // Load data from localStorage
         async function loadData() {
+            const savedData = localStorage.getItem('attendanceData');
+            if (savedData) {
+                attendanceData = JSON.parse(savedData);
+            }
             try {
-                const data = await fetchAttendanceFromFirestore();
-                attendanceData.records = data;
+                const firebaseData = await fetchAttendanceFromFirestore();
+                attendanceData.records = firebaseData;
             } catch (e) {
-                console.warn("Failed to fetch from Firestore, falling back to localStorage.");
-                const savedData = localStorage.getItem('attendanceData');
-                if (savedData) {
-                    attendanceData = JSON.parse(savedData);
-                }
+                console.error("Failed to fetch from Firestore:", e);
             }
         }
-
 
         // Save data to localStorage
         function saveData() {
