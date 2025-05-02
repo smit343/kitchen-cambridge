@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0/dist/chartjs-adapter-luxon.min.js"></script>
+  <style>
+    /* ====== Custom Styles from style.css ====== */
+body {
+	padding: 2rem;
+	font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
+}
+
+h1 {
+	font-size: 16px;
+	margin-top: 0;
+}
+
+p {
+	color: rgb(107, 114, 128);
+	font-size: 15px;
+	margin-bottom: 10px;
+	margin-top: 5px;
+}
+
+.card {
+	max-width: 620px;
+	margin: 0 auto;
+	padding: 16px;
+	border: 1px solid lightgray;
+	border-radius: 16px;
+}
+
+.card p:last-child {
+	margin-bottom: 0;
+}
+
+    /* ====== Existing Styles from index.html ====== */
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .calendar-day {
+      transition: all 0.2s ease;
+    }
+
+    .calendar-day:hover {
+      transform: scale(1.05);
+    }
+
+    .dark .calendar-day.present {
+      background-color: #4ade80 !important;
+    }
+
+    .dark .calendar-day.absent {
+      background-color: #f87171 !important;
+    }
+  </style>
+
+  <!-- Firebase App (Modular SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
+    authDomain: "attendance-c8ae8.firebaseapp.com",
+    projectId: "attendance-c8ae8",
+    databaseURL: "https://attendance-c8ae8-default-rtdb.firebaseio.com",
+    storageBucket: "attendance-c8ae8.appspot.com",
+    messagingSenderId: "633592543701",
+    appId: "1:633592543701:web:ffc7fe9625b92b3dbda55c",
+    measurementId: "G-LJ5PBZ9XM0"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
+
+
+<script>
+  const SHEET_ID = '1lT5MA8zNfc8i0h3qRq8I_sCsW2-Dv1Wale90m7NdOuY';
+  const API_KEY = 'AIzaSyDmMM7OEIan9FdRhV4U9rDjwWOJcDTA1ic';
+  const CLIENT_ID = '291026406454-qma5r1pj93q7o1l4u0p0ufbeg276a8hm.apps.googleusercontent.com';
+  const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+
+  function gapiInit() {
+    gapi.load('client:auth2', async () => {
+      await gapi.client.init({
+        apiKey: API_KEY,
+        clientId: CLIENT_ID,
+        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+        scope: SCOPES
+      });
+      gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+      updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+    });
+  }
+
+  function updateSigninStatus(isSignedIn) {
+    if (isSignedIn) {
+      console.log("Signed into Google");
+      syncFromSheet(); // pull data on load
+    } else {
+      console.log("Not signed in — attempting sign in");
+      gapi.auth2.getAuthInstance().signIn();
+    }
+  }
+
+  // Read attendance data from Google Sheet
+  async function syncFromSheet() {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Sheet1!A2:C',
+      });
+
+      const rows = response.result.values;
+      if (!rows) return;
+
+      attendanceData.people = [];
+      attendanceData.records = [];
+
+      for (const row of rows) {
+        const [id, name, recordJson] = row;
+        attendanceData.people.push({ id, name });
+        const records = JSON.parse(recordJson || '[]');
+        attendanceData.records.push(...records);
+      }
+
+      saveData();
+            syncToSheet(); // Save locally
+      renderPeopleList();
+      renderPersonSelect();
+      updateCounts();
+      renderCalendar();
+      console.log("Synced from Google Sheet");
+    } catch (e) {
+      console.error("Failed to sync from sheet", e);
+    }
+  }
+
+  // Write attendance data to Google Sheet
+  async function syncToSheet() {
+    try {
+      const rows = attendanceData.people.map(person => {
+        const personRecords = attendanceData.records.filter(r => r.personId === person.id);
+        return [person.id, person.name, JSON.stringify(personRecords)];
+      });
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: 'Sheet1!A2',
+        valueInputOption: 'RAW',
+        resource: {
+          values: rows
+        }
+      });
+
+      console.log("Synced to Google Sheet");
+    } catch (e) {
+      console.error("Failed to sync to sheet", e);
+    }
+  }
+
+  window.onload = function () {
+    gapiInit();
+  };
+</script>
+
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Attendance Tracker</h1>
+            <div class="flex items-center space-x-4">
+                <button id="darkModeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </button>
+                <button id="resetBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    Reset Data
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Add Person and Today's Attendance -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Add New Person -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 fade-in">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Person</h2>
+                    <div class="flex space-x-2">
+                        <input type="text" id="newPersonName" placeholder="Full Name" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                        <button id="addPersonBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            Add
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Today's Attendance -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Today's Attendance</h2>
+                        <div class="text-gray-600 dark:text-gray-300">
+                            <span id="todayDate" class="font-medium"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <input type="text" id="searchInput" placeholder="Search names..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    
+                    <div class="max-h-96 overflow-y-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="py-2 text-left text-gray-600 dark:text-gray-300">Name</th>
+                                    <th class="py-2 text-center text-gray-600 dark:text-gray-300">Present</th>
+                                    <th class="py-2 text-center text-gray-600 dark:text-gray-300">Streak</th>
+                                    <th class="py-2 text-center text-gray-600 dark:text-gray-300">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceList">
+                                <!-- Attendance list will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-between items-center text-sm text-gray-600 dark:text-gray-300">
+                        <div>
+                            <span class="font-medium">Total:</span> 
+                            <span id="totalCount">0</span> | 
+                            <span class="text-green-600 dark:text-green-400">Present:</span> 
+                            <span id="presentCount">0</span> | 
+                            <span class="text-red-600 dark:text-red-400">Absent:</span> 
+                            <span id="absentCount">0</span>
+                        </div>
+                        <button id="saveAttendanceBtn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            Save Attendance
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Attendance History -->
+            <div class="space-y-8">
+                <!-- Person Selector -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 fade-in">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Attendance History</h2>
+                    <div class="mb-4">
+                        <select id="personSelect" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            <option value="">Select a person</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-300">Current Streak:</span>
+                            <span id="currentStreak" class="font-bold ml-2">0</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-300">Attendance %:</span>
+                            <span id="attendancePercentage" class="font-bold ml-2">0%</span>
+                        </div>
+                    </div>
+                    <button id="exportCSVBtn" class="w-full mb-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                        Export to CSV
+                    </button>
+                    <div class="h-64">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 fade-in">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Monthly View</h2>
+                    <div class="flex justify-between items-center mb-4">
+                        <button id="prevMonthBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <h3 id="currentMonthYear" class="font-medium text-gray-800 dark:text-white">Month Year</h3>
+                        <button id="nextMonthBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="calendarGrid" class="grid grid-cols-7 gap-1">
+                        <!-- Calendar will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Confirm Reset</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">Are you sure you want to reset all attendance data? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancelResetBtn" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmResetBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    Reset Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure
+        let attendanceData = {
+            people: [], // Array of person objects { id, name }
+            records: [] // Array of attendance records { personId, date, present }
+        };
+
+        // DOM Elements
+        const elements = {
+            newPersonName: document.getElementById('newPersonName'),
+            addPersonBtn: document.getElementById('addPersonBtn'),
+            attendanceList: document.getElementById('attendanceList'),
+            todayDate: document.getElementById('todayDate'),
+            searchInput: document.getElementById('searchInput'),
+            saveAttendanceBtn: document.getElementById('saveAttendanceBtn'),
+            personSelect: document.getElementById('personSelect'),
+            attendanceChart: document.getElementById('attendanceChart'),
+            exportCSVBtn: document.getElementById('exportCSVBtn'),
+            currentStreak: document.getElementById('currentStreak'),
+            attendancePercentage: document.getElementById('attendancePercentage'),
+            totalCount: document.getElementById('totalCount'),
+            presentCount: document.getElementById('presentCount'),
+            absentCount: document.getElementById('absentCount'),
+            calendarGrid: document.getElementById('calendarGrid'),
+            currentMonthYear: document.getElementById('currentMonthYear'),
+            prevMonthBtn: document.getElementById('prevMonthBtn'),
+            nextMonthBtn: document.getElementById('nextMonthBtn'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
+            resetBtn: document.getElementById('resetBtn'),
+            confirmationModal: document.getElementById('confirmationModal'),
+            cancelResetBtn: document.getElementById('cancelResetBtn'),
+            confirmResetBtn: document.getElementById('confirmResetBtn')
+        };
+
+        // Chart instance
+        let attendanceChart = null;
+        
+        // Current date and calendar view
+        const today = new Date();
+        let currentCalendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load data from localStorage
+            loadData();
+            
+            // Set today's date
+            elements.todayDate.textContent = formatDate(today);
+            
+            // Initialize UI
+            renderPeopleList();
+            renderPersonSelect();
+            updateCounts();
+            renderCalendar();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Check dark mode preference
+            checkDarkModePreference();
+        });
+
+        // Load data from localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('attendanceData');
+            if (savedData) {
+                attendanceData = JSON.parse(savedData);
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+        }
+
+        // Format date as YYYY-MM-DD
+        function formatDate(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Format date for display (e.g., Jan 1, 2023)
+        function formatDisplayDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Add a new person
+        function addPerson(name) {
+            if (!name.trim()) return;
+            
+            // Check if person already exists
+            const existingPerson = attendanceData.people.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (existingPerson) {
+                alert('This person already exists!');
+                return;
+            }
+            
+            // Create new person
+            const newPerson = {
+                id: Date.now().toString(),
+                name: name.trim()
+            };
+            
+            attendanceData.people.push(newPerson);
+            saveData();
+            syncToSheet();
+            
+            // Clear input
+            elements.newPersonName.value = '';
+            
+            // Update UI
+            renderPeopleList();
+            renderPersonSelect();
+            updateCounts();
+        }
+
+        // Render the list of people for today's attendance
+        function renderPeopleList(filter = '') {
+            const todayStr = formatDate(today);
+            const filteredPeople = attendanceData.people.filter(person => 
+                person.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            let html = '';
+            
+            filteredPeople.forEach(person => {
+                // Check if attendance is already marked for today
+                const todayRecord = attendanceData.records.find(record => 
+                    record.personId === person.id && record.date === todayStr
+                );
+                
+                const isPresent = todayRecord ? todayRecord.present : false;
+                const streak = calculateCurrentStreak(person.id);
+                const percentage = calculateAttendancePercentage(person.id);
+                
+                html += `
+                    <tr class="border-b border-gray-200 dark:border-gray-700 ${!isPresent ? 'bg-red-50 dark:bg-red-900 bg-opacity-30' : ''}">
+                        <td class="py-3 text-gray-800 dark:text-white">${person.name}</td>
+                        <td class="text-center">
+                            <input type="checkbox" data-person-id="${person.id}" ${isPresent ? 'checked' : ''} 
+                                class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        </td>
+                        <td class="text-center font-medium ${streak > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
+                            ${streak}
+                        </td>
+                        <td class="text-center font-medium">
+                            <span class="px-2 py-1 rounded-full text-xs ${percentage >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : percentage >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+                                ${percentage}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            elements.attendanceList.innerHTML = html || '<tr><td colspan="4" class="py-4 text-center text-gray-500">No people added yet</td></tr>';
+        }
+
+        // Render the person select dropdown
+        function renderPersonSelect() {
+            let html = '<option value="">Select a person</option>';
+            
+            attendanceData.people.forEach(person => {
+                html += `<option value="${person.id}">${person.name}</option>`;
+            });
+            
+            elements.personSelect.innerHTML = html;
+        }
+
+        // Save today's attendance
+        function saveTodayAttendance() {
+            const todayStr = formatDate(today);
+            const checkboxes = document.querySelectorAll('#attendanceList input[type="checkbox"]');
+            
+            checkboxes.forEach(checkbox => {
+                const personId = checkbox.dataset.personId;
+                const isPresent = checkbox.checked;
+                
+                // Find existing record for today
+                const existingRecordIndex = attendanceData.records.findIndex(record => 
+                    record.personId === personId && record.date === todayStr
+                );
+                
+                if (existingRecordIndex !== -1) {
+                    // Update existing record
+                    attendanceData.records[existingRecordIndex].present = isPresent;
+                } else {
+                    // Add new record
+                    attendanceData.records.push({
+                        personId,
+                        date: todayStr,
+                        present: isPresent,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            });
+            
+            saveData();
+            syncToSheet();
+            updateCounts();
+            
+            // Update the chart if a person is selected
+            if (elements.personSelect.value) {
+                renderAttendanceChart(elements.personSelect.value);
+            }
+            
+            // Update calendar view
+            renderCalendar();
+            
+            // Show success feedback
+            const originalText = elements.saveAttendanceBtn.textContent;
+            elements.saveAttendanceBtn.textContent = 'Saved!';
+            elements.saveAttendanceBtn.classList.remove('bg-green-500');
+            elements.saveAttendanceBtn.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                elements.saveAttendanceBtn.textContent = originalText;
+                elements.saveAttendanceBtn.classList.remove('bg-green-600');
+                elements.saveAttendanceBtn.classList.add('bg-green-500');
+            }, 2000);
+        }
+
+        // Render attendance chart for selected person
+        function renderAttendanceChart(personId) {
+            const person = attendanceData.people.find(p => p.id === personId);
+            if (!person) return;
+            
+            // Get all records for this person, sorted by date
+            const personRecords = attendanceData.records
+                .filter(record => record.personId === personId)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Prepare data for chart
+            const labels = personRecords.map(record => record.date);
+            const data = personRecords.map(record => record.present ? 1 : 0);
+            const backgroundColors = personRecords.map(record => record.present ? '#4ade80' : '#f87171');
+            
+            // Calculate streak and percentage
+            const streak = calculateCurrentStreak(personId);
+            const percentage = calculateAttendancePercentage(personId);
+            
+            elements.currentStreak.textContent = streak;
+            elements.attendancePercentage.textContent = `${percentage}%`;
+            
+            // Destroy previous chart if exists
+            if (attendanceChart) {
+                attendanceChart.destroy();
+            }
+            
+            // Create new chart
+            const ctx = elements.attendanceChart.getContext('2d');
+            attendanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Attendance',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors,
+                        borderWidth: 1,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return value === 1 ? 'Present' : value === 0 ? 'Absent' : '';
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                callback: function(value, index) {
+                                    // Show only every 5th label or the last one
+                                    if (index % 5 === 0 || index === labels.length - 1) {
+                                        const date = new Date(labels[index]);
+                                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const date = new Date(labels[context.dataIndex]);
+                                    const status = data[context.dataIndex] ? 'Present' : 'Absent';
+                                    return `${status} on ${date.toLocaleDateString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Calculate current streak for a person
+        function calculateCurrentStreak(personId) {
+            const personRecords = attendanceData.records
+                .filter(record => record.personId === personId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let streak = 0;
+            let prevDate = null;
+            
+            for (const record of personRecords) {
+                if (!record.present) break;
+                
+                const currentDate = new Date(record.date);
+                
+                if (prevDate === null) {
+                    // First record in the streak
+                    streak = 1;
+                    prevDate = currentDate;
+                } else {
+                    // Check if dates are consecutive
+                    const diffDays = Math.floor((prevDate - currentDate) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) {
+                        streak++;
+                        prevDate = currentDate;
+                    } else if (diffDays > 1) {
+                        // Not consecutive, streak ends
+                        break;
+                    }
+                    // If diffDays === 0, it's the same day (shouldn't happen with our data structure)
+                }
+            }
+            
+            return streak;
+        }
+
+        // Calculate attendance percentage for a person
+        function calculateAttendancePercentage(personId) {
+            const personRecords = attendanceData.records.filter(record => record.personId === personId);
+            if (personRecords.length === 0) return 0;
+            
+            const presentCount = personRecords.filter(record => record.present).length;
+            return Math.round((presentCount / personRecords.length) * 100);
+        }
+
+        // Update the total, present, and absent counts
+        function updateCounts() {
+            const todayStr = formatDate(today);
+            const totalPeople = attendanceData.people.length;
+            let presentCount = 0;
+            
+            attendanceData.people.forEach(person => {
+                const todayRecord = attendanceData.records.find(record => 
+                    record.personId === person.id && record.date === todayStr
+                );
+                
+                if (todayRecord && todayRecord.present) {
+                    presentCount++;
+                }
+            });
+            
+            elements.totalCount.textContent = totalPeople;
+            elements.presentCount.textContent = presentCount;
+            elements.absentCount.textContent = totalPeople - presentCount;
+        }
+
+        // Export attendance data for selected person as CSV
+        function exportAttendanceCSV(personId) {
+            const person = attendanceData.people.find(p => p.id === personId);
+            if (!person) return;
+            
+            const personRecords = attendanceData.records
+                .filter(record => record.personId === personId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (personRecords.length === 0) {
+                alert('No attendance records found for this person.');
+                return;
+            }
+            
+            // CSV header
+            let csv = 'Date,Status,Timestamp\n';
+            
+            // Add records
+            personRecords.forEach(record => {
+                const date = formatDisplayDate(record.date);
+                const status = record.present ? 'Present' : 'Absent';
+                const timestamp = new Date(record.timestamp).toLocaleString();
+                csv += `"${date}","${status}","${timestamp}"\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${person.name.replace(/\s+/g, '_')}_attendance.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Render calendar view
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            // Set month/year header
+            elements.currentMonthYear.textContent = new Date(year, month, 1).toLocaleDateString('en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Get first day of month and days in month
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Create day headers (Sun, Mon, etc.)
+            let html = '';
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                html += `<div class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 py-1">${day}</div>`;
+            });
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="calendar-day"></div>`;
+            }
+            
+            // Add cells for each day of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateStr = formatDate(date);
+                
+                // Check attendance for this date
+                let attendanceStatus = 'none';
+                let tooltip = `${day}`;
+                
+                if (date <= today) { // Only show for past or today
+                    const dayRecords = attendanceData.records.filter(record => record.date === dateStr);
+                    
+                    if (dayRecords.length > 0) {
+                        const presentCount = dayRecords.filter(record => record.present).length;
+                        const totalCount = dayRecords.length;
+                        
+                        if (presentCount === totalCount) {
+                            attendanceStatus = 'present';
+                            tooltip = `${day} - All present`;
+                        } else if (presentCount === 0) {
+                            attendanceStatus = 'absent';
+                            tooltip = `${day} - All absent`;
+                        } else {
+                            attendanceStatus = 'partial';
+                            tooltip = `${day} - ${presentCount}/${totalCount} present`;
+                        }
+                    } else if (dateStr === formatDate(today)) {
+                        tooltip = `${day} - Today`;
+                    }
+                }
+                
+                html += `
+                    <div class="calendar-day text-center p-1 rounded cursor-default relative group ${attendanceStatus === 'present' ? 'bg-green-100 dark:bg-green-800' : attendanceStatus === 'absent' ? 'bg-red-100 dark:bg-red-800' : attendanceStatus === 'partial' ? 'bg-yellow-100 dark:bg-yellow-800' : ''} ${dateStr === formatDate(today) ? 'border-2 border-blue-500' : ''}">
+                        <span class="text-gray-800 dark:text-white">${day}</span>
+                        <span class="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                            ${tooltip}
+                        </span>
+                    </div>
+                `;
+            }
+            
+            elements.calendarGrid.innerHTML = html;
+        }
+
+        // Change calendar month
+        function changeCalendarMonth(offset) {
+            currentCalendarDate = new Date(
+                currentCalendarDate.getFullYear(),
+                currentCalendarDate.getMonth() + offset,
+                1
+            );
+            renderCalendar();
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            
+            // Update chart colors if exists
+            if (attendanceChart) {
+                attendanceChart.update();
+            }
+        }
+
+        // Check user's dark mode preference
+        function checkDarkModePreference() {
+            const savedMode = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedMode === 'enabled' || (!savedMode && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        // Reset all data
+        function resetData() {
+            attendanceData = {
+                people: [],
+                records: []
+            };
+            saveData();
+            syncToSheet();
+            
+            // Update UI
+            renderPeopleList();
+            renderPersonSelect();
+            updateCounts();
+            
+            // Clear chart
+            if (attendanceChart) {
+                attendanceChart.destroy();
+                attendanceChart = null;
+            }
+            
+            elements.currentStreak.textContent = '0';
+            elements.attendancePercentage.textContent = '0%';
+            
+            // Update calendar
+            renderCalendar();
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Add person
+            elements.addPersonBtn.addEventListener('click', () => {
+                addPerson(elements.newPersonName.value);
+            });
+            
+            elements.newPersonName.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addPerson(elements.newPersonName.value);
+                }
+            });
+            
+            // Search
+            elements.searchInput.addEventListener('input', (e) => {
+                renderPeopleList(e.target.value);
+            });
+            
+            // Save attendance
+            elements.saveAttendanceBtn.addEventListener('click', saveTodayAttendance);
+            
+            // Person select change
+            elements.personSelect.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    renderAttendanceChart(e.target.value);
+                } else {
+                    if (attendanceChart) {
+                        attendanceChart.destroy();
+                        attendanceChart = null;
+                    }
+                    elements.currentStreak.textContent = '0';
+                    elements.attendancePercentage.textContent = '0%';
+                }
+            });
+            
+            // Export CSV
+            elements.exportCSVBtn.addEventListener('click', () => {
+                if (elements.personSelect.value) {
+                    exportAttendanceCSV(elements.personSelect.value);
+                } else {
+                    alert('Please select a person first.');
+                }
+            });
+            
+            // Calendar navigation
+            elements.prevMonthBtn.addEventListener('click', () => changeCalendarMonth(-1));
+            elements.nextMonthBtn.addEventListener('click', () => changeCalendarMonth(1));
+            
+            // Dark mode toggle
+            elements.darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Reset data
+            elements.resetBtn.addEventListener('click', () => {
+                elements.confirmationModal.classList.remove('hidden');
+            });
+            
+            elements.cancelResetBtn.addEventListener('click', () => {
+                elements.confirmationModal.classList.add('hidden');
+            });
+            
+            elements.confirmResetBtn.addEventListener('click', () => {
+                resetData();
+                elements.confirmationModal.classList.add('hidden');
+            });
+        }
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/attendance" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>

@@ -243,22 +243,25 @@
         <!-- Navigation Tabs -->
         <div class="sticky top-0 z-40 bg-gray-300">
             <div class="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700 bg-gray-300">
-                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
+                <button class="tab-btn px-6 py-3 font-semibold text-align border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="dashboard">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </button>
              
         
-                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
+                <button class="tab-btn px-6 py-3 font-semibold text-align border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="event-data">
                     <i class="fas fa-calendar-alt mr-2"></i>Sabha Event Data
                 </button>
                 
-                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
+                <button class="tab-btn px-6 py-3 font-semibold text-align border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="recipe-book">
                     <i class="fas fa-book mr-2"></i>Recipe Book
                 </button>
-                <button class="tab-btn px-6 py-3 font-medium text-sm border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="find-ai-recipe">
+                <button class="tab-btn px-6 py-3 font-semibold text-align border-b-2 border-transparent text-black hover:text-indigo-600 dark:hover:text-indigo-400 transition" data-tab="find-ai-recipe">
                     <i class="fas fa-robot mr-2"></i>Find Recipe With AI
                 </button>
-        
+                <button class="tab-btn px-6 py-3 font-semibold text-black hover:text-indigo-600" onclick="window.location.href='attendance.html'">
+                    <i class="fas fa-user-check mr-2"></i>Attendance
+                  </button>
+                  
             </div>
         </div>
         
@@ -578,7 +581,7 @@
 
                         <!-- Find Recipe With AI Tab Content -->
             <div id="find-ai-recipe" class="tab-content">
-                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-full">Welcome to AI Recipe Finder ! Find Your Favorite Item Recipe Here:</h2>
+                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded">Welcome to AI Recipe Finder ! Find Your Favorite Item Recipe Here:</h2>
                 
                
                 <!-- Recipe Search Form -->
@@ -729,6 +732,8 @@
        </div>
      </div>
    </div>
+
+   
 
 
     <script>
