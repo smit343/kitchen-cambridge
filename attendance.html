@@ -114,7 +114,7 @@ p {
 <!-- Firestore SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
@@ -369,20 +369,33 @@ p {
             // Check dark mode preference
             checkDarkModePreference();
         });
-
+        import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";    
+        onSnapshot(collection(db, "AttendanceRecords"), snapshot => {
+          attendanceData.records = snapshot.docs.map(doc => doc.data());
+          renderPeopleList(); // or wherever the UI needs to update
+        });
+        
         // Load data from localStorage
         async function loadData() {
+          try {
+            // Fetch people
+            const peopleSnap = await getDocs(collection(db, "People"));
+            attendanceData.people = peopleSnap.docs.map(doc => doc.data());
+        
+            // Fetch records
+            const recordSnap = await getDocs(collection(db, "AttendanceRecords"));
+            attendanceData.records = recordSnap.docs.map(doc => doc.data());
+        
+            saveData(); // Cache locally
+          } catch (err) {
+            console.error("Failed to load from Firestore", err);
             const savedData = localStorage.getItem('attendanceData');
             if (savedData) {
-                attendanceData = JSON.parse(savedData);
+              attendanceData = JSON.parse(savedData);
             }
-            try {
-                const firebaseData = await fetchAttendanceFromFirestore();
-                attendanceData.records = firebaseData;
-            } catch (e) {
-                console.error("Failed to fetch from Firestore:", e);
-            }
+          }
         }
+        
 
         // Save data to localStorage
         function saveData() {
@@ -405,34 +418,39 @@ p {
         }
 
         // Add a new person
-        function addPerson(name) {
-            if (!name.trim()) return;
-            
-            // Check if person already exists
-            const existingPerson = attendanceData.people.find(p => p.name.toLowerCase() === name.toLowerCase());
-            if (existingPerson) {
-                alert('This person already exists!');
-                return;
-            }
-            
-            // Create new person
-            const newPerson = {
-                id: Date.now().toString(),
-                name: name.trim()
-            };
-            
-            attendanceData.people.push(newPerson);
-            saveData();
-           
-            
-            // Clear input
-            elements.newPersonName.value = '';
-            
-            // Update UI
-            renderPeopleList();
-            renderPersonSelect();
-            updateCounts();
-        }
+        async function addPerson(name) {
+           if (!name.trim()) return;
+       
+           // Check if person already exists (case insensitive)
+           const existingPerson = attendanceData.people.find(p => p.name.toLowerCase() === name.toLowerCase());
+           if (existingPerson) {
+               alert('This person already exists!');
+               return;
+           }
+       
+           const newPerson = {
+               id: Date.now().toString(),
+               name: name.trim()
+           };
+       
+           attendanceData.people.push(newPerson);
+           saveData();
+       
+           // Save to Firestore using deterministic ID
+           try {
+               await setDoc(doc(db, "People", newPerson.id), newPerson);
+               console.log("Person saved to Firestore:", newPerson.name);
+           } catch (err) {
+               console.error("Error saving person to Firestore", err);
+           }
+       
+           // Clear input and update UI
+           elements.newPersonName.value = '';
+           renderPeopleList();
+           renderPersonSelect();
+           updateCounts();
+        }       
+
 
         // Render the list of people for today's attendance
         function renderPeopleList(filter = '') {
@@ -487,24 +505,22 @@ p {
         }
 
         // Save today's attendance
-        function saveTodayAttendance() {
+        async function saveTodayAttendance() {
             const todayStr = formatDate(today);
             const checkboxes = document.querySelectorAll('#attendanceList input[type="checkbox"]');
-            
-            checkboxes.forEach(checkbox => {
+        
+            for (const checkbox of checkboxes) {
                 const personId = checkbox.dataset.personId;
                 const isPresent = checkbox.checked;
-                
+        
                 // Find existing record for today
-                const existingRecordIndex = attendanceData.records.findIndex(record => 
+                const existingRecordIndex = attendanceData.records.findIndex(record =>
                     record.personId === personId && record.date === todayStr
                 );
-                
+        
                 if (existingRecordIndex !== -1) {
-                    // Update existing record
                     attendanceData.records[existingRecordIndex].present = isPresent;
                 } else {
-                    // Add new record
                     attendanceData.records.push({
                         personId,
                         date: todayStr,
@@ -512,41 +528,36 @@ p {
                         timestamp: new Date().toISOString()
                     });
                 }
-            });
-            
-            saveData();
-            
-
-            // Save to Firestore
-            
-            attendanceData.people.forEach(person => {
-                const record = attendanceData.records.find(r => r.personId === person.id && r.date === todayStr);
-                if (record) {
-                    saveAttendanceToFirestore(person.id, person.name, record.date, record.present);
-                }
-            });
+        
+                // Save/update to Firestore with deterministic ID (personId_date)
+                const docId = `${personId}_${todayStr}`;
+                await setDoc(doc(db, "AttendanceRecords", docId), {
+                    personId,
+                    name: attendanceData.people.find(p => p.id === personId)?.name || '',
+                    date: todayStr,
+                    present: isPresent,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        
+            saveData(); // Save to localStorage
             updateCounts();
-            
-            // Update the chart if a person is selected
+        
             if (elements.personSelect.value) {
                 renderAttendanceChart(elements.personSelect.value);
             }
-            
-            // Update calendar view
+        
             renderCalendar();
-            
-            // Show success feedback
+        
             const originalText = elements.saveAttendanceBtn.textContent;
             elements.saveAttendanceBtn.textContent = 'Saved!';
-            elements.saveAttendanceBtn.classList.remove('bg-green-500');
-            elements.saveAttendanceBtn.classList.add('bg-green-600');
-            
+            elements.saveAttendanceBtn.classList.replace('bg-green-500', 'bg-green-600');
             setTimeout(() => {
                 elements.saveAttendanceBtn.textContent = originalText;
-                elements.saveAttendanceBtn.classList.remove('bg-green-600');
-                elements.saveAttendanceBtn.classList.add('bg-green-500');
+                elements.saveAttendanceBtn.classList.replace('bg-green-600', 'bg-green-500');
             }, 2000);
         }
+
 
         // Render attendance chart for selected person
         function renderAttendanceChart(personId) {
