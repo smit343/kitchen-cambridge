@@ -115,7 +115,7 @@ p {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, doc, setDoc, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+  import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";  
   const firebaseConfig = {
     apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
     authDomain: "attendance-c8ae8.firebaseapp.com",
@@ -369,7 +369,7 @@ p {
             // Check dark mode preference
             checkDarkModePreference();
         });
-        import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";    
+          
         onSnapshot(collection(db, "AttendanceRecords"), snapshot => {
           attendanceData.records = snapshot.docs.map(doc => doc.data());
           renderPeopleList(); // or wherever the UI needs to update
