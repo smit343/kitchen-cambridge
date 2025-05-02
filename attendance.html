@@ -128,7 +128,10 @@ p {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
+  onSnapshot(collection(db, "AttendanceRecords"), snapshot => {
+    attendanceData.records = snapshot.docs.map(doc => doc.data());
+    renderPeopleList();
+  });
   // Function to save a single attendance record to Firestore
   async function saveAttendanceToFirestore(personId, name, date, present) {
     try {
