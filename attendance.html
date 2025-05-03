@@ -8,163 +8,54 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0/dist/chartjs-adapter-luxon.min.js"></script>
-  <style>
-    /* ====== Custom Styles from style.css ====== */
-body {
-	padding: 2rem;
-	font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
-}
-
-h1 {
-	font-size: 16px;
-	margin-top: 0;
-}
-
-p {
-	color: rgb(107, 114, 128);
-	font-size: 15px;
-	margin-bottom: 10px;
-	margin-top: 5px;
-}
-
-.card {
-	max-width: 620px;
-	margin: 0 auto;
-	padding: 16px;
-	border: 1px solid lightgray;
-	border-radius: 16px;
-}
-
-.card p:last-child {
-	margin-bottom: 0;
-}
-
-    /* ====== Existing Styles from index.html ====== */
-    .fade-in {
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .calendar-day {
-      transition: all 0.2s ease;
-    }
-
-    .calendar-day:hover {
-      transform: scale(1.05);
-    }
-
-    .dark .calendar-day.present {
-      background-color: #4ade80 !important;
-    }
-
-    .dark .calendar-day.absent {
-      background-color: #f87171 !important;
-    }
-  </style>
-
-  <!-- Firebase App (Modular SDK) -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<script>
-  const SHEET_ID = '1lT5MA8zNfc8i0h3qRq8I_sCsW2-Dv1Wale90m7NdOuY';
-  const API_KEY = 'AIzaSyDmMM7OEIan9FdRhV4U9rDjwWOJcDTA1ic';
-  const CLIENT_ID = '291026406454-qma5r1pj93q7o1l4u0p0ufbeg276a8hm.apps.googleusercontent.com';
-  const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-  let tokenClient;
-
-  async function gapiInit() {
-    await syncFromSheet(); // directly call sync without gapi
-    gapi.load('client', async () => {
-      await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
-      });
-
-      /* OAuth logic removed for public access */
-    });
-  }
-
-  
-
-  function updateSigninStatus(isSignedIn) {
-    if (isSignedIn) {
-      console.log("Signed into Google");
-      syncFromSheet(); // pull data on load
-    } else {
-      console.log("Not signed in — attempting sign in");
-      gapi.auth2.getAuthInstance().signIn();
-    }
-  }
-
-  
-
-
-
-  
-</script>
-
-
-<!-- Firestore SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";  
-  const firebaseConfig = {
-    apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
-    authDomain: "attendance-c8ae8.firebaseapp.com",
-    projectId: "attendance-c8ae8",
-    storageBucket: "attendance-c8ae8.appspot.com",
-    messagingSenderId: "633592543701",
-    appId: "1:633592543701:web:ffc7fe9625b92b3dbda55c",
-    measurementId: "G-LJ5PBZ9XM0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  onSnapshot(collection(db, "AttendanceRecords"), snapshot => {
-    attendanceData.records = snapshot.docs.map(doc => doc.data());
-    renderPeopleList();
-  });
-  // Function to save a single attendance record to Firestore
-  async function saveAttendanceToFirestore(personId, name, date, present) {
-    try {
-      await addDoc(collection(db, "AttendanceRecords"), {
-        personId,
-        name,
-        date,
-        present
-      });
-      console.log("Saved to Firestore:", name, date, present);
-    } catch (err) {
-      console.error("Failed to write to Firestore", err);
-    }
-  }
-
-  // Example function to fetch all records (you can customize)
-  async function fetchAttendanceFromFirestore() {
-    try {
-      const snapshot = await getDocs(collection(db, "AttendanceRecords"));
-      const data = [];
-      snapshot.forEach(doc => data.push(doc.data()));
-      console.log("Fetched from Firestore:", data);
-      return data;
-    } catch (err) {
-      console.error("Failed to fetch from Firestore", err);
-      return [];
-    }
-  }
-
-  window.saveAttendanceToFirestore = saveAttendanceToFirestore;
-  window.fetchAttendanceFromFirestore = fetchAttendanceFromFirestore;
-</script>
-
+    <style>
+        body {
+            padding: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
+        }
+        h1 {
+            font-size: 16px;
+            margin-top: 0;
+        }
+        p {
+            color: rgb(107, 114, 128);
+            font-size: 15px;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
+        .card {
+            max-width: 620px;
+            margin: 0 auto;
+            padding: 16px;
+            border: 1px solid lightgray;
+            border-radius: 16px;
+        }
+        .card p:last-child {
+            margin-bottom: 0;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .calendar-day {
+            transition: all 0.2s ease;
+        }
+        .calendar-day:hover {
+            transform: scale(1.05);
+        }
+        .dark .calendar-day.present {
+            background-color: #4ade80 !important;
+        }
+        .dark .calendar-day.absent {
+            background-color: #f87171 !important;
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
@@ -312,10 +203,28 @@ p {
     </div>
 
     <script>
+        "use strict";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5_a7GZjatvUldUorfXOWDLvXgPZZm67c",
+            authDomain: "attendance-c8ae8.firebaseapp.com",
+            projectId: "attendance-c8ae8",
+            storageBucket: "attendance-c8ae8.appspot.com",
+            messagingSenderId: "633592543701",
+            appId: "1:633592543701:web:ffc7fe9625b92b3dbda55c",
+            measurementId: "G-LJ5PBZ9XM0"
+        };
+
+        // Initialize Firebase
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
         // Data structure
-        let attendanceData = {
-            people: [], // Array of person objects { id, name }
-            records: [] // Array of attendance records { personId, date, present }
+        const attendanceData = {
+            people: [],
+            records: []
         };
 
         // DOM Elements
@@ -345,113 +254,142 @@ p {
             confirmResetBtn: document.getElementById('confirmResetBtn')
         };
 
-        // Chart instance
-        let attendanceChart = null;
-        
-        // Current date and calendar view
+        // App State
         const today = new Date();
         let currentCalendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        let attendanceChart = null;
 
         // Initialize the app
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load data from localStorage
-            loadData();
-            
-            // Set today's date
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Utility Functions
+        function formatDate(date) {
+            const d = new Date(date);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function formatDisplayDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+        }
+
+        async function initApp() {
             elements.todayDate.textContent = formatDate(today);
-            
-            // Initialize UI
+            setupEventListeners();
+            checkDarkModePreference();
+            await loadData();
+            setupFirestoreListeners();
+        }
+
+        async function loadData() {
+            try {
+                const [peopleSnap, recordsSnap] = await Promise.all([
+                    db.collection("People").get(),
+                    db.collection("AttendanceRecords").get()
+                ]);
+                
+                attendanceData.people = peopleSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                attendanceData.records = recordsSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                
+                updateUI();
+            } catch (error) {
+                console.error("Load error:", error);
+                const savedData = localStorage.getItem('attendanceData');
+                if (savedData) {
+                    Object.assign(attendanceData, JSON.parse(savedData));
+                    updateUI();
+                }
+            }
+        }
+
+        function setupFirestoreListeners() {
+          // People collection
+          db.collection("People").onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+              const data = change.doc.data();
+              if (change.type === "added") {
+                attendanceData.people.push({ id: change.doc.id, ...data });
+              }
+              if (change.type === "modified") {
+                const index = attendanceData.people.findIndex(p => p.id === change.doc.id);
+                if (index !== -1) {
+                  attendanceData.people[index] = { id: change.doc.id, ...data };
+                }
+              }
+              if (change.type === "removed") {
+                attendanceData.people = attendanceData.people.filter(p => p.id !== change.doc.id);
+              }
+            });
+            updateUI();
+          }, (error) => {
+            console.error("People listener error:", error);
+          });
+        
+          // AttendanceRecords collection
+          db.collection("AttendanceRecords").onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+              const data = change.doc.data();
+              if (change.type === "added") {
+                attendanceData.records.push({ id: change.doc.id, ...data });
+              }
+              if (change.type === "modified") {
+                const index = attendanceData.records.findIndex(r => r.id === change.doc.id);
+                if (index !== -1) {
+                  attendanceData.records[index] = { id: change.doc.id, ...data };
+                }
+              }
+              if (change.type === "removed") {
+                attendanceData.records = attendanceData.records.filter(r => r.id !== change.doc.id);
+              }
+            });
+            updateUI();
+          }, (error) => {
+            console.error("Records listener error:", error);
+          });
+        }
+
+        function handlePeopleChange(snapshot) {
+            snapshot.docChanges().forEach(change => {
+                const index = attendanceData.people.findIndex(p => p.id === change.doc.id);
+                if (change.type === "added" && index === -1) {
+                    attendanceData.people.push({id: change.doc.id, ...change.doc.data()});
+                } else if (change.type === "modified" && index !== -1) {
+                    attendanceData.people[index] = {id: change.doc.id, ...change.doc.data()};
+                } else if (change.type === "removed" && index !== -1) {
+                    attendanceData.people.splice(index, 1);
+                }
+            });
+            updateUI();
+        }
+
+        function handleRecordsChange(snapshot) {
+            snapshot.docChanges().forEach(change => {
+                const index = attendanceData.records.findIndex(r => r.id === change.doc.id);
+                if (change.type === "added" && index === -1) {
+                    attendanceData.records.push({id: change.doc.id, ...change.doc.data()});
+                } else if (change.type === "modified" && index !== -1) {
+                    attendanceData.records[index] = {id: change.doc.id, ...change.doc.data()};
+                } else if (change.type === "removed" && index !== -1) {
+                    attendanceData.records.splice(index, 1);
+                }
+            });
+            updateUI();
+            if (elements.personSelect.value) {
+                renderAttendanceChart(elements.personSelect.value);
+            }
+        }
+
+        function updateUI() {
             renderPeopleList();
             renderPersonSelect();
             updateCounts();
             renderCalendar();
-            
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Check dark mode preference
-            checkDarkModePreference();
-        });
-          
-       
-        // Load data from localStorage
-        async function loadData() {
-          try {
-            // Fetch people
-            const peopleSnap = await getDocs(collection(db, "People"));
-            attendanceData.people = peopleSnap.docs.map(doc => doc.data());
-        
-            // Fetch records
-            const recordSnap = await getDocs(collection(db, "AttendanceRecords"));
-            attendanceData.records = recordSnap.docs.map(doc => doc.data());
-        
-            saveData(); // Cache locally
-          } catch (err) {
-            console.error("Failed to load from Firestore", err);
-            const savedData = localStorage.getItem('attendanceData');
-            if (savedData) {
-              attendanceData = JSON.parse(savedData);
-            }
-          }
+            saveData();
         }
-        
 
-        // Save data to localStorage
         function saveData() {
             localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
         }
 
-        // Format date as YYYY-MM-DD
-        function formatDate(date) {
-            const d = new Date(date);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        // Format date for display (e.g., Jan 1, 2023)
-        function formatDisplayDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        // Add a new person
-        async function addPerson(name) {
-           if (!name.trim()) return;
-       
-           // Check if person already exists (case insensitive)
-           const existingPerson = attendanceData.people.find(p => p.name.toLowerCase() === name.toLowerCase());
-           if (existingPerson) {
-               alert('This person already exists!');
-               return;
-           }
-       
-           const newPerson = {
-               id: Date.now().toString(),
-               name: name.trim()
-           };
-       
-           attendanceData.people.push(newPerson);
-           saveData();
-       
-           // Save to Firestore using deterministic ID
-           try {
-               await setDoc(doc(db, "People", newPerson.id), newPerson);
-               console.log("Person saved to Firestore:", newPerson.name);
-           } catch (err) {
-               console.error("Error saving person to Firestore", err);
-           }
-       
-           // Clear input and update UI
-           elements.newPersonName.value = '';
-           renderPeopleList();
-           renderPersonSelect();
-           updateCounts();
-        }       
-
-
-        // Render the list of people for today's attendance
         function renderPeopleList(filter = '') {
             const todayStr = formatDate(today);
             const filteredPeople = attendanceData.people.filter(person => 
@@ -461,7 +399,6 @@ p {
             let html = '';
             
             filteredPeople.forEach(person => {
-                // Check if attendance is already marked for today
                 const todayRecord = attendanceData.records.find(record => 
                     record.personId === person.id && record.date === todayStr
                 );
@@ -492,62 +429,61 @@ p {
             elements.attendanceList.innerHTML = html || '<tr><td colspan="4" class="py-4 text-center text-gray-500">No people added yet</td></tr>';
         }
 
-        // Render the person select dropdown
         function renderPersonSelect() {
             let html = '<option value="">Select a person</option>';
-            
             attendanceData.people.forEach(person => {
                 html += `<option value="${person.id}">${person.name}</option>`;
             });
-            
             elements.personSelect.innerHTML = html;
         }
 
-        // Save today's attendance
-        async function saveTodayAttendance() {
+        function updateCounts() {
             const todayStr = formatDate(today);
-            const checkboxes = document.querySelectorAll('#attendanceList input[type="checkbox"]');
-        
-            for (const checkbox of checkboxes) {
-                const personId = checkbox.dataset.personId;
-                const isPresent = checkbox.checked;
-        
-                // Find existing record for today
-                const existingRecordIndex = attendanceData.records.findIndex(record =>
-                    record.personId === personId && record.date === todayStr
+            const totalPeople = attendanceData.people.length;
+            let presentCount = 0;
+            
+            attendanceData.people.forEach(person => {
+                const todayRecord = attendanceData.records.find(record => 
+                    record.personId === person.id && record.date === todayStr
                 );
-        
-                if (existingRecordIndex !== -1) {
-                    attendanceData.records[existingRecordIndex].present = isPresent;
-                } else {
-                    attendanceData.records.push({
-                        personId,
-                        date: todayStr,
-                        present: isPresent,
-                        timestamp: new Date().toISOString()
-                    });
+                
+                if (todayRecord && todayRecord.present) {
+                    presentCount++;
                 }
+            });
+            
+            elements.totalCount.textContent = totalPeople;
+            elements.presentCount.textContent = presentCount;
+            elements.absentCount.textContent = totalPeople - presentCount;
+        }
+
+        async function saveTodayAttendance() {
+          const todayStr = formatDate(today);
+          const batch = db.batch();
+          
+          document.querySelectorAll('#attendanceList input[type="checkbox"]').forEach(checkbox => {
+            const personId = checkbox.dataset.personId;
+            const isPresent = checkbox.checked;
+            const docId = `${personId}_${todayStr}`;
+            
+            const recordRef = db.collection("AttendanceRecords").doc(docId);
+            batch.set(recordRef, {
+              personId,
+              date: todayStr,
+              present: isPresent,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }); // Important: merge updates instead of overwriting
+          });
         
-                // Save/update to Firestore with deterministic ID (personId_date)
-                const docId = `${personId}_${todayStr}`;
-                await setDoc(doc(db, "AttendanceRecords", docId), {
-                    personId,
-                    name: attendanceData.people.find(p => p.id === personId)?.name || '',
-                    date: todayStr,
-                    present: isPresent,
-                    timestamp: new Date().toISOString()
-                });
-            }
-        
-            saveData(); // Save to localStorage
-            updateCounts();
-        
-            if (elements.personSelect.value) {
-                renderAttendanceChart(elements.personSelect.value);
-            }
-        
-            renderCalendar();
-        
+          try {
+            await batch.commit();
+            showSaveConfirmation();
+          } catch (error) {
+            console.error("Save failed:", error);
+            alert("Failed to save attendance. Please try again.");
+          }
+        }
+        function showSaveConfirmation() {
             const originalText = elements.saveAttendanceBtn.textContent;
             elements.saveAttendanceBtn.textContent = 'Saved!';
             elements.saveAttendanceBtn.classList.replace('bg-green-500', 'bg-green-600');
@@ -557,35 +493,28 @@ p {
             }, 2000);
         }
 
-
-        // Render attendance chart for selected person
         function renderAttendanceChart(personId) {
             const person = attendanceData.people.find(p => p.id === personId);
             if (!person) return;
             
-            // Get all records for this person, sorted by date
             const personRecords = attendanceData.records
                 .filter(record => record.personId === personId)
                 .sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            // Prepare data for chart
             const labels = personRecords.map(record => record.date);
             const data = personRecords.map(record => record.present ? 1 : 0);
             const backgroundColors = personRecords.map(record => record.present ? '#4ade80' : '#f87171');
             
-            // Calculate streak and percentage
             const streak = calculateCurrentStreak(personId);
             const percentage = calculateAttendancePercentage(personId);
             
             elements.currentStreak.textContent = streak;
             elements.attendancePercentage.textContent = `${percentage}%`;
             
-            // Destroy previous chart if exists
             if (attendanceChart) {
                 attendanceChart.destroy();
             }
             
-            // Create new chart
             const ctx = elements.attendanceChart.getContext('2d');
             attendanceChart = new Chart(ctx, {
                 type: 'bar',
@@ -617,7 +546,6 @@ p {
                         x: {
                             ticks: {
                                 callback: function(value, index) {
-                                    // Show only every 5th label or the last one
                                     if (index % 5 === 0 || index === labels.length - 1) {
                                         const date = new Date(labels[index]);
                                         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -645,7 +573,6 @@ p {
             });
         }
 
-        // Calculate current streak for a person
         function calculateCurrentStreak(personId) {
             const personRecords = attendanceData.records
                 .filter(record => record.personId === personId)
@@ -660,27 +587,22 @@ p {
                 const currentDate = new Date(record.date);
                 
                 if (prevDate === null) {
-                    // First record in the streak
                     streak = 1;
                     prevDate = currentDate;
                 } else {
-                    // Check if dates are consecutive
                     const diffDays = Math.floor((prevDate - currentDate) / (1000 * 60 * 60 * 24));
                     if (diffDays === 1) {
                         streak++;
                         prevDate = currentDate;
                     } else if (diffDays > 1) {
-                        // Not consecutive, streak ends
                         break;
                     }
-                    // If diffDays === 0, it's the same day (shouldn't happen with our data structure)
                 }
             }
             
             return streak;
         }
 
-        // Calculate attendance percentage for a person
         function calculateAttendancePercentage(personId) {
             const personRecords = attendanceData.records.filter(record => record.personId === personId);
             if (personRecords.length === 0) return 0;
@@ -689,100 +611,36 @@ p {
             return Math.round((presentCount / personRecords.length) * 100);
         }
 
-        // Update the total, present, and absent counts
-        function updateCounts() {
-            const todayStr = formatDate(today);
-            const totalPeople = attendanceData.people.length;
-            let presentCount = 0;
-            
-            attendanceData.people.forEach(person => {
-                const todayRecord = attendanceData.records.find(record => 
-                    record.personId === person.id && record.date === todayStr
-                );
-                
-                if (todayRecord && todayRecord.present) {
-                    presentCount++;
-                }
-            });
-            
-            elements.totalCount.textContent = totalPeople;
-            elements.presentCount.textContent = presentCount;
-            elements.absentCount.textContent = totalPeople - presentCount;
-        }
-
-        // Export attendance data for selected person as CSV
-        function exportAttendanceCSV(personId) {
-            const person = attendanceData.people.find(p => p.id === personId);
-            if (!person) return;
-            
-            const personRecords = attendanceData.records
-                .filter(record => record.personId === personId)
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            if (personRecords.length === 0) {
-                alert('No attendance records found for this person.');
-                return;
-            }
-            
-            // CSV header
-            let csv = 'Date,Status,Timestamp\n';
-            
-            // Add records
-            personRecords.forEach(record => {
-                const date = formatDisplayDate(record.date);
-                const status = record.present ? 'Present' : 'Absent';
-                const timestamp = new Date(record.timestamp).toLocaleString();
-                csv += `"${date}","${status}","${timestamp}"\n`;
-            });
-            
-            // Create download link
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${person.name.replace(/\s+/g, '_')}_attendance.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Render calendar view
         function renderCalendar() {
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             
-            // Set month/year header
             elements.currentMonthYear.textContent = new Date(year, month, 1).toLocaleDateString('en-US', { 
                 month: 'long', 
                 year: 'numeric' 
             });
             
-            // Get first day of month and days in month
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             
-            // Create day headers (Sun, Mon, etc.)
             let html = '';
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             dayNames.forEach(day => {
                 html += `<div class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 py-1">${day}</div>`;
             });
             
-            // Add empty cells for days before the first day of the month
             for (let i = 0; i < firstDay; i++) {
                 html += `<div class="calendar-day"></div>`;
             }
             
-            // Add cells for each day of the month
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month, day);
                 const dateStr = formatDate(date);
                 
-                // Check attendance for this date
                 let attendanceStatus = 'none';
                 let tooltip = `${day}`;
                 
-                if (date <= today) { // Only show for past or today
+                if (date <= today) {
                     const dayRecords = attendanceData.records.filter(record => record.date === dateStr);
                     
                     if (dayRecords.length > 0) {
@@ -817,7 +675,6 @@ p {
             elements.calendarGrid.innerHTML = html;
         }
 
-        // Change calendar month
         function changeCalendarMonth(offset) {
             currentCalendarDate = new Date(
                 currentCalendarDate.getFullYear(),
@@ -827,18 +684,15 @@ p {
             renderCalendar();
         }
 
-        // Toggle dark mode
         function toggleDarkMode() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
             
-            // Update chart colors if exists
             if (attendanceChart) {
                 attendanceChart.update();
             }
         }
 
-        // Check user's dark mode preference
         function checkDarkModePreference() {
             const savedMode = localStorage.getItem('darkMode');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -848,43 +702,79 @@ p {
             }
         }
 
-        // Reset all data
-        function resetData() {
-            attendanceData = {
-                people: [],
-                records: []
-            };
-            saveData();
-            
-            
-            // Update UI
-            renderPeopleList();
-            renderPersonSelect();
-            updateCounts();
-            
-            // Clear chart
-            if (attendanceChart) {
-                attendanceChart.destroy();
-                attendanceChart = null;
+        async function resetData() {
+            if (!confirm("Are you sure you want to reset ALL data? This cannot be undone.")) {
+                return;
             }
             
-            elements.currentStreak.textContent = '0';
-            elements.attendancePercentage.textContent = '0%';
+            try {
+                // Delete all records
+                const recordsSnapshot = await db.collection("AttendanceRecords").get();
+                const recordsBatch = db.batch();
+                recordsSnapshot.docs.forEach(doc => {
+                    recordsBatch.delete(doc.ref);
+                });
+                
+                // Delete all people
+                const peopleSnapshot = await db.collection("People").get();
+                const peopleBatch = db.batch();
+                peopleSnapshot.docs.forEach(doc => {
+                    peopleBatch.delete(doc.ref);
+                });
+                
+                await Promise.all([recordsBatch.commit(), peopleBatch.commit()]);
+                
+                // Clear local data
+                attendanceData.people = [];
+                attendanceData.records = [];
+                updateUI();
+                
+                alert("All data has been reset successfully.");
+            } catch (error) {
+                console.error("Error resetting data:", error);
+                alert("Failed to reset data. Please try again.");
+            }
+        }
+        async function addPerson(name) {
+            if (!name.trim()) return;
             
-            // Update calendar
-            renderCalendar();
+            // Check for duplicates (case insensitive)
+            const nameLower = name.trim().toLowerCase();
+            const existingPerson = attendanceData.people.find(p => 
+                p.name.toLowerCase() === nameLower
+            );
+            
+            if (existingPerson) {
+                alert('This person already exists!');
+                return;
+            }
+            
+            try {
+                // Add to Firestore
+                await db.collection("People").add({
+                    name: name.trim(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Clear input
+                elements.newPersonName.value = '';
+            } catch (error) {
+                console.error("Error adding person:", error);
+                alert("Failed to add person. Please try again.");
+            }
         }
 
-        // Set up event listeners
         function setupEventListeners() {
             // Add person
             elements.addPersonBtn.addEventListener('click', () => {
-                addPerson(elements.newPersonName.value);
+                const name = elements.newPersonName.value.trim();
+                if (name) addPerson(name);
             });
             
             elements.newPersonName.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    addPerson(elements.newPersonName.value);
+                    const name = elements.newPersonName.value.trim();
+                    if (name) addPerson(name);
                 }
             });
             
@@ -900,11 +790,9 @@ p {
             elements.personSelect.addEventListener('change', (e) => {
                 if (e.target.value) {
                     renderAttendanceChart(e.target.value);
-                } else {
-                    if (attendanceChart) {
-                        attendanceChart.destroy();
-                        attendanceChart = null;
-                    }
+                } else if (attendanceChart) {
+                    attendanceChart.destroy();
+                    attendanceChart = null;
                     elements.currentStreak.textContent = '0';
                     elements.attendancePercentage.textContent = '0%';
                 }
@@ -940,6 +828,45 @@ p {
                 elements.confirmationModal.classList.add('hidden');
             });
         }
+        
+        function checkConnection() {
+          const isConnectedRef = firebase.database().ref(".info/connected");
+          isConnectedRef.on("value", (snap) => {
+            console.log("Firebase connection:", snap.val() ? "Connected" : "Disconnected");
+          });
+        }
+
+        function exportAttendanceCSV(personId) {
+            const person = attendanceData.people.find(p => p.id === personId);
+            if (!person) return;
+            
+            const personRecords = attendanceData.records
+                .filter(record => record.personId === personId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (personRecords.length === 0) {
+                alert('No attendance records found for this person.');
+                return;
+            }
+            
+            let csv = 'Date,Status,Timestamp\n';
+            
+            personRecords.forEach(record => {
+                const date = formatDisplayDate(record.date);
+                const status = record.present ? 'Present' : 'Absent';
+                const timestamp = new Date(record.timestamp).toLocaleString();
+                csv += `"${date}","${status}","${timestamp}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${person.name.replace(/\s+/g, '_')}_attendance.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/attendance" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</body>
 </html>
