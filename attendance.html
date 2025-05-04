@@ -52,6 +52,14 @@
         .dark .calendar-day.absent {
             background-color: #f87171 !important;
         }
+        /* Add to your existing styles */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+            cursor: pointer;
+        }
+        .dark input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -87,6 +95,14 @@
                             Add
                         </button>
                     </div>
+                </div>
+
+                <div class="flex items-center mb-4">
+                    <label for="attendanceDate" class="mr-2 text-gray-600 dark:text-gray-300">Select Date:</label>
+                    <input type="date" id="attendanceDate" class="px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                    <button id="loadAttendanceBtn" class="ml-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Load
+                    </button>
                 </div>
 
                 <!-- Today's Attendance -->
@@ -132,6 +148,33 @@
                         </button>
                     </div>
                 </div>
+             
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 fade-in">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Team Performance</h2>
+                    
+                    <!-- Date Range Selector -->
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
+                            <input type="date" id="startDate" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
+                            <input type="date" id="endDate" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div class="self-end">
+                            <button id="updateTeamChartBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                Update Chart
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Container -->
+                    <div class="h-96">
+                        <canvas id="teamPerformanceChart"></canvas>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Right Column - Attendance History -->
@@ -182,6 +225,11 @@
                         <!-- Calendar will be populated here -->
                     </div>
                 </div>
+
+
+            
+                
+
             </div>
         </div>
     </div>
@@ -251,33 +299,187 @@
             resetBtn: document.getElementById('resetBtn'),
             confirmationModal: document.getElementById('confirmationModal'),
             cancelResetBtn: document.getElementById('cancelResetBtn'),
-            confirmResetBtn: document.getElementById('confirmResetBtn')
+            confirmResetBtn: document.getElementById('confirmResetBtn'),          
+            startDate: document.getElementById('startDate'),
+            endDate: document.getElementById('endDate'),
+            updateTeamChartBtn: document.getElementById('updateTeamChartBtn'),
+            attendanceDate: document.getElementById('attendanceDate'),
+            loadAttendanceBtn: document.getElementById('loadAttendanceBtn'),
+            teamPerformanceChart: document.getElementById('teamPerformanceChart')
         };
 
         // App State
         const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        function normalizeDate(date) {
+            if (typeof date === 'string') {
+                const d = new Date(date);
+                d.setHours(0, 0, 0, 0);
+                return d;
+            }
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
+        
+        function getCurrentViewDate() {
+            const selectedDate = elements.attendanceDate.value;
+            return selectedDate ? normalizeDate(new Date(selectedDate)) : today;
+        }
         let currentCalendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
         let attendanceChart = null;
+        // Add with your other chart variables
+        let teamPerformanceChart = null;
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', initApp);
 
         // Utility Functions
+        // Fixed date formatting that accounts for timezone
         function formatDate(date) {
+            // Use UTC methods to avoid timezone issues
             const d = new Date(date);
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const year = d.getUTCFullYear();
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Fixed date parsing that handles timezones correctly
+        function parseInputDate(dateString) {
+            // Create date in local timezone from YYYY-MM-DD string
+            const parts = dateString.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
         }
 
         function formatDisplayDate(dateString) {
-            return new Date(dateString).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            };
+            return new Date(dateString).toLocaleDateString('en-US', options);
         }
 
         async function initApp() {
-            elements.todayDate.textContent = formatDate(today);
+            // Initialize with today's date (using local time)
+            const today = new Date();
+            elements.attendanceDate.value = formatDate(today);
+            elements.attendanceDate.max = formatDate(today);
+            window.handleCalendarDayClick = handleCalendarDayClick;
+            
+            // Set up today's date display
+            elements.todayDate.textContent = formatDisplayDate(today);
+            
+            // Rest of your initialization code...
             setupEventListeners();
             checkDarkModePreference();
             await loadData();
             setupFirestoreListeners();
+        
+            // Set default date range (last 30 days)
+            const defaultEndDate = new Date();
+            const defaultStartDate = new Date();
+            defaultStartDate.setDate(defaultEndDate.getDate() - 30);
+            
+            elements.startDate.value = formatDate(defaultStartDate);
+            elements.endDate.value = formatDate(defaultEndDate);
+            
+            renderTeamPerformanceChart(defaultStartDate, defaultEndDate);
+            
+            elements.updateTeamChartBtn.addEventListener('click', () => {
+                const startDate = elements.startDate.value;
+                const endDate = elements.endDate.value;
+                
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates');
+                    return;
+                }
+                
+                renderTeamPerformanceChart(startDate, endDate);
+            });
+        }
+
+        function setupDateSelection() {
+            // Set default date input value to today
+            elements.attendanceDate.value = formatDate(today);
+            
+            elements.loadAttendanceBtn.addEventListener('click', () => {
+                const selectedDateStr = elements.attendanceDate.value;
+                const selectedDate = parseInputDate(selectedDateStr);
+                
+                if (isNaN(selectedDate.getTime())) {
+                    alert('Please select a valid date');
+                    return;
+                }
+                
+                // Sync all displays with this date
+                syncAllDateDisplays(selectedDate);
+            });
+        }
+
+        // Proper date formatting for HTML input
+        function formatDateForInput(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Date comparison that ignores time
+        function isSameDate(date1, date2) {
+            return date1.getFullYear() === date2.getFullYear() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getDate() === date2.getDate();
+        }
+        
+    
+        
+        function renderAttendanceForDate(date) {
+            const dateStr = formatDate(date);
+            const isToday = dateStr === formatDate(today);
+            
+            // Update UI to show which date you're viewing
+            elements.todayDate.textContent = formatDisplayDate(dateStr) + (isToday ? '' : ' (Past Date)');
+            
+            // Modify your renderPeopleList to accept a date parameter
+            renderPeopleList('', dateStr);
+            
+            // Update your save function to use the selected date
+            elements.saveAttendanceBtn.onclick = () => saveAttendanceForDate(date);
+        }
+        
+        // Add this to your utility functions
+        function syncAllDateDisplays(selectedDate) {
+            // Format the date for display
+            const dateStr = formatDate(selectedDate);
+            const displayStr = formatDisplayDate(selectedDate);
+            
+            // Update the main date selector
+            elements.attendanceDate.value = dateStr;
+            elements.todayDate.textContent = displayStr + (isSameDate(selectedDate, today) ? '' : ' (Past Date)');
+            
+            // Update the Team Performance date range to show 30 days from selected date
+            const startDate = new Date(selectedDate);
+            startDate.setDate(startDate.getDate() - 30);
+            elements.startDate.value = formatDate(startDate);
+            elements.endDate.value = dateStr;
+            
+            // Refresh all displays
+            renderPeopleList();
+            renderTeamPerformanceChart(startDate, selectedDate);
+            
+            // If a person is selected, update their chart too
+            if (elements.personSelect.value) {
+                renderAttendanceChart(elements.personSelect.value);
+            }
+        }
+        
+        // Add this to your calendar day click handler
+        function handleCalendarDayClick(date) {
+            syncAllDateDisplays(date);
+            renderCalendar(); // Refresh calendar to highlight selected date
         }
 
         async function loadData() {
@@ -301,60 +503,82 @@
             }
         }
 
+        // Replace your current setupFirestoreListeners with this:
         function setupFirestoreListeners() {
-          // People collection
-          db.collection("People").onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-              const data = change.doc.data();
-              if (change.type === "added") {
-                attendanceData.people.push({ id: change.doc.id, ...data });
-              }
-              if (change.type === "modified") {
-                const index = attendanceData.people.findIndex(p => p.id === change.doc.id);
-                if (index !== -1) {
-                  attendanceData.people[index] = { id: change.doc.id, ...data };
+            // People collection with proper change tracking
+            db.collection("People").onSnapshot((snapshot) => {
+                const changes = snapshot.docChanges();
+                if (changes.length === 0) return;
+                
+                changes.forEach(change => {
+                    const personData = { id: change.doc.id, ...change.doc.data() };
+                    const index = attendanceData.people.findIndex(p => p.id === change.doc.id);
+                    
+                    if (change.type === "added") {
+                        // Only add if not already present
+                        if (index === -1) {
+                            attendanceData.people.push(personData);
+                        }
+                    } 
+                    else if (change.type === "modified") {
+                        if (index !== -1) {
+                            attendanceData.people[index] = personData;
+                        }
+                    } 
+                    else if (change.type === "removed") {
+                        if (index !== -1) {
+                            attendanceData.people.splice(index, 1);
+                        }
+                    }
+                });
+                
+                // Only update UI if we actually made changes
+                if (changes.length > 0) {
+                    updateUI();
                 }
-              }
-              if (change.type === "removed") {
-                attendanceData.people = attendanceData.people.filter(p => p.id !== change.doc.id);
-              }
+            }, (error) => {
+                console.error("People listener error:", error);
             });
-            updateUI();
-          }, (error) => {
-            console.error("People listener error:", error);
-          });
         
-          // AttendanceRecords collection
-          db.collection("AttendanceRecords").onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-              const data = change.doc.data();
-              if (change.type === "added") {
-                attendanceData.records.push({ id: change.doc.id, ...data });
-              }
-              if (change.type === "modified") {
-                const index = attendanceData.records.findIndex(r => r.id === change.doc.id);
-                if (index !== -1) {
-                  attendanceData.records[index] = { id: change.doc.id, ...data };
+            // Similar update for AttendanceRecords listener
+            db.collection("AttendanceRecords").onSnapshot((snapshot) => {
+                const changes = snapshot.docChanges();
+                if (changes.length === 0) return;
+                
+                changes.forEach(change => {
+                    const recordData = { id: change.doc.id, ...change.doc.data() };
+                    const index = attendanceData.records.findIndex(r => r.id === change.doc.id);
+                    
+                    if (change.type === "added") {
+                        if (index === -1) {
+                            attendanceData.records.push(recordData);
+                        }
+                    }
+                    // ... rest of record handling
+                });
+                
+                if (changes.length > 0) {
+                    updateUI();
                 }
-              }
-              if (change.type === "removed") {
-                attendanceData.records = attendanceData.records.filter(r => r.id !== change.doc.id);
-              }
+            }, (error) => {
+                console.error("Records listener error:", error);
             });
-            updateUI();
-          }, (error) => {
-            console.error("Records listener error:", error);
-          });
         }
+
+   
 
         function handlePeopleChange(snapshot) {
             snapshot.docChanges().forEach(change => {
+                const personData = { id: change.doc.id, ...change.doc.data() };
                 const index = attendanceData.people.findIndex(p => p.id === change.doc.id);
+                
                 if (change.type === "added" && index === -1) {
-                    attendanceData.people.push({id: change.doc.id, ...change.doc.data()});
-                } else if (change.type === "modified" && index !== -1) {
-                    attendanceData.people[index] = {id: change.doc.id, ...change.doc.data()};
-                } else if (change.type === "removed" && index !== -1) {
+                    attendanceData.people.push(personData);
+                } 
+                else if (change.type === "modified" && index !== -1) {
+                    attendanceData.people[index] = personData;
+                } 
+                else if (change.type === "removed" && index !== -1) {
                     attendanceData.people.splice(index, 1);
                 }
             });
@@ -363,16 +587,23 @@
 
         function handleRecordsChange(snapshot) {
             snapshot.docChanges().forEach(change => {
+                const recordData = { id: change.doc.id, ...change.doc.data() };
                 const index = attendanceData.records.findIndex(r => r.id === change.doc.id);
+                
                 if (change.type === "added" && index === -1) {
-                    attendanceData.records.push({id: change.doc.id, ...change.doc.data()});
+                    attendanceData.records.push(recordData);
                 } else if (change.type === "modified" && index !== -1) {
-                    attendanceData.records[index] = {id: change.doc.id, ...change.doc.data()};
+                    attendanceData.records[index] = recordData;
                 } else if (change.type === "removed" && index !== -1) {
                     attendanceData.records.splice(index, 1);
                 }
             });
-            updateUI();
+            
+            // Refresh the current view
+            const currentDate = elements.attendanceDate.value || formatDate(today);
+            renderPeopleList('', currentDate);
+            updateCounts();
+            
             if (elements.personSelect.value) {
                 renderAttendanceChart(elements.personSelect.value);
             }
@@ -391,7 +622,25 @@
         }
 
         function renderPeopleList(filter = '') {
-            const todayStr = formatDate(today);
+            // Get the selected date from the input (using value instead of valueAsDate)
+            const selectedDateStr = elements.attendanceDate.value;
+            const selectedDate = selectedDateStr ? parseInputDate(selectedDateStr) : new Date();
+    
+            // Get today's date (normalized)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const isToday = selectedDate.getTime() === today.getTime();
+            const viewDateStr = formatDate(selectedDate);
+            
+            console.log("Rendering for:", {
+                selectedInput: elements.attendanceDate.value,
+                parsedDate: selectedDate,
+                formattedDate: viewDateStr,
+                isToday: isToday
+            });
+            
+            // Filter people based on search input
             const filteredPeople = attendanceData.people.filter(person => 
                 person.name.toLowerCase().includes(filter.toLowerCase())
             );
@@ -399,11 +648,12 @@
             let html = '';
             
             filteredPeople.forEach(person => {
-                const todayRecord = attendanceData.records.find(record => 
-                    record.personId === person.id && record.date === todayStr
+                // Check attendance for the specified date
+                const record = attendanceData.records.find(r => 
+                    r.personId === person.id && r.date === viewDateStr
                 );
                 
-                const isPresent = todayRecord ? todayRecord.present : false;
+                const isPresent = record ? record.present : false;
                 const streak = calculateCurrentStreak(person.id);
                 const percentage = calculateAttendancePercentage(person.id);
                 
@@ -411,14 +661,18 @@
                     <tr class="border-b border-gray-200 dark:border-gray-700 ${!isPresent ? 'bg-red-50 dark:bg-red-900 bg-opacity-30' : ''}">
                         <td class="py-3 text-gray-800 dark:text-white">${person.name}</td>
                         <td class="text-center">
-                            <input type="checkbox" data-person-id="${person.id}" ${isPresent ? 'checked' : ''} 
-                                class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <input type="checkbox" 
+                                   data-person-id="${person.id}" 
+                                   ${isPresent ? 'checked' : ''}
+                                   class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         </td>
                         <td class="text-center font-medium ${streak > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
                             ${streak}
                         </td>
                         <td class="text-center font-medium">
-                            <span class="px-2 py-1 rounded-full text-xs ${percentage >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : percentage >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+                            <span class="px-2 py-1 rounded-full text-xs ${percentage >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                percentage >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
+                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
                                 ${percentage}%
                             </span>
                         </td>
@@ -426,9 +680,133 @@
                 `;
             });
             
-            elements.attendanceList.innerHTML = html || '<tr><td colspan="4" class="py-4 text-center text-gray-500">No people added yet</td></tr>';
+            // Update the display to show which date we're viewing
+            elements.todayDate.textContent = formatDisplayDate(selectedDate) + 
+                (isToday ? '' : ' (Past Date)');
+            
+            // Set the table content
+            elements.attendanceList.innerHTML = html || 
+                '<tr><td colspan="4" class="py-4 text-center text-gray-500">No matching people found</td></tr>';
+            
+            // Update counts for the selected date
+            updateCounts(selectedDate);
         }
 
+        function isValidDate(dateString) {
+            const regEx = /^\d{4}-\d{2}-\d{2}$/;
+            if(!dateString.match(regEx)) return false;
+            const d = new Date(dateString);
+            return !isNaN(d.getTime());
+        }
+        
+        function renderTeamPerformanceChart(startDate, endDate) {   
+            // Convert string dates to Date objects if needed
+            if (typeof startDate === 'string') startDate = parseInputDate(startDate);
+            if (typeof endDate === 'string') endDate = parseInputDate(endDate);
+            
+         
+        
+            // Filter records by date range
+            const filteredRecords = attendanceData.records.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+            });
+        
+            // Get all unique dates in range
+            const dates = [...new Set(filteredRecords.map(r => r.date))].sort();
+            
+            // Prepare dataset for each person
+            const datasets = attendanceData.people.map(person => {
+                const personData = dates.map(date => {
+                    const record = filteredRecords.find(r => 
+                        r.personId === person.id && r.date === date
+                    );
+                    return record ? (record.present ? 1 : 0) : null;
+                });
+        
+                // Generate random color for each person
+                const color = getRandomColor();
+                
+                return {
+                    label: person.name,
+                    data: personData,
+                    backgroundColor: color + '80', // Add transparency
+                    borderColor: color,
+                    borderWidth: 1,
+                    borderRadius: 4, // Rounded corners for bars
+                    borderSkipped: false, // Apply border radius to all sides
+                };
+            });
+        
+            // Destroy previous chart if exists
+            if (teamPerformanceChart) {
+                teamPerformanceChart.destroy();
+            }
+        
+            const ctx = elements.teamPerformanceChart.getContext('2d');
+            teamPerformanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates.map(d => formatDisplayDate(d)),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 1,
+                                callback: value => value === 1 ? 'Present' : value === 0 ? 'Absent' : ''
+                            }
+                        },
+                        x: {
+                            stacked: true, // Optional: stack bars instead of grouping
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                callback: function(value, index) {
+                                    // Show every 3rd date or last date
+                                    if (index % 3 === 0 || index === dates.length - 1) {
+                                        return this.getLabelForValue(value);
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw === 1 ? 'Present' : 'Absent'}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                usePointStyle: true,
+                                pointStyle: 'rectRounded'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Helper function for random colors
+        function getRandomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 70%, 50%)`;
+        }
+        
         function renderPersonSelect() {
             let html = '<option value="">Select a person</option>';
             attendanceData.people.forEach(person => {
@@ -437,17 +815,17 @@
             elements.personSelect.innerHTML = html;
         }
 
-        function updateCounts() {
-            const todayStr = formatDate(today);
+        function updateCounts(forDate) {
+            const dateStr = formatDate(forDate);
             const totalPeople = attendanceData.people.length;
             let presentCount = 0;
             
             attendanceData.people.forEach(person => {
-                const todayRecord = attendanceData.records.find(record => 
-                    record.personId === person.id && record.date === todayStr
+                const record = attendanceData.records.find(r => 
+                    r.personId === person.id && r.date === dateStr
                 );
                 
-                if (todayRecord && todayRecord.present) {
+                if (record && record.present) {
                     presentCount++;
                 }
             });
@@ -457,31 +835,51 @@
             elements.absentCount.textContent = totalPeople - presentCount;
         }
 
-        async function saveTodayAttendance() {
-          const todayStr = formatDate(today);
-          const batch = db.batch();
-          
-          document.querySelectorAll('#attendanceList input[type="checkbox"]').forEach(checkbox => {
-            const personId = checkbox.dataset.personId;
-            const isPresent = checkbox.checked;
-            const docId = `${personId}_${todayStr}`;
+        async function saveAttendance() {
+            // Get the selected date (handling timezone correctly)
+            const selectedDateStr = elements.attendanceDate.value;
+            const selectedDate = parseInputDate(selectedDateStr);
+            const dateStr = formatDate(selectedDate);
             
-            const recordRef = db.collection("AttendanceRecords").doc(docId);
-            batch.set(recordRef, {
-              personId,
-              date: todayStr,
-              present: isPresent,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }); // Important: merge updates instead of overwriting
-          });
+            const batch = db.batch();
+            let hasChanges = false;
+            
+            document.querySelectorAll('#attendanceList input[type="checkbox"]').forEach(checkbox => {
+                const personId = checkbox.dataset.personId;
+                const isPresent = checkbox.checked;
+                const docId = `${personId}_${dateStr}`;
+                
+                // Check if this is actually a change from existing record
+                const existingRecord = attendanceData.records.find(r => 
+                    r.personId === personId && r.date === dateStr
+                );
+                
+                if (!existingRecord || existingRecord.present !== isPresent) {
+                    hasChanges = true;
+                    const recordRef = db.collection("AttendanceRecords").doc(docId);
+                    batch.set(recordRef, {
+                        personId,
+                        date: dateStr,
+                        present: isPresent,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }
+            });
+            
+            if (!hasChanges) {
+                alert("No changes detected to save.");
+                return;
+            }
         
-          try {
-            await batch.commit();
-            showSaveConfirmation();
-          } catch (error) {
-            console.error("Save failed:", error);
-            alert("Failed to save attendance. Please try again.");
-          }
+            try {
+                await batch.commit();
+                showSaveConfirmation();
+                // Force refresh from Firestore
+                await loadData();
+            } catch (error) {
+                console.error("Save failed:", error);
+                alert("Failed to save attendance. Please try again.");
+            }
         }
         function showSaveConfirmation() {
             const originalText = elements.saveAttendanceBtn.textContent;
@@ -753,7 +1151,8 @@
                 // Add to Firestore
                 await db.collection("People").add({
                     name: name.trim(),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'active'
                 });
                 
                 // Clear input
@@ -761,6 +1160,34 @@
             } catch (error) {
                 console.error("Error adding person:", error);
                 alert("Failed to add person. Please try again.");
+            }
+        }
+
+
+        async function saveAttendanceForDate(date) {
+            const dateStr = formatDate(date);
+            const batch = db.batch();
+            
+            document.querySelectorAll('#attendanceList input[type="checkbox"]').forEach(checkbox => {
+                const personId = checkbox.dataset.personId;
+                const isPresent = checkbox.checked;
+                const docId = `${personId}_${dateStr}`;
+                
+                const recordRef = db.collection("AttendanceRecords").doc(docId);
+                batch.set(recordRef, {
+                    personId,
+                    date: dateStr,
+                    present: isPresent,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }); // This allows updating existing records
+            });
+        
+            try {
+                await batch.commit();
+                showSaveConfirmation();
+            } catch (error) {
+                console.error("Save failed:", error);
+                alert("Failed to save attendance. Please try again.");
             }
         }
 
@@ -784,7 +1211,8 @@
             });
             
             // Save attendance
-            elements.saveAttendanceBtn.addEventListener('click', saveTodayAttendance);
+            elements.saveAttendanceBtn.addEventListener('click', saveAttendance);
+
             
             // Person select change
             elements.personSelect.addEventListener('change', (e) => {
@@ -828,7 +1256,7 @@
                 elements.confirmationModal.classList.add('hidden');
             });
         }
-        
+
         function checkConnection() {
           const isConnectedRef = firebase.database().ref(".info/connected");
           isConnectedRef.on("value", (snap) => {
