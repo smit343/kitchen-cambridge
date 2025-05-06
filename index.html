@@ -1248,7 +1248,7 @@
         // Handle event form submission
         async function handleEventSubmit(e) {
            e.preventDefault();
-
+           const dateInput = document.getElementById('event-date');
            const isUpdate = eventForm.dataset.mode === 'update';
            const eventId = isUpdate ? eventForm.dataset.id : Date.now().toString();
 
@@ -1258,7 +1258,7 @@
            const event = {
                
                id: eventId,
-               date: document.getElementById('event-date').value,
+               date: dateInput.value,
                sabhaName: document.getElementById('event-name').value,
                santosPresent: document.getElementById('event-saints').value,
                gents: gents,
@@ -1557,7 +1557,7 @@
             sortedEvents.forEach(event => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.date}</td>
                     <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
