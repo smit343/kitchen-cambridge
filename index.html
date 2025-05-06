@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAPS Cambridge Kitchen – Sabha & Recipe Data Organizer </title>
+    <title>BAPS Cambridge Kitchen – Sabha & Recipe Data Organizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {  
-          --baps-saffron: #FF9933;
-          --baps-blue: #4169E1;
-          --baps-white: #FFFFFF;
-          --baps-light: #F8F5F0;
-          --kitchen-cream: #FFF9F0;
-          --kitchen-warmgray: #F3EFEB;
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --text: #1f2937;
+            --bg: #020c15;
         }
-  
         .dark {
             --primary: #6366f1;
             --secondary: #34d399;
@@ -30,22 +29,11 @@
             --bg: #111827;
         }
         body {
-            background-color: var(--divine-light);
-            background-image: 
-              linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)),
-              url('https://www.baps.org/Data/Sites/1/Media/PageImages/1933/bg-texture.png');
-            background-attachment: fixed;
             font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: all 0.3s ease;
         }
-        header {
-            background: linear-gradient(to right, 
-                        var(--baps-saffron) 0%, 
-                        var(--baps-saffron) 0%, 
-                        var(--baps-white) 5%, 
-                        var(--baps-white) 80%);
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-        
         .stat-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -128,93 +116,65 @@
             color: #000;
         }
         #gallery img:hover {
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        /* Hamburger menu styles */
         #sidebar {
-            background-color: #4169E1
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(-100%);
         }
-        
-        .sidebar-btn {
-            font-weight: 600; /* bold */
-            color: black;
-            transition: all 0.2s ease;
+        #sidebar.open {
+            transform: translateX(0);
         }
-        
-        .sidebar-btn:hover {
-            background-color: #5544ee; /* light gray on hover */
+        #overlay {
+            transition: opacity 0.3s ease-in-out;
         }
-        
-        .sidebar-btn.active {
-            background-color: #4f46e5; /* indigo */
-            color: white;
+        .hamburger {
+            transition: all 0.3s ease;
         }
-        
-        #sidebar-close {
-            color: black;
+        .hamburger.open span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
         }
-        
-        #sidebar i {
-            color: #4f46e5; /* icon color */
+        .hamburger.open span:nth-child(2) {
+            opacity: 0;
         }
-        /* Ensure header stays on top of everything */
-        header {
-            z-index: 1000; /* Higher than other elements */
+        .hamburger.open span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
         }
-        
-        /* Smooth transition for header */
-        header {
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+        .tab-btn {
+            color: black !important; /* Force white text for all menu items */
+            background-color: transparent !important; /* Remove any background */
             transition: all 0.3s ease;
         }
         
-        /* Optional: Add shadow when scrolling */
-        .header-scrolled {
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .tab-btn.active, .tab-btn:hover {
+            background-color: rgb(245, 199, 112) !important; /* White background when active/hover */
+            color: black !important; /* Black text when active/hover */
         }
-        /* Ensure proper stacking and spacing */
-        #sidebar {
-            position: fixed;
-            top: 80px; /* Adjust based on your header height */
-            left: 0;
-            height: calc(100vh - 80px); /* Full height minus header */
-            width: 260px;
-            overflow-y: auto;
-            z-index: 40;
-            transition: transform 0.3s ease;
-            background-color: white;
-        }
-        @media (max-width: 768px) {
-            #sidebar {
-                transform: translateX(-100%);
-                width: 280px;
-                
+        
+        /* Mobile styles - hide header nav, show hamburger */
+        @media (max-width: 767px) {
+            header nav {
+                display: none;
             }
-            #sidebar.translate-x-0 {
-                transform: translateX(0);
-            }
-            main {
-                margin-left: 0;
-            }
-            .mobile-menu-button {
-                position: fixed;
-                top: 20px;
-                left: 15px;
-                z-index: 60;
+            #menu-toggle {
+                display: block;
             }
         }
-                
-                
+        
+        /* Desktop styles - show header nav, but keep hamburger visible */
+        @media (min-width: 768px) {
+            header nav {
+                display: flex;
+            }
+            #menu-toggle {
+                display: block;
+                margin-right: 1rem;
+            }
+        }
        
     </style>
 
@@ -227,7 +187,7 @@
     apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
     authDomain: "kitchen-data-61ecd.firebaseapp.com",
     projectId: "kitchen-data-61ecd",
-    storageBucket: "kitchen-data-61ecd.firebasestorage.app",
+    storageBucket: "kitchen-data-61ecd.appspot.com",
     messagingSenderId: "225092587820",
     appId: "1:225092587820:web:4b896b9f9387718c1f9c89",
     measurementId: "G-YRVFHF4ME9"
@@ -283,576 +243,498 @@
       return [];
     }
   }
-  // Add this to your existing JavaScript
-  window.addEventListener('scroll', function() {
-      const header = document.querySelector('header');
-      if (window.scrollY > 10) {
-          header.classList.add('header-scrolled');
-      } else {
-          header.classList.remove('header-scrolled');
-      }
-  });
-
-
-
 
   window.syncToFirebase = syncToFirebase;
   window.loadFromFirebase = loadFromFirebase;
-
-  // NEW TAB HANDLING CODE - PUT THIS IN YOUR DOMContentLoaded
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log("Document ready - initializing tabs");
-    
-    // Mobile Menu Toggle
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarClose = document.getElementById('sidebar-close');
-    
-    if (mobileMenuButton && sidebar) {
-      mobileMenuButton.addEventListener('click', function() {
-        sidebar.classList.toggle('translate-x-0');
-        sidebar.classList.toggle('-translate-x-full');
-      });
-    }
-    
-    if (sidebarClose) {
-      sidebarClose.addEventListener('click', function() {
-        sidebar.classList.remove('translate-x-0');
-        sidebar.classList.add('-translate-x-full');
-      });
-    }
-    
-    // TAB SWITCHING - CORE FIX
-    function showTab(tabId) {
-      console.log(`Showing tab: ${tabId}`);
-      
-      // Hide all tabs
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      
-      // Show selected tab
-      const activeTab = document.getElementById(tabId);
-      if (activeTab) {
-        activeTab.classList.add('active');
-        
-        // Load data for specific tabs
-        if (tabId === 'dashboard') {
-          updateDashboard();
-          initCharts();
-        } else if (tabId === 'event-data') {
-          renderAllEvents();
-        } else if (tabId === 'recipe-book') {
-          renderAllRecipes();
-        }
-      }
-    }
-    
-    // Set up tab buttons
-    document.querySelectorAll('.sidebar-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        // Update active button style
-        document.querySelectorAll('.sidebar-btn').forEach(b => {
-          b.classList.remove('bg-indigo-700', 'text-white');
-          b.classList.add('hover:bg-gray-700');
-        });
-        this.classList.add('bg-indigo-700', 'text-white');
-        this.classList.remove('hover:bg-gray-700');
-        
-        // Switch tab
-        const tabId = this.getAttribute('data-tab');
-        if (tabId) {
-          showTab(tabId);
-        }
-        
-        // Close sidebar on mobile
-        if (window.innerWidth < 768) {
-          sidebar.classList.remove('translate-x-0');
-          sidebar.classList.add('-translate-x-full');
-        }
-      });
-    });
-    
-    // Initialize first tab
-    const defaultTab = document.querySelector('.sidebar-btn[data-tab="dashboard"]');
-    if (defaultTab) defaultTab.click();
-    
-    // Make showTab available globally
-    window.showTab = showTab;
-  });
  
 
 </script>
 
 </head>
-   
 
-<body class="bg-gray-50 dark:bg-gray-900">
-    <header class="fixed top-0 left-0 right-0 bg-white text-black shadow-md py-2 z-50 h-22 flex items-centre">
-        <div class="container mx-auto flex justify-between items-center px-4">
-            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- New Header with Hamburger Menu -->
+    <header class="bg-orange-50 text-black py-4 px-4 rounded-b-2xl shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Left side: Hamburger + Logo -->
             <div class="flex items-center space-x-4">
-                <img src="images.png" alt="Logo" class="w-12 h-12 rounded-full object-cover shadow-md border-2 border-white">
-             
-                <div>
-                  <h1 class="text-2xl text-red-900 sm:text-4xl font-bold">BAPS Cambridge–Kitchen</h1>
-                  <p class="text-lg text-blue-600">Sabha & Recipe Data Organizer</p>
-                </div>
-              </div>
-          
-              <!-- Right side: Buttons -->
-              <div class="hidden md:flex items-center space-x-4">
-                
-                <button id="export-btn" class="px-4 font-bold py-2 bg-orange-400 hover:bg-green-700 transition rounded-lg text-white">
-                  <i class="fas fa-download mr-2"></i>Export Data
+                <!-- Hamburger Button - Always visible -->
+                <button id="menu-toggle" class="hamburger focus:outline-none">
+                    <span class="block w-6 h-0.5 bg-black mb-1.5 transition"></span>
+                    <span class="block w-6 h-0.5 bg-black mb-1.5 transition"></span>
+                    <span class="block w-6 h-0.5 bg-black transition"></span>
                 </button>
-              </div>
+                
+                <!-- Logo/Image -->
+                <img src="images.png" alt="Logo" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-white">
+                
+                <!-- Title Text -->
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-red-900">BAPS Cambridge–Kitchen</h1>
+                    <p class="text-sm text-black">Sabha & Recipe Data Organizer</p>
+                </div>
             </div>
-          </header>
-        <main class="pt-16 md:pt-24">
-          <div class="flex">
-              <!-- Sidebar -->
-              <div id="sidebar" class="fixed top-0 left-0 h-screen w-64 bg-blue-900 text-black shadow-lg z-40 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 pt-16">
-                  <div class="px-4 flex justify-between items-center border-b border-blue-700">
-                      <h2 class="text-xl font-bold ml-12 mb-2">Menu</h2>
-                      <button id="sidebar-close" class="md:hidden text-gray-600 hover:text-gray-900">
-                          <i class="fas fa-times"></i>
-                      </button>
-                  </div>
-                  <nav class="p-4">
-                      <ul class="space-y-2">
-                          <li>
-                              <button class="sidebar-btn w-full text-left px-4 py-3 rounded-lg" data-tab="dashboard">
-                                  <i class="fas fa-home mr-3"></i>Dashboard
-                              </button>
-                          </li>
-                          <li>
-                              <button class="sidebar-btn w-full text-left px-4 py-3 rounded-lg" data-tab="event-data">
-                                  <i class="fas fa-calendar-alt mr-3"></i>Sabha Event Data
-                              </button>
-                          </li>
-                          <li>
-                              <button class="sidebar-btn w-full text-left px-4 py-3 rounded-lg" data-tab="recipe-book">
-                                  <i class="fas fa-book mr-3"></i>Recipe Book
-                              </button>
-                          </li>
-                          <li>
-                              <button class="sidebar-btn w-full text-left px-4 py-3 rounded-lg" data-tab="find-ai-recipe">
-                                  <i class="fas fa-robot mr-3"></i>Find Recipe With AI
-                              </button>
-                          </li>
-                          <li>
-                              <button class="sidebar-btn w-full text-left px-4 py-3 rounded-lg" onclick="window.location.href='attendance.html'">
-                                  <i class="fas fa-user-check mr-3"></i>Attendance
-                              </button>
-                          </li>
-                      </ul>
-                  </nav>
+            
+            <!-- Center: Navigation Menu - Hidden on mobile, shown on desktop -->
+            <nav class="hidden md:flex space-x-2 lg:space-x-4">
+                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black text-black" data-tab="dashboard">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </button>
+                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" data-tab="event-data">
+                    <i class="fas fa-calendar-alt mr-2"></i>Sabha Events
+                </button>
+                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" data-tab="recipe-book">
+                    <i class="fas fa-book mr-2"></i>Recipes
+                </button>
+                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" data-tab="find-ai-recipe">
+                    <i class="fas fa-robot mr-2"></i>AI Recipes
+                </button>
+                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" onclick="window.location.href='attendance.html'">
+                    <i class="fas fa-user-check mr-2"></i>Attendance
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed top-10 left-0 w-64 h-[calc(100%-4rem)] bg-orange-50 font-semibold text-white z-40 shadow-xl overflow-y-auto">
+        <div class="p-4">
+            <!-- Close Button -->
+            <div class="flex justify-end">
+                <button id="close-menu" class="text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="mt-6">
+                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="dashboard">
+                    <i class="fas fa-home mr-3"></i>Dashboard
+                </button>
+                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="event-data">
+                    <i class="fas fa-calendar-alt mr-3"></i>Sabha Event Data
+                </button>
+                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="recipe-book">
+                    <i class="fas fa-book mr-3"></i>Recipe Book
+                </button>
+                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="find-ai-recipe">
+                    <i class="fas fa-robot mr-3"></i>Find Recipe With AI
+                </button>
+                <button class="w-full text-left px-4 py-3 mb-2 rounded hover:bg-orange-300 transition text-black" onclick="window.location.href='attendance.html'">
+                    <i class="fas fa-user-check mr-3"></i>Attendance
+                </button>
+                    <!-- Right side: Export Button -->
+                <button id="export-btn" class="px-3 py-2 bg-orange-400 hover:bg-green-700 transition rounded-lg text-white text-sm sm:text-base">
+                    <i class="fas fa-download mr-2"></i>Export Data
+                </button>
+        
+            </nav>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-0 z-30 hidden"></div>
+
+    <div class="main-content container mx-auto px-4 py-8 max-w-full">
+        <!-- Toast Notification -->
+        <div id="toast" class="toast fixed right-4 top-4 hidden px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="toast-message">Operation successful!</span>
+            </div>
+        </div>
+
+        <!-- Centered Prompt Copied Popup -->
+        <div id="custom-toast" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+            <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-xl rounded-xl px-6 py-5 text-center space-y-4 max-w-sm w-full">
+              <div class="text-green-600 text-2xl font-semibold">
+                <i class="fas fa-check-circle mr-2"></i> Prompt made & Copied to keyboard!
               </div>
-              <!-- Mobile menu toggle -->
-              <button id="mobile-menu-button" class="fixed bottom-4 right-4 bg-indigo-600 text-white p-4 rounded-full shadow-lg z-50 md:hidden">
-                  <i class="fas fa-bars text-xl"></i>
+              <p class="text-gray-700 dark:text-gray-300 text-base">Click the button below to open ChatGPT and just paste your prompt there.</p>
+              <button id="proceed-chatgpt-btn"
+                      class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg transition">
+                Go to ChatGPT
               </button>
+            </div>
+        </div>
 
-              <!-- Main content -->
-              <div class="flex-1 p-4 ml-0 md:ml-64 transition-all duration-300">
-                  <!-- Toast Notification -->
-                  <div id="toast" class="toast fixed right-4 top-4 hidden px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg z-50">
-                      <div class="flex items-center">
-                          <i class="fas fa-check-circle mr-2"></i>
-                          <span id="toast-message">Operation successful!</span>
-                      </div>
-                  </div>
-
-                  <!-- Centered Prompt Copied Popup -->
-                  <div id="custom-toast" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-                      <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-xl rounded-xl px-6 py-5 text-center space-y-4 max-w-sm w-full">
-                        <div class="text-green-600 text-2xl font-semibold">
-                          <i class="fas fa-check-circle mr-2"></i> Prompt made & Copied to keyboard!
-                        </div>
-                        <p class="text-gray-700 dark:text-gray-300 text-base">Click the button below to open ChatGPT and just paste your prompt there.</p>
-                        <button id="proceed-chatgpt-btn"
-                                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg transition">
-                          Go to ChatGPT
-                        </button>
-                      </div>
-                  </div>
-
-                  <!-- Tab Contents -->
-                  <div class="tab-contents">
-                      <!-- Dashboard Tab -->
-                      <div id="dashboard" class="tab-content active">
-                          <div class="w-full mb-6">
-                              <img src="photo.jpg" alt="Seva Banner"
-                                   class="w-full h-auto object-cover border-y-[8px] border-indigo-300 dark:border-indigo-300 shadow-md" />
-                          </div>
-                            
-                            
-                            
-                          <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-lg">Dashboard Overview</h2>
-                          <div class="flex space-x-4 mt-6">
-                              <button onclick="showTab('add-event')" class="px-4 py-4 mb-4 font-bold bg-orange-300 text-black rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
-                                  <i class="fas fa-plus mr-2"></i> Add New Sabha Data
-                              </button>
-                              <button onclick="showTab('add-recipe')" class="px-4 py-4 mb-4 font-bold bg-orange-300 text-black rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
-                                  <i class="fas fa-plus mr-2"></i> Add New Recipe
-                              </button>
-                          </div>
-                          
-                          <!-- Stat Cards -->
-                          
-                          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                              <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                  <div class="flex items-center">
-                                      <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 mr-4">
-                                          <i class="fas fa-calendar-check text-xl"></i>
-                                      </div>
-                                      <div>
-                                          <p class="text-gray-500 dark:text-gray-400 text-sm">Total Events</p>
-                                          <h3 class="text-2xl font-bold" id="total-events">0</h3>
-                                      </div>
-                                  </div>
-                              </div>
-                              <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                  <div class="flex items-center">
-                                      <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 mr-4">
-                                          <i class="fas fa-users text-xl"></i>
-                                      </div>
-                                      <div>
-                                          <p class="text-gray-500 dark:text-gray-400 text-sm">Total Bhaktas</p>
-                                          <h3 class="text-2xl font-bold" id="total-bhaktas">0</h3>
-                                      </div>
-                                  </div>
-                              </div>
-                              <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                  <div class="flex items-center">
-                                      <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 mr-4">
-                                          <i class="fas fa-utensils text-xl"></i>
-                                      </div>
-                                      <div>
-                                          <p class="text-gray-500 dark:text-gray-400 text-sm">Total Recipes</p>
-                                          <h3 class="text-2xl font-bold" id="total-recipes">0</h3>
-                                      </div>
-                                  </div>
-                              </div>
-                              <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                  <div class="flex items-center">
-                                      <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 mr-4">
-                                          <i class="fas fa-clock text-xl"></i>
-                                      </div>
-                                      <div>
-                                          <p class="text-gray-500 dark:text-gray-400 text-sm">Latest Event</p>
-                                          <h3 class="text-2xl font-bold" id="latest-event">-</h3>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-          
-                          <!-- Charts Section -->
-                          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                              <!-- Bhakta Attendance Chart -->
-                              <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                  <h3 class="text-lg font-semibold mb-4">Bhakta Attendance Over Time</h3>
-                                  <canvas id="attendanceChart" height="300"></canvas>
-                              </div>
-                              
-                              <!-- Gents vs Ladies Chart -->
-                              <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                  <h3 class="text-lg font-semibold mb-4">Gents vs Ladies Ratio</h3>
-                                  <canvas id="genderChart" height="300"></canvas>
-                              </div>
-                          </div>
-          
-                          <!-- Image Gallery Section -->
-                          <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
-                            <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Seva Memories</h3>
-                            <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <!-- Gallery images will go here -->
+        <!-- Tab Contents -->
+        <div class="tab-contents">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                                <div class="w-full mb-6 overflow-hidden rounded-xl">
+                    <img src="photo.jpg" alt="Seva Banner" 
+                         class="w-full h-auto object-contain rounded-xl" />
+                   
+                    
+                </div>
+                  
+                  
+                  
+                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-lg">Dashboard Overview</h2>
+                <div class="flex space-x-4 mt-6">
+                    <button onclick="showTab('add-event')" class="px-4 py-4 mb-4 font-bold bg-red-800 text-white rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
+                        <i class="fas fa-plus mr-2"></i> Add New Sabha Data
+                    </button>
+                    <button onclick="showTab('add-recipe')" class="px-4 py-4 mb-4 font-bold bg-red-800 text-white rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
+                        <i class="fas fa-plus mr-2"></i> Add New Recipe
+                    </button>
+                </div>
+                
+                <!-- Stat Cards -->
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 mr-4">
+                                <i class="fas fa-calendar-check text-xl"></i>
                             </div>
-                          </div>
-          
-          
-          
-                          <!-- Recent Events -->
-                          <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
-                              <div class="flex justify-between items-center mb-4">
-                                  <h3 class="text-lg font-semibold">Recent Sabha Events</h3>
-                                  <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('event-data')">View All</a>
-                              </div>
-                              <div class="overflow-x-auto">
-                                  <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                      <thead class="bg-gray-50 dark:bg-gray-700">
-                                          <tr>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
-                                          </tr>
-                                      </thead>
-                                      <tbody id="recent-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                          <!-- Recent events will be populated here -->
-                                      </tbody>
-                                  </table>
-                              </div>
-                          </div>
-          
-                          <!-- Popular Recipes -->
-                          <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                              <div class="flex justify-between items-center mb-4">
-                                  <h3 class="text-lg font-semibold">Recent Recipes</h3>
-                                  <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('recipe-book')">View All</a>
-                              </div>
-                              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="popular-recipes">
-                                  <!-- Popular recipes will be populated here -->
-                              </div>
-                          </div>
-                      </div>
-          
-                      <!-- Add Event Tab -->
-                      <div id="add-event" class="tab-content">
-                          <h2 class="text-2xl font-bold mb-6">Add New Sabha Event</h2>
-                          <form id="event-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                  <div>
-                                      <label for="event-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                                      <input type="date" id="event-date" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
-                                  </div>
-                                  <div>
-                                      <label for="event-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sabha Name</label>
-                                      <input type="text" id="event-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
-                                  </div>
-                                  <div>
-                                      <label for="event-saints" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pujya Santo's Present</label>
-                                      <input type="text" id="event-saints" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                  </div>
-                                  <div>
-                                      <label for="event-bhaktas" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Bhaktas</label>
-                                      <input type="number" id="event-bhaktas" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
-                                  </div>
-                                  <div>
-                                      <label for="event-gents" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gents</label>
-                                      <input type="number" id="event-gents" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
-                                  </div>
-                                  <div>
-                                      <label for="event-ladies" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ladies</label>
-                                      <input type="number" id="event-ladies" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
-                                  </div>
-                                  <div>
-                                      <label for="event-menu" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Menu</label>
-                                      <textarea id="event-menu" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="List the menu items..."></textarea>
-                                  </div>
-                          
-                                  <div>
-                                      <label for="event-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
-                                      <textarea id="event-ingredients" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Enter ingredients, one per line"></textarea>
-                                  </div>
-                                  <div>
-                                      <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leftover Food (optional)</label>
-                                      <input type="text" id="event-leftover" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                  </div>
-                                  <div>
-                                      <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Re-made Items (optional)</label>
-                                      <input type="text" id="event-remade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                  </div>
-                                  <div>
-                                      <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Grocery Cost :</label>
-                                      <input type="text" id="event-grocery-cost" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                  </div>
-                                  <div>
-                                      <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost Per Plate :</label>
-                                      <input type="text" id="event-cost-per-plate" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                  </div>
-                              </div>
-                          
-                              <div class="mb-6">
-                                  <label for="event-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-                                  <textarea id="event-notes" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
-                              </div>
-                          
-                              <div class="mb-6">
-                                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Image/File (optional)</label>
-                                  <div class="file-upload">
-                                      <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                                          <i class="fas fa-upload mr-2"></i>Upload
-                                      </button>
-                                      <input type="file" id="event-file" class="file-upload-input" accept="image/*,.pdf,.doc,.docx">
-                                  </div>
-                              </div>
-                          
-                              <div class="flex justify-end">
-                                  <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">Cancel</button>
-                                  <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                                      <i class="fas fa-save mr-2"></i>Save Event
-                                  </button>
-                              </div>
-                          </form>
-
-                        </div>
-
-                        <!-- Event Data Tab -->
-                        <div id="event-data" class="tab-content">
-                            <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-2xl font-bold">Sabha Event Data</h2>
-                                <div class="relative w-64">
-                                    <input type="text" id="event-search" class="w-full mt-3 pl-10 pr-4 py-2 mb-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
-                                    <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                                        <i class="fas fa-search"></i>
-                                    </div>       
-                                
-                                </div>
-                                <button onclick="showTab('add-event')" class="px-4 mt-3 py-4 font-bold bg-blue-500 hover:bg-orange-600 text-white rounded-lg shadow transition">
-                                    <i class="fas fa-plus mr-2"></i>Add New Sabha Data
-                                </button>
-                                
-                            </div>
-                            
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                        <thead class="bg-gray-50 dark:bg-gray-700">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sabha Name</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pujya Santo's Present</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="all-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                            <!-- All events will be populated here -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Events</p>
+                                <h3 class="text-2xl font-bold" id="total-events">0</h3>
                             </div>
                         </div>
-
-                        <!-- Add Recipe Tab -->
-                        <div id="add-recipe" class="tab-content">
-                            <h2 class="text-2xl font-bold mb-6">Add New Recipe</h2>
-                            <form id="recipe-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                    <div>
-                                        <label for="recipe-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Name</label>
-                                        <input type="text" id="recipe-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Enter recipe name" required>
-                                    </div>
-               
-                                    <div>
-                                        <label for="recipe-cook-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cooking Time (min)</label>
-                                        <input type="number" id="recipe-cook-time" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Cooking time in minutes" min="0">
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-6">
-                                    <label for="recipe-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
-                                    <div class="tag-input" id="ingredients-container">
-                                        <input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-6">
-                                    <label for="recipe-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
-                                    <textarea id="recipe-instructions" rows="5" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Step-by-step instructions" required></textarea>
-                                </div>
-                                
-                                <div class="mb-6">
-                                    <label for="recipe-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-                                    <textarea id="recipe-notes" rows="2" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Additional notes about the recipe"></textarea>
-                                </div>
-                                
-                                <div class="mb-6">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Image</label>
-                                    <div class="file-upload">
-                                        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                                            <i class="fas fa-upload mr-2"></i>Upload Image
-                                        </button>
-                                        <input type="file" id="recipe-image" class="file-upload-input" accept="image/*">
-                                    </div>
-                                    <div id="recipe-image-preview" class="mt-4"></div>
-                                </div>
-                                
-                                <div class="flex justify-end">
-                                    <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">
-                                        Cancel
-                                    </button>
-                                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                                        <i class="fas fa-save mr-2"></i>Save Recipe
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Find Recipe With AI Tab Content -->
-                        <div id="find-ai-recipe" class="tab-content">
-                            <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded">Welcome to AI Recipe Finder ! Find Your Favorite Item Recipe Here:</h2>
-                            
-                           
-                            <!-- Recipe Search Form -->
-                            <form id="ai-recipe-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="md:col-span-1">
-                                  <label for="item-name" class="block text-sm font-medium font-semibold text-gray-700">Item Name :</label>
-                                  <input type="text" id="item-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                                </div>
-                                <div class="md:col-span-1">
-                                  <label for="num-people" class="block text-sm font-medium font-semibold text-gray-700">Number Of Serving people ?</label>
-                                  <input type="number" id="num-people" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                                </div>
-                              
-                                <div class="md:col-span-1">
-                                  <label for="special-note" class="block text-sm font-medium font-semibold text-gray-700">Special Notes (optional):</label>
-                                  <textarea id="special-note" class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
-                                </div>
-                              
-                                <div class="md:col-span-1">
-                                  <label for="other-items" class="block text-sm font-medium font-semiboldtext-gray-700">Are you making any other item with this ?</label>
-                                  <input type="text" id="other-items" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                                </div>
-                              
-                                <div class="md:col-span-2">
-                                  <label class="inline-flex items-center">
-                                    <input type="checkbox" id="with-swaminarayan-diet" class="form-checkbox text-indigo-600" style="transform: scale(2.0);">
-                                    <span class="ml-2 text-gray-700 font-bold">Check This Box To Make It With Swaminarayan Diet.</span>
-                                  </label>
-                                </div>
-                              
-                                <div class="md:col-span-2 flex justify-center">
-                                  <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                    Find Recipe
-                                  </button>
-                                </div>
-                            </form>
-                                
-                            <!-- AI Recipe Response Display -->
-                            <div id="ai-response" class="mt-6 text-gray-700 dark:text-gray-200">
-                                <!-- ChatGPT's response will be displayed here -->
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 mr-4">
+                                <i class="fas fa-users text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Bhaktas</p>
+                                <h3 class="text-2xl font-bold" id="total-bhaktas">0</h3>
                             </div>
                         </div>
-
-                        <!-- Recipe Book Tab -->
-                        <div id="recipe-book" class="tab-content">
-                            <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-2xl font-bold">Recipe Book</h2>
-                                <div class="relative w-64">
-                                    <input type="text" id="recipe-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search recipes...">
-                                    <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                </div>
-                                <button onclick="showTab('add-recipe')" class="px-4 font-bold py-4 bg-blue-500 mt-4 hover:bg-orange-600 text-white rounded-lg shadow transition mb-4">
-                                    <i class="fas fa-plus mr-2"></i>Add New Recipe
-                                </button>
-                                
-                                
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 mr-4">
+                                <i class="fas fa-utensils text-xl"></i>
                             </div>
-                            
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
-                                <!-- All recipes will be populated here -->
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Recipes</p>
+                                <h3 class="text-2xl font-bold" id="total-recipes">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 mr-4">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Latest Event</p>
+                                <h3 class="text-2xl font-bold" id="latest-event">-</h3>
                             </div>
                         </div>
                     </div>
                 </div>
-        </main>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Bhakta Attendance Chart -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <h3 class="text-lg font-semibold mb-4">Bhakta Attendance Over Time</h3>
+                        <canvas id="attendanceChart" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Gents vs Ladies Chart -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                        <h3 class="text-lg font-semibold mb-4">Gents vs Ladies Ratio</h3>
+                        <canvas id="genderChart" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Image Gallery Section -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
+                  <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Seva Memories</h3>
+                  <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Gallery images will go here -->
+                  </div>
+                </div>
+
+
+
+                <!-- Recent Events -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Recent Sabha Events</h3>
+                        <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('event-data')">View All</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Recent events will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Popular Recipes -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Recent Recipes</h3>
+                        <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('recipe-book')">View All</a>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="popular-recipes">
+                        <!-- Popular recipes will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Event Tab -->
+            <div id="add-event" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">Add New Sabha Event</h2>
+                
+<form id="event-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="event-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+            <input type="date" id="event-date" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+        </div>
+        <div>
+            <label for="event-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sabha Name</label>
+            <input type="text" id="event-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+        </div>
+        <div>
+            <label for="event-saints" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pujya Santo's Present</label>
+            <input type="text" id="event-saints" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-bhaktas" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Bhaktas</label>
+            <input type="number" id="event-bhaktas" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
+        </div>
+        <div>
+            <label for="event-gents" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gents</label>
+            <input type="number" id="event-gents" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
+        </div>
+        <div>
+            <label for="event-ladies" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ladies</label>
+            <input type="number" id="event-ladies" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
+        </div>
+        <div>
+            <label for="event-menu" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Menu</label>
+            <textarea id="event-menu" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="List the menu items..."></textarea>
+        </div>
+
+        <div>
+            <label for="event-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
+            <textarea id="event-ingredients" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Enter ingredients, one per line"></textarea>
+        </div>
+        <div>
+            <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leftover Food (optional)</label>
+            <input type="text" id="event-leftover" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Re-made Items (optional)</label>
+            <input type="text" id="event-remade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Grocery Cost :</label>
+            <input type="text" id="event-grocery-cost" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost Per Plate :</label>
+            <input type="text" id="event-cost-per-plate" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <label for="event-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+        <textarea id="event-notes" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
+    </div>
+
+    <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Image/File (optional)</label>
+        <div class="file-upload">
+            <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <i class="fas fa-upload mr-2"></i>Upload
+            </button>
+            <input type="file" id="event-file" class="file-upload-input" accept="image/*,.pdf,.doc,.docx">
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">Cancel</button>
+        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            <i class="fas fa-save mr-2"></i>Save Event
+        </button>
+    </div>
+</form>
+
+            </div>
+
+            <!-- Event Data Tab -->
+            <div id="event-data" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Sabha Event Data</h2>
+                    <div class="relative w-64">
+                        <input type="text" id="event-search" class="w-full mt-3 pl-10 pr-4 py-2 mb-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
+                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-search"></i>
+                        </div>       
+                    
+                    </div>
+                    <button onclick="showTab('add-event')" class="px-4 mt-3 py-4 font-bold bg-blue-500 hover:bg-orange-600 text-white rounded-lg shadow transition">
+                        <i class="fas fa-plus mr-2"></i>Add New Sabha Data
+                    </button>
+                    
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sabha Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pujya Santo's Present</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- All events will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Recipe Tab -->
+            <div id="add-recipe" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6">Add New Recipe</h2>
+                <form id="recipe-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="recipe-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Name</label>
+                            <input type="text" id="recipe-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Enter recipe name" required>
+                        </div>
+
+                        <div>
+                            <label for="recipe-cook-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cooking Time (min)</label>
+                            <input type="number" id="recipe-cook-time" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Cooking time in minutes" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="recipe-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
+                        <div class="tag-input" id="ingredients-container">
+                            <input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="recipe-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
+                        <textarea id="recipe-instructions" rows="5" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Step-by-step instructions" required></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="recipe-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+                        <textarea id="recipe-notes" rows="2" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Additional notes about the recipe"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Image</label>
+                        <div class="file-upload">
+                            <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-upload mr-2"></i>Upload Image
+                            </button>
+                            <input type="file" id="recipe-image" class="file-upload-input" accept="image/*">
+                        </div>
+                        <div id="recipe-image-preview" class="mt-4"></div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                            <i class="fas fa-save mr-2"></i>Save Recipe
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+                        <!-- Find Recipe With AI Tab Content -->
+            <div id="find-ai-recipe" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded">Welcome to AI Recipe Finder ! Find Your Favorite Item Recipe Here:</h2>
+                
+               
+                <!-- Recipe Search Form -->
+                <form id="ai-recipe-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-1">
+                      <label for="item-name" class="block text-sm font-medium font-semibold text-gray-700">Item Name :</label>
+                      <input type="text" id="item-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div class="md:col-span-1">
+                      <label for="num-people" class="block text-sm font-medium font-semibold text-gray-700">Number Of Serving people ?</label>
+                      <input type="number" id="num-people" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                    </div>
+                  
+                    <div class="md:col-span-1">
+                      <label for="special-note" class="block text-sm font-medium font-semibold text-gray-700">Special Notes (optional):</label>
+                      <textarea id="special-note" class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
+                    </div>
+                  
+                    <div class="md:col-span-1">
+                      <label for="other-items" class="block text-sm font-medium font-semiboldtext-gray-700">Are you making any other item with this ?</label>
+                      <input type="text" id="other-items" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                  
+                    <div class="md:col-span-2">
+                      <label class="inline-flex items-center">
+                        <input type="checkbox" id="with-swaminarayan-diet" class="form-checkbox text-indigo-600" style="transform: scale(2.0);">
+                        <span class="ml-2 text-gray-700 font-bold">Check This Box To Make It With Swaminarayan Diet.</span>
+                      </label>
+                    </div>
+                  
+                    <div class="md:col-span-2 flex justify-center">
+                      <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Find Recipe
+                      </button>
+                    </div>
+                </form>
+                    
+                <!-- AI Recipe Response Display -->
+                <div id="ai-response" class="mt-6 text-gray-700 dark:text-gray-200">
+                    <!-- ChatGPT's response will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Recipe Book Tab -->
+            <div id="recipe-book" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Recipe Book</h2>
+                    <div class="relative w-64">
+                        <input type="text" id="recipe-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search recipes...">
+                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <button onclick="showTab('add-recipe')" class="px-4 font-bold py-4 bg-blue-500 mt-4 hover:bg-orange-600 text-white rounded-lg shadow transition mb-4">
+                        <i class="fas fa-plus mr-2"></i>Add New Recipe
+                    </button>
+                    
+                    
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
+                    <!-- All recipes will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Recipe Modal -->
     <div id="recipe-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
@@ -942,6 +824,59 @@
 
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeMenu = document.getElementById('close-menu');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            // Toggle sidebar
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('hidden');
+                menuToggle.classList.toggle('open');
+                
+                // Adjust main content margin when sidebar is open
+                if (sidebar.classList.contains('open')) {
+                    document.querySelector('.main-content').style.marginLeft = '16rem';
+                } else {
+                    document.querySelector('.main-content').style.marginLeft = '0';
+                }
+            }
+            
+            // Event listeners
+            
+
+
+            menuToggle.addEventListener('click', toggleSidebar);
+            closeMenu.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+            
+            // Modify your existing tab button event listeners
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    showTab(tabId);
+                    
+                    // Update active state for both sidebar and header buttons
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Close sidebar if it's open (for mobile)
+                    if (sidebar.classList.contains('open')) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            
+            // Initialize - Close sidebar by default
+            toggleSidebar();
+        });
+       
+
+
         // Data storage
         let events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
         let recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
@@ -1134,15 +1069,14 @@
             });
             
             tabBtns.forEach(btn => {
-                btn.classList.remove('bg-orange-200', 'text-black', 'border-indigo-600', 'dark:border-indigo-400');
-                btn.classList.add('text-black', 'bg-gray-250'); // Ensure non-active tabs have black background and white text
+                btn.classList.remove('active'); // Remove active class from all buttons
             });
             
             document.getElementById(tabId).classList.add('active');
             
             const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
             if (activeBtn) {
-                activeBtn.classList.add('bg-orange-200', 'text-black', 'border-indigo-600'); // Active tab with white background and black text
+                activeBtn.classList.add('active'); // Add active class to current button
             }
             
             // Update specific tabs when shown
@@ -2338,7 +2272,6 @@
       </button>
     </div>
 </div>
-  
 
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
