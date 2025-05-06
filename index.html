@@ -1540,26 +1540,46 @@
         // Render all events in the event data tab
         function renderAllEvents() {
             const container = document.getElementById('all-events');
-            container.innerHTML = '';
-            
-            if (events.length === 0) {
-                container.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No events found. Add your first event!</td>
-                    </tr>
-                `;
+            if (!container) {
+                console.error('Could not find all-events container!');
                 return;
             }
             
-            // Sort events by date (newest first)
-            const sortedEvents = [...events].sort((a, b) => new Date(b.date) - new Date(a.date));
+            container.innerHTML = '';
             
-            sortedEvents.forEach(event => {
+            // Create a fresh sorted copy
+            const eventsToRender = [...events].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            
+            eventsToRender.forEach(event => {
+                // Ensure YYYY-MM-DD format
+                let displayDate = event.date;
+                
+                // Convert if not already in correct format
+                if (typeof displayDate === 'string' && !displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    try {
+                        const d = new Date(displayDate);
+                        if (!isNaN(d.getTime())) {
+                            displayDate = d.toISOString().split('T')[0];
+                        }
+                    } catch (e) {
+                        console.warn('Date conversion failed for:', displayDate);
+                    }
+                }
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.date}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                        ${displayDate}
+                    </td>
+                    <!-- Keep all other columns exactly as they were -->
+                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
+                        ${event.sabhaName || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                        ${event.santosPresent || '-'}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                         <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
                         <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
@@ -1574,11 +1594,6 @@
                         <button onclick="deleteEvent('${event.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-500">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button onclick="downloadEventPDF('${event.id}')" class="text-green-600 hover:text-green-900">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    
-
                     </td>
                 `;
                 container.appendChild(row);
