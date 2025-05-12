@@ -908,8 +908,7 @@
                 });
             });
             
-            // Initialize - Close sidebar by default
-            toggleSidebar();
+           
         });
        
 
@@ -1376,84 +1375,219 @@
         }
         
         async function downloadEventPDF(eventId) {
-           const event = events.find(ev => ev.id === eventId);
-           if (!event) return;
-         
-           const { jsPDF } = window.jspdf;
-           const doc = new jsPDF();
-         
-           // Title Banner
-           doc.setFillColor(251, 146, 60); // Orange
-           doc.rect(0, 0, 210, 30, 'F');
+            const event = events.find(ev => ev.id === eventId);
+            if (!event) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Set document properties
+            doc.setProperties({
+                title: `Kitchen Report - ${event.date || 'Event'}`,
+                subject: 'BAPS Cambridge Kitchen Sabha Report',
+                author: 'BAPS Cambridge Kitchen'
+            });
+        
+            // ===== PAGE 1 =====
+            
+            // Header with color
+            doc.setFillColor(0, 0, 0); // Indigo background
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255); // White text
+            doc.text(`Kitchen Report - ${formatPDFDate(event.date)}`, 105, 16, { align: 'center' });
+            
+            // Reset text color
+            doc.setTextColor(0, 0, 0); // Black text
+            
+            // Sabha Date section with colored header
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0); // Indigo text
+            doc.text('Sabha Details', 20, 40);
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(0.3);
+            doc.line(20, 42, 50, 42);
+            
+            // Create table for event details with colors
+            doc.autoTable({
+                startY: 45,
+                head: [['Field', 'Details']],
+                body: [
+                    ['Event Date:', formatPDFDate(event.date)],
+                    ['Special Event:', event.sabhaName || '-'],
+                    ['Pujya Santo\'s Presence:', event.santosPresent || '-'],
+                    ['Total Bhaktas:', (event.gents || 0) + (event.ladies || 0)],
+                    ['Total Gents:', event.gents || '0'],
+                    ['Total Ladies:', event.ladies || '0'],
+                    ['Left-Over Food:', event.leftover || '-'],
+                    ['Remade Items:', event.remade || '-'],
+                    ['Total Grocery Cost:', event.groceryCost || '-'],
+                    ['Cost Per Plate:', event.costPerPlate || '-'],
+                    ['Notes:', event.notes || '-']
+                ],
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [79, 70, 229], // Indigo header
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 255] // Light blue alternate rows
+                },
+                styles: {
+                    fontSize: 12,
+                    cellPadding: 5,
+                    overflow: 'linebreak'
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 60 },
+                    1: { cellWidth: 'auto' }
+                }
+            });
+            
+            // Replace the Menu and Ingredients sections with this combined version:
+            // Replace the Menu & Ingredients section with this corrected version:
+
+            // Combined Menu & Ingredients section
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0); // Indigo text
+            doc.text('Menu & Ingredients', 20, doc.lastAutoTable.finalY + 15);
+            doc.line(20, doc.lastAutoTable.finalY + 17, 70, doc.lastAutoTable.finalY + 17);
+            
+            // Prepare content
+            const menuText = event.menu || 'No menu items entered';
+            const ingredientsText = event.ingredients?.join('\n') || 'No ingredients entered';
+            
+            // Create the combined table
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 25,
+                head: false,
+                body: [
+                    ['Menu Items:', menuText],
+                    ['Ingredients Used:', ingredientsText]
+                ],
+                theme: 'grid',
+                columnStyles: {
+                    0: { 
+                        cellWidth: 50, 
+                        fontStyle: 'bold',
+                        textColor: [79, 70, 229] // Indigo text
+                    },
+                    1: { 
+                        cellWidth: 'auto',
+                        cellPadding: { top: 5, right: 5, bottom: 5, left: 5 }
+                    }
+                },
+                styles: {
+                    fontSize: 12,
+                    lineColor: [200, 200, 200], // Light gray lines
+                    lineWidth: 0.3
+                },
+                // Handle multi-line text properly
+                didParseCell: (data) => {
+                    if (data.section === 'body' && data.column.index === 1) {
+                        // Split text into lines
+                        data.cell.text = data.cell.raw.split('\n');
+                    }
+                }
+            });
+            
+            // Update position for next section
+            const menuY = doc.lastAutoTable.finalY;
+            
+            // Add photo if available
+            // Calculate available space on page
+            const remainingSpace = 280 - doc.lastAutoTable.finalY;
+            const minSpaceNeeded = 100; // Minimum space needed for photo + caption
+            
+            // Add photo if available (after ingredients)
+            if (event.photos && event.photos.length > 0) {
+                try {
+                    // Add new page if not enough space
+                    if (remainingSpace < minSpaceNeeded) {
+                        doc.addPage();
+                    }
+            
+                    const img = await loadImage(event.photos[0]);
+                    const imgProps = doc.getImageProperties(img);
+                    
+                    // Calculate dimensions to fit full width (with margins)
+                    const pageWidth = 170; // 190 - 20px margins
+                    const pdfWidth = pageWidth;
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    // Position after ingredients with proper spacing
+                    const photoY = doc.lastAutoTable.finalY + 10;
+                    
+                    // Add photo caption
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('Event Photo:', 20, photoY);
+                    
+                    // Add the image (full width with margins)
+                    doc.addImage(img, 'JPEG', 20, photoY + 5, pdfWidth, pdfHeight);
+                    
+                    // Update final Y position
+                    menuY = photoY + pdfHeight + 10;
+                } catch (err) {
+                    console.error("Failed to load image:", err);
+                }
+            } else {
+                menuY = doc.lastAutoTable.finalY;
+            }
            
-           doc.setFontSize(22);
-           doc.setTextColor(255, 255, 255);
-           doc.text('Sabha Event Report', 105, 20, { align: 'center' });
-           let data = [
-             ['Date', formatDate(event.date)],
-             ['Sabha Name', event.sabhaName || '-'],
-             ['Pujya Santo\'s Present', event.santosPresent || '-'],
-             ['Gents', event.gents || '0'],
-             ['Ladies', event.ladies || '0'],
-             ['Total Bhaktas', event.totalBhaktas || '0'],
-             ['Menu', event.menu || '-'],
-             ['Total Grocery Cost', event.groceryCost || '-'],
-             ['Cost Per Plate', event.costPerPlate || '-'],
-             ['Notes', event.notes || '-']
-           ];
-         
-           const startY = 40;
-         
-           doc.autoTable({
-             startY: startY,
-             head: [['Field', 'Value']],
-             body: data,
-             theme: 'grid',
-             headStyles: { fillColor: [34, 197, 94] }, // Green header
-             alternateRowStyles: { fillColor: [243, 244, 246] }, // Light Gray
-             margin: { top: 10 },
-             styles: { fontSize: 12, cellPadding: 3 },
-           });
-         
-           // Ingredients table (if available)
-           if (event.ingredients && event.ingredients.length > 0) {
-             const ingStartY = doc.lastAutoTable.finalY + 10;
-         
-             const ingredientsData = event.ingredients.map((ing, index) => [index + 1, ing]);
-         
-             doc.autoTable({
-               startY: ingStartY,
-               head: [['#', 'Ingredient']],
-               body: ingredientsData,
-               theme: 'striped',
-               headStyles: { fillColor: [251, 146, 60] }, // Orange
-               margin: { top: 10 },
-               styles: { fontSize: 12, cellPadding: 3 },
-             });
-           }
-         
-           // Now insert uploaded image if available
-           if (event.imageUrl) { // Assuming you store image URL in event.imageUrl
-             try {
-               const img = await loadImage(event.imageUrl);
-         
-               const imgProps = doc.getImageProperties(img);
-               const pdfWidth = 150; // ~medium size
-               const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-               const imgY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : startY + 80;
-         
-               doc.addImage(img, 'JPEG', 30, imgY, pdfWidth, pdfHeight);
-             } catch (err) {
-               console.error("Failed to load image:", err);
-               // Skip image if loading fails
-             }
-           }
-         
-           // Save final PDF
-           doc.save(`SabhaEvent-${event.sabhaName || 'Event'}.pdf`);
-         }
-         
-         // Helper to load external image
+            
+            // Footer with color
+       
+            doc.rect(0, 280, 210, 20, 'F');
+            doc.setFontSize(10);
+            doc.setTextColor(255, 255, 255);
+            doc.text('Generated by BAPS Cambridge Kitchen System', 105, 287, { align: 'center' });
+            doc.text(`Report generated on: ${formatPDFDate(new Date())}`, 105, 293, { align: 'center' });
+            
+            // Save the PDF
+            doc.save(`Kitchen_Report_${formatPDFDate(event.date, true)}.pdf`);
+        }
+        
+        // Helper function to load images
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.setAttribute('crossOrigin', 'anonymous');
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+        
+        // Helper function to format dates
+        // Replace the formatPDFDate function with this corrected version:
+        function formatPDFDate(dateString, forFilename = false) {
+            if (!dateString) return '-';
+            
+            // Parse date correctly (fixes timezone issues)
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            
+            // Adjust for timezone offset to get correct date
+            const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+            
+            if (forFilename) {
+                return adjustedDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            }
+            
+            return adjustedDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+        
+        
+                 
+                 // Helper to load external image
         function loadImage(url) {
            return new Promise((resolve, reject) => {
              const img = new Image();
@@ -1462,14 +1596,7 @@
              img.onerror = reject;
              img.src = url;
            });
-        }
-
-
-        
-         
-         
-                     
-                    
+        }              
         
         // Handle ingredient input
         function handleIngredientInput(e) {
@@ -1863,100 +1990,179 @@
             });
         }
 
-
         async function downloadRecipePDF(recipeId) {
-          const recipe = recipes.find(r => r.id === recipeId);
-          if (!recipe) {
-            alert("Recipe not found!");
-            return;
-          }
-        
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
-        
-          // Title
-          doc.setFillColor(79, 70, 229); // Indigo
-          doc.rect(0, 0, 210, 30, 'F');
-        
-          doc.setFontSize(22);
-          doc.setTextColor(255, 255, 255);
-          doc.text('Recipe Details', 105, 20, { align: 'center' });
-        
-          let data = [
-            ['Recipe Name', recipe.name || '-'],
+            const recipe = recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
             
-            ['Cooking Time (min)', recipe.cookTime || '0'],
-            ['Notes', recipe.notes || '-']
-          ];
-        
-          const startY = 40;
-        
-          doc.autoTable({
-            startY: startY,
-            head: [['Field', 'Value']],
-            body: data,
-            theme: 'grid',
-            headStyles: { fillColor: [79, 70, 229] }, // Indigo
-            alternateRowStyles: { fillColor: [243, 244, 246] }, // Light Gray
-            margin: { top: 10 },
-            styles: { fontSize: 12, cellPadding: 3 },
-          });
-        
-          // Ingredients Table
-          if (recipe.ingredients && recipe.ingredients.length > 0) {
-            const ingredientsStartY = doc.lastAutoTable.finalY + 10;
-            const ingredientsData = recipe.ingredients.map((ing, index) => [index + 1, ing]);
-        
-            doc.autoTable({
-              startY: ingredientsStartY,
-              head: [['#', 'Ingredient']],
-              body: ingredientsData,
-              theme: 'striped',
-              headStyles: { fillColor: [16, 185, 129] }, // Green
-              margin: { top: 10 },
-              styles: { fontSize: 12, cellPadding: 3 },
-            });
-          }
-        
-          // Instructions
-          if (recipe.instructions) {
-            const instructionsStartY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 70;
-            const instructionsText = recipe.instructions.split('\n').filter(Boolean);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
             
-            let instructionsData = instructionsText.map(inst => [inst]);
-        
-            doc.autoTable({
-              startY: instructionsStartY,
-              head: [['#', 'Instruction']],
-              body: instructionsData,
-              theme: 'grid',
-              headStyles: { fillColor: [245, 158, 11] }, // Amber
-              margin: { top: 10 },
-              styles: { fontSize: 12, cellPadding: 3 },
+            // Set document properties
+            doc.setProperties({
+                title: `Recipe - ${recipe.name}`,
+                subject: 'BAPS Cambridge Kitchen Recipe',
+                author: 'BAPS Cambridge Kitchen'
             });
-          }
         
-          // Image (optional)
-          if (recipe.image) {
-            try {
-              const img = await loadImage(recipe.image);
-              const imgProps = doc.getImageProperties(img);
-              const pdfWidth = 120;
-              const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-              const imgY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 150;
-              doc.addImage(img, 'JPEG', 45, imgY, pdfWidth, pdfHeight);
-            } catch (err) {
-              console.error("Failed to load recipe image:", err);
+            // ===== PAGE 1 =====
+            
+            // Header with orange background
+            doc.setFillColor(0, 0, 0); // Orange background
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255); // White text
+            doc.text(`Recipe: ${recipe.name}`, 105, 16, { align: 'center' });
+            
+            // Reset text color
+            doc.setTextColor(0, 0, 0); // Black text
+            
+            // Recipe Details section
+            doc.setFontSize(14);
+            doc.setTextColor(79, 70, 229); // Indigo text
+            doc.text('Recipe Details', 20, 40);
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(0.3);
+            doc.line(20, 42, 50, 42);
+            
+            // Basic info table
+            doc.autoTable({
+                startY: 45,
+                head: false,
+                body: [
+                    ['Preparation Time:', `${recipe.cookTime || '0'} minutes`],
+                    ['Category:', recipe.category || '-']
+                ],
+                theme: 'grid',
+                columnStyles: {
+                    0: { 
+                        cellWidth: 60, 
+                        fontStyle: 'bold',
+                        textColor: [79, 70, 229] // Indigo text
+                    },
+                    1: { cellWidth: 'auto' }
+                },
+                styles: {
+                    fontSize: 12,
+                    cellPadding: 5,
+                    lineColor: [200, 200, 200]
+                }
+            });
+            
+            // Ingredients section
+            doc.setFontSize(14);
+            doc.setTextColor(79, 70, 229);
+            doc.text('Ingredients', 20, doc.lastAutoTable.finalY + 15);
+            doc.line(20, doc.lastAutoTable.finalY + 17, 50, doc.lastAutoTable.finalY + 17);
+            
+            // Ingredients table with line breaks preserved
+            const ingredientsText = recipe.ingredients?.join('\n') || 'No ingredients listed';
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 25,
+                head: false,
+                body: [['', ingredientsText]],
+                columnStyles: {
+                    0: { cellWidth: 10 },
+                    1: { cellWidth: 'auto' }
+                },
+                styles: {
+                    fontSize: 12,
+                    cellPadding: { left: 5, right: 5, top: 5, bottom: 5 },
+                    lineColor: [200, 200, 200]
+                },
+                didParseCell: function(data) {
+                    if (data.section === 'body' && data.column.index === 1) {
+                        data.cell.text = data.cell.raw.split('\n');
+                    }
+                }
+            });
+            
+            // Instructions section
+            doc.setFontSize(14);
+            doc.setTextColor(79, 70, 229);
+            doc.text('Instructions', 20, doc.lastAutoTable.finalY + 15);
+            doc.line(20, doc.lastAutoTable.finalY + 17, 50, doc.lastAutoTable.finalY + 17);
+            
+            // Instructions with line breaks preserved
+            const instructionsText = recipe.instructions || 'No instructions provided';
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 25,
+                head: false,
+                body: [['', instructionsText]],
+                columnStyles: {
+                    0: { cellWidth: 10 },
+                    1: { cellWidth: 'auto' }
+                },
+                styles: {
+                    fontSize: 12,
+                    cellPadding: { left: 5, right: 5, top: 5, bottom: 5 },
+                    lineColor: [200, 200, 200]
+                },
+                didParseCell: function(data) {
+                    if (data.section === 'body' && data.column.index === 1) {
+                        data.cell.text = data.cell.raw.split('\n');
+                    }
+                }
+            });
+            
+            // Notes section (if exists)
+            if (recipe.notes) {
+                doc.setFontSize(14);
+                doc.setTextColor(79, 70, 229);
+                doc.text('Notes', 20, doc.lastAutoTable.finalY + 15);
+                doc.line(20, doc.lastAutoTable.finalY + 17, 30, doc.lastAutoTable.finalY + 17);
+                
+                doc.autoTable({
+                    startY: doc.lastAutoTable.finalY + 25,
+                    head: false,
+                    body: [['', recipe.notes]],
+                    columnStyles: {
+                        0: { cellWidth: 10 },
+                        1: { cellWidth: 'auto' }
+                    },
+                    styles: {
+                        fontSize: 12,
+                        cellPadding: { left: 5, right: 5, top: 5, bottom: 5 },
+                        lineColor: [200, 200, 200]
+                    },
+                    didParseCell: function(data) {
+                        if (data.section === 'body' && data.column.index === 1) {
+                            data.cell.text = data.cell.raw.split('\n');
+                        }
+                    }
+                });
             }
-          }
-        
-          // Save PDF
-          doc.save(`Recipe-${recipe.name || 'Recipe'}.pdf`);
+            
+            // Add recipe image if available
+            if (recipe.image) {
+                try {
+                    const img = await loadImage(recipe.image);
+                    const imgProps = doc.getImageProperties(img);
+                    const pdfWidth = 60;
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    doc.addImage(img, 'JPEG', 140, 40, pdfWidth, pdfHeight);
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('Recipe Image:', 140, 38);
+                } catch (err) {
+                    console.error("Failed to load recipe image:", err);
+                }
+            }
+            
+            // Footer
+            doc.setFillColor(0, 0, 0); // Orange background
+            doc.rect(0, 280, 210, 20, 'F');
+            doc.setFontSize(10);
+            doc.setTextColor(255, 255, 255);
+            doc.text('Generated by BAPS Cambridge Kitchen System', 105, 287, { align: 'center' });
+            doc.text(`Report generated on: ${new Date().toLocaleDateString()}`, 105, 293, { align: 'center' });
+            
+            // Save the PDF
+            doc.save(`Recipe_${recipe.name.replace(/ /g, '_')}.pdf`);
         }
        
        
-           
-   
         
         // Highlight matching text in search results
         function highlightMatches(text, query) {
