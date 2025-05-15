@@ -26,3 +26,77 @@ p {
 .card p:last-child {
 	margin-bottom: 0;
 }
+
+/* Mobile-First Styles (default styles for small screens) */
+
+/* Ensure buttons are appropriately sized for mobile */
+button {
+    padding: 12px 24px;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Responsive adjustments for medium screens (tablets and up) */
+@media (min-width: 640px) {
+    h1 {
+        font-size: 20px; /* Increase font size for tablets */
+    }
+
+    p {
+        font-size: 16px; /* Increase font size for better readability on tablets */
+    }
+
+    /* Adjust card padding and max-width for medium screens */
+    .card {
+        max-width: 720px;
+        padding: 20px;
+    }
+
+    button {
+        padding: 14px 28px;
+        font-size: 16px;
+    }
+}
+
+/* Responsive adjustments for large screens (desktops and up) */
+@media (min-width: 1024px) {
+    h1 {
+        font-size: 24px; /* Larger font size for desktops */
+    }
+
+    p {
+        font-size: 18px; /* Larger font size for easier reading on desktops */
+    }
+
+    /* Adjust card padding and max-width for large screens */
+    .card {
+        max-width: 800px;
+        padding: 24px;
+    }
+
+    button {
+        padding: 16px 32px;
+        font-size: 18px;
+    }
+}
+
+/* Mobile-Friendly Buttons (stack vertically on mobile if needed) */
+@media (max-width: 640px) {
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Stack buttons with space between */
+    }
+}
+
+/* Ensure text is readable and mobile-friendly */
+@media (max-width: 640px) {
+    body {
+        padding: 1rem; /* Reduce body padding on mobile */
+    }
+
+    .card {
+        padding: 12px; /* Reduce card padding on smaller screens */
+    }
+}
