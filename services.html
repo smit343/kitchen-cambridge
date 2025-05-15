@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Services | National Water Authority</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    body { font-family: 'Open Sans', sans-serif; color: #555; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Header -->
+  <header class="fixed w-full z-50 bg-blue-900 shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <img src="logo1.jpeg" alt="WROS" class="h-12" />
+        <div class="h-12 border-l border-gray-300"></div>
+        <div class="flex flex-col justify-center text-white">
+          <span class="font-bold text-lg leading-tight">WATER REFINED</span>
+          <span class="font-medium text-sm leading-tight">OPERATING SERVICES</span>
+        </div>
+      </div>
+      <nav class="hidden md:flex space-x-6">
+        <a href="index.html#home" class="text-white hover:text-blue-200 font-bold">Home</a>
+        <a href="about.html" class="text-white hover:text-blue-200 font-bold">About</a>
+        <a href="services.html" class="text-white hover:text-blue-200 font-bold">Services</a>
+        
+        
+        <a href="careers.html" class="text-white hover:text-blue-200 font-bold">Careers</a>
+        <a href="index.html#contact" class="text-white hover:text-blue-200 font-bold">Contact</a>
+
+      </nav>
+      <button id="mobile-menu-button" class="md:hidden text-white">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu fixed inset-y-0 right-0 w-64 bg-blue-900 shadow-lg z-50 p-4 transform translate-x-full transition-transform duration-300">
+      <div class="flex justify-end mb-4">
+        <button id="close-menu" class="text-white">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+      <nav class="flex flex-col space-y-4">
+        <a href="index.html#home" class="text-white hover:text-orange-400 text-lg font-semibold">Home</a>
+        <a href="about.html" class="text-white hover:text-orange-400 text-lg font-semibold">About</a>
+        <a href="services.html" class="text-white hover:text-orange-400 text-lg font-semibold">Services</a>
+       
+        
+        <a href="careers.html" class="text-white hover:text-orange-400 text-lg font-semibold">Careers</a>
+        <a href="index.html#contact" class="text-white hover:text-orange-400 text-lg font-semibold">Contact</a>
+
+      </nav>
+    </div>
+  </header>
+
+ <div class="max-w-[1400px] mx-auto px-4">
+
+  <!-- Spacer for fixed header -->
+  <div class="pt-20"></div>
+
+  <!-- Services Section -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Our Services</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">We deliver reliable and innovative water solutions across all facets of infrastructure and operations.</p>
+      </div>
+
+
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Service 1 -->
+        <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+            <div class="h-48 bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-tools text-6xl text-blue-600"></i>
+            </div>
+           
+          <h3 class="text-xl font-bold text-blue-900 mb-3 py-2 px-4">Operations & Maintenance</h3>
+          <p class="text-gray-700 px-3">We ensure water systems run efficiently around the clock, managing pumps, plants, and pipelines with preventive maintenance and rapid response protocols.</p>
+        </div>
+
+        <!-- Service 2 -->
+        <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+            <div class="h-48 bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-water text-6xl text-blue-600"></i>
+            </div>
+        
+          <h3 class="text-xl font-bold text-blue-900 mb-3 py-2 px-4">Project Management & Delivery</h3>
+          <p class="text-gray-700 px-3">From planning to execution, our team leads complex water infrastructure projects that meet budget, timeline, and sustainability goals.</p>
+        </div>
+
+        <!-- Service 3 -->
+        <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+            <div class="h-48 bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-building text-6xl text-blue-600"></i>
+            </div>
+          <h3 class="text-xl font-bold text-blue-900 mb-3 py-2 px-4">Infrastructure Support</h3>
+          <p class="text-gray-700 px-3">We support the maintenance and upgrade of treatment plants, storage tanks, valves, meters, and other critical infrastructure components.</p>
+        </div>
+
+        <!-- Service 4 -->
+        <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+            <div class="h-48 bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-dollar text-6xl text-blue-600"></i>
+            </div>
+          <h3 class="text-xl font-bold text-blue-900 mb-3 py-2 px-4">Financial Services</h3>
+          <p class="text-gray-700 px-3">Our financial experts help utilities streamline budgeting, billing, and revenue collection, ensuring transparency and fiscal responsibility.</p>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+            <div class="h-48 bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-database text-6xl text-blue-600"></i>
+            </div>
+          <h3 class="text-xl font-bold text-blue-900 mb-3 px-4 py-2">Information & Data Management</h3>
+          <p class="text-gray-700 px-3">We leverage smart data tools to monitor systems, ensure compliance, and guide decision-making with dashboards and analytics platforms.</p>
+        </div>
+
+        <!-- Service 6 -->
+        <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+            <div class="h-48 bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-book text-6xl text-blue-600"></i>
+            </div>
+          <h3 class="text-xl font-bold text-blue-900 mb-3 py-2 px-4">Training & Capacity Building</h3>
+          <p class="text-gray-700 px-3">We offer customized training programs to help utilities and professionals build skills, meet certification requirements, and stay current with regulations.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-blue-900 text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <img src="logo1.jpeg" alt="National Water Authority" class="h-12 mb-4" />
+          <p class="text-blue-200 mb-4">Providing clean, safe water to our communities for over 100 years.</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html#home" class="text-blue-200 hover:text-white">Home</a></li>
+            <li><a href="about.html" class="text-blue-200 hover:text-white">About Us</a></li>
+            <li><a href="services.html" class="text-blue-200 hover:text-white">Services</a></li>
+            
+            <li><a href="news.html" class="text-blue-200 hover:text-white">Newsroom</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">Resources</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-blue-200 hover:text-white">Water Quality Reports</a></li>
+            <li><a href="#" class="text-blue-200 hover:text-white">Conservation Tips</a></li>
+            <li><a href="#" class="text-blue-200 hover:text-white">FAQs</a></li>
+            <li><a href="#" class="text-blue-200 hover:text-white">Forms & Documents</a></li>
+            <li><a href="careers.html" class="text-blue-200 hover:text-white">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">Contact</h3>
+          <address class="not-italic space-y-2 text-blue-200">
+            <p>123 Waterfront Drive</p>
+            <p>Capital City, CC 12345</p>
+            <p>Phone: 1-800-555-WATER</p>
+            <p>Email: info@nwa.gov</p>
+          </address>
+        </div>
+      </div>
+      <div class="text-center text-blue-300 text-sm border-t border-blue-800 pt-4">
+        <p>&copy; 2023 National Water Authority. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  <script>
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const closeMenu = document.getElementById('close-menu');
+  
+    if (mobileMenuButton && mobileMenu && closeMenu) {
+      mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.remove('translate-x-full');
+        mobileMenu.classList.add('translate-x-0');
+      });
+  
+      closeMenu.addEventListener('click', () => {
+        mobileMenu.classList.remove('translate-x-0');
+        mobileMenu.classList.add('translate-x-full');
+      });
+    }
+  </script>
+ </div>
+</body>
+</html>

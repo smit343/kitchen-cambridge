@@ -1,2532 +1,928 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAPS Cambridge Kitchen – Sabha & Recipe Data Organizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>WROS-Water Refined Operating Services</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>   
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #4f46e5;
-            --secondary: #10b981;
-            --accent: #f59e0b;
-            --text: #1f2937;
-            --bg: #020c15;
-        }
-        .dark {
-            --primary: #6366f1;
-            --secondary: #34d399;
-            --accent: #fbbf24;
-            --text: #f3f4f6;
-            --bg: #111827;
-        }
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            transition: all 0.3s ease;
+            font-family: 'Open Sans', sans-serif;
+            color: #555555;
         }
-        .stat-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        
+        .h-screen-80 {
+            height: 80vh;
+            min-height: 400px;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        section#home {
+            padding-top: 80px; /* Matches header height */
         }
-        .recipe-card {
-            transition: all 0.3s ease;
+        
+        /* Adjust mobile menu colors */
+        .mobile-menu {
+            background-color: white;
         }
-        .recipe-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        
+        .mobile-menu a {
+            color: #fefeff;
         }
-        .tab-content {
-            display: none;
+        
+        .mobile-menu a:hover {
+            color: #ef9051;
         }
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .toast {
-            animation: slideIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        .tag-input {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-        }
-        .tag {
-            background-color: #e0e7ff;
-            color: #4f46e5;
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        .tag-remove {
-            cursor: pointer;
-            color: #4f46e5;
-        }
-        .file-upload {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-        .file-upload-input {
-            position: absolute;
-            left: 0;
-            top: 0;
+        .section {
             opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
         }
-        .preview-image {
-            max-width: 150px;
-            max-height: 150px;
-            margin-top: 10px;
-            border-radius: 8px;
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .search-highlight {
-            background-color: #fef08a;
-            color: #000;
+        .timeline-item:not(:last-child):after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -50px;
+            width: 2px;
+            height: 50px;
+            
         }
-        #gallery img:hover {
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        header {
+            transition: all 0.3s ease;
         }
-        /* Hamburger menu styles */
-        #sidebar {
-            transition: transform 0.3s ease-in-out;
-            transform: translateX(-100%);
+        
+        header.scrolled {
+            background: rgba(16, 75, 134, 0.9);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        #sidebar.open {
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .counter {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #004c97;
+        }
+    
+   
+        @keyframes pulse {
+            0% { background-color: rgba(255, 0, 0, 0.1); }
+            50% { background-color: rgba(255, 0, 0, 0.3); }
+            100% { background-color: rgba(255, 0, 0, 0.1); }
+        }
+        .director-card:hover .director-overlay {
+            opacity: 1;
+        }
+        .director-overlay {
+            background: rgba(0, 76, 151, 0.8);
+            transition: opacity 0.3s ease;
+        }
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .mobile-menu.open {
             transform: translateX(0);
         }
-        #overlay {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .hamburger {
-            transition: all 0.3s ease;
-        }
-        .hamburger.open span:nth-child(1) {
-            transform: translateY(8px) rotate(45deg);
-        }
-        .hamburger.open span:nth-child(2) {
-            opacity: 0;
-        }
-        .hamburger.open span:nth-child(3) {
-            transform: translateY(-8px) rotate(-45deg);
-        }
-        .main-content {
-            transition: margin-left 0.3s ease;
-        }
-        .tab-btn {
-            color: black !important; /* Force white text for all menu items */
-            background-color: transparent !important; /* Remove any background */
-            transition: all 0.3s ease;
-        }
-        
-        .tab-btn.active, .tab-btn:hover {
-            background-color: rgb(245, 199, 112) !important; /* White background when active/hover */
-            color: black !important; /* Black text when active/hover */
-        }
-        
-        /* Mobile styles - hide header nav, show hamburger */
-        @media (max-width: 767px) {
-            header nav {
-                display: none;
-            }
-            #menu-toggle {
-                display: block;
-            }
-        }
-        
-        /* Desktop styles - show header nav, but keep hamburger visible */
-        @media (min-width: 768px) {
-            header nav {
-                display: flex;
-            }
-            #menu-toggle {
-                display: block;
-                margin-right: 1rem;
-            }
-        }
-        /* Mobile-first responsive adjustments */
-@media (max-width: 767px) {
-  html {
-    font-size: 14px;
-  }
-  
-  body {
-    padding-top: 60px; /* Make space for fixed header */
-  }
-  
-  /* Adjust all padding/margin for mobile */
-  .container, .px-4, .py-8 {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  /* Smaller headings on mobile */
-  h1 {
-    font-size: 1.5rem;
-  }
-  
-  h2 {
-    font-size: 1.3rem;
-  }
-  
-  h3 {
-    font-size: 1.1rem;
-  }
-  
-  /* Make buttons more touch-friendly */
-  button, .btn, [type="button"], [type="submit"] {
-    padding: 0.5rem 1rem;
-    min-height: 44px; /* Minimum touch target size */
-  }
-  
-  /* Form inputs */
-  input, textarea, select {
-    padding: 0.5rem;
-    font-size: 1rem;
-  }
-}
+        /* Hero Section Styles */
        
+        /* Modern full-viewport height with fallback */
+        .h-screen-80 {
+            height: 80vh;
+            min-height: 400px;
+        }
+        
+        /* Overlay for better text readability */
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(103, 95, 95, 0.3);
+            z-index: 1;
+        }
+        
+        /* Hero content container */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 0;
+        }
+        
+        /* Text styles */
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            line-height: 1.4;
+        }
+        
+        /* Button styles */
+        .hero-button {
+            display: inline-block;
+            background: white;
+            color: #004c97;
+            font-weight: 800;
+            padding: 14px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 1rem;
+        }
+        
+        .hero-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .h-screen-80 {
+                height: 90vh;
+                min-height: 500px;
+                background-attachment: scroll; /* Prevent parallax on mobile */
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+                margin-bottom: 1rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .hero-button {
+                padding: 12px 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .h-screen-80 {
+                height: 100vh;
+                min-height: 600px;
+            }
+            
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            /* iOS specific fixes */
+            @supports (-webkit-touch-callout: none) {
+                .h-screen-80 {
+                    height: -webkit-fill-available;
+                    min-height: -webkit-fill-available;
+                }
+            }
+        }
+        /* Static Wave Divider */
+        .wave-divider {
+          width: 100%;
+          height: 60px; /* Adjust height as needed */
+          margin-top: -2px; /* Eliminates any gap */
+          line-height: 0;
+          transform: rotate(360deg); /* Flips wave downward */
+        }
+        
+        .wave-divider svg {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+        
+        /* Color matching your hero section */
+        .wave-divider path {
+          fill: #4fade0; /* White to match your current hero overlay */
+        }
+        
+        /* For a blue wave instead, use your brand color: */
+        /* .wave-divider path { fill: #004c97; } */
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+          .wave-divider {
+            height: 40px; /* Smaller wave on mobile */
+          }
+        }
+   
+            
     </style>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBo8fOEuVFc-lync-V3N9JV37qyCtCtkYo",
-    authDomain: "kitchen-data-61ecd.firebaseapp.com",
-    projectId: "kitchen-data-61ecd",
-    storageBucket: "kitchen-data-61ecd.appspot.com",
-    messagingSenderId: "225092587820",
-    appId: "1:225092587820:web:4b896b9f9387718c1f9c89",
-    measurementId: "G-YRVFHF4ME9"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.db = getFirestore(app);
-  window.deleteDoc = deleteDoc;
-  window.firestoreDoc = doc;
-
-  async function syncToFirebase(collectionName, dataArray) {
-    try {
-      const batchPromises = dataArray.map(item => {
-        return setDoc(doc(window.db, collectionName, item.id), item);
-      });
-      await Promise.all(batchPromises);
-      console.log(`Synced ${dataArray.length} documents to ${collectionName}`);
-    } catch (err) {
-      console.error("Sync to Firebase failed:", err);
-    }
-  }
-
-  async function loadFromFirebase(collectionName) {
-    try {
-      const querySnapshot = await getDocs(collection(window.db, collectionName));
-      const data = [];
-      querySnapshot.forEach(doc => {
-        const obj = doc.data();
-        
-        // Ensure 'id' exists
-        if (!obj.id) {
-          obj.id = doc.id; // fallback to Firestore document ID
-        }
-
-        // Normalize special fields
-        if (collectionName === 'SabhaEvents') {
-          obj.gents = parseInt(obj.gents) || 0;
-          obj.ladies = parseInt(obj.ladies) || 0;
-          obj.totalBhaktas = obj.gents + obj.ladies;
-          if (!Array.isArray(obj.ingredients)) obj.ingredients = [];
-          if (!Array.isArray(obj.photos)) obj.photos = [];
-        } else if (collectionName === 'Recipes') {
-          if (!Array.isArray(obj.ingredients)) obj.ingredients = [];
-          if (!Array.isArray(obj.photos)) obj.photos = [];
-          obj.cookTime = parseInt(obj.cookTime) || 0;
-        }
-
-        data.push(obj);
-      });
-      return data;
-    } catch (err) {
-      console.error("Failed to load from Firebase:", err);
-      return [];
-    }
-  }
-
-  window.syncToFirebase = syncToFirebase;
-  window.loadFromFirebase = loadFromFirebase;
- 
-
-</script>
-
 </head>
-
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
-    <!-- New Header with Hamburger Menu -->
-    <header class="bg-orange-50 text-black py-4 px-4 rounded-b-2xl shadow-md sticky top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <!-- Left side: Hamburger + Logo -->
-            <div class="flex items-center space-x-4">
-                <!-- Hamburger Button - Always visible -->
-                <button id="menu-toggle" class="hamburger focus:outline-none">
-                    <span class="block w-6 h-0.5 bg-black mb-1.5 transition"></span>
-                    <span class="block w-6 h-0.5 bg-black mb-1.5 transition"></span>
-                    <span class="block w-6 h-0.5 bg-black transition"></span>
-                </button>
-                
-                <!-- Logo/Image -->
-                <img src="images.png" alt="Logo" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-white">
-                
-                <!-- Title Text -->
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-red-900">BAPS Cambridge–Kitchen</h1>
-                    <p class="text-sm text-black">Sabha & Recipe Data Organizer</p>
-                </div>
-            </div>
-            
-            <!-- Center: Navigation Menu - Hidden on mobile, shown on desktop -->
-            <nav class="hidden md:flex space-x-2 lg:space-x-4">
-                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black text-black" data-tab="dashboard">
-                    <i class="fas fa-home mr-2"></i>Dashboard
-                </button>
-                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" data-tab="event-data">
-                    <i class="fas fa-calendar-alt mr-2"></i>Sabha Events
-                </button>
-                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" data-tab="recipe-book">
-                    <i class="fas fa-book mr-2"></i>Recipes
-                </button>
-                <button class="tab-btn px-3 py-2 rounded-lg transition hover:bg-white hover:text-black" data-tab="find-ai-recipe">
-                    <i class="fas fa-robot mr-2"></i>AI Recipes
-                </button>
-                
-            </nav>
-        </div>
-    </header>
-
-    <!-- Sidebar -->
-    <div id="sidebar" class="fixed top-10 left-0 w-64 h-[calc(100%-4rem)] bg-orange-50 font-semibold text-white z-40 shadow-xl overflow-y-auto">
-        <div class="p-4">
-            <!-- Close Button -->
-            <div class="flex justify-end">
-                <button id="close-menu" class="text-white focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Navigation Links -->
-            <nav class="mt-6">
-                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="dashboard">
-                    <i class="fas fa-home mr-3"></i>Dashboard
-                </button>
-                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="event-data">
-                    <i class="fas fa-calendar-alt mr-3"></i>Sabha Event Data
-                </button>
-                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="recipe-book">
-                    <i class="fas fa-book mr-3"></i>Recipe Book
-                </button>
-                <button class="tab-btn w-full text-left px-4 py-3 mb-2 rounded hover:bg-gray-700 transition" data-tab="find-ai-recipe">
-                    <i class="fas fa-robot mr-3"></i>Find Recipe With AI
-                </button>
-                <button class="w-full text-left px-4 py-3 mb-2 rounded hover:bg-orange-300 transition text-black" onclick="window.location.href='attendance.html'">
-                    <i class="fas fa-user-check mr-3"></i>Attendance
-                </button>
-                    <!-- Right side: Export Button -->
-                <button id="export-btn" class="px-3 py-2 bg-orange-400 hover:bg-green-700 transition rounded-lg text-white text-sm sm:text-base">
-                    <i class="fas fa-download mr-2"></i>Export Data
-                </button>
-        
-            </nav>
-        </div>
-    </div>
-
-    <!-- Overlay -->
-    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-0 z-30 hidden"></div>
-
-    <div class="main-content container mx-auto px-4 py-8 max-w-full">
-        <!-- Toast Notification -->
-        <div id="toast" class="toast fixed right-4 top-4 hidden px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg z-50">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
-                <span id="toast-message">Operation successful!</span>
-            </div>
-        </div>
-
-        <!-- Centered Prompt Copied Popup -->
-        <div id="custom-toast" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-            <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-xl rounded-xl px-6 py-5 text-center space-y-4 max-w-sm w-full">
-              <div class="text-green-600 text-2xl font-semibold">
-                <i class="fas fa-check-circle mr-2"></i> Prompt made & Copied to keyboard!
-              </div>
-              <p class="text-gray-700 dark:text-gray-300 text-base">Click the button below to open ChatGPT and just paste your prompt there.</p>
-              <button id="proceed-chatgpt-btn"
-                      class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg transition">
-                Go to ChatGPT
-              </button>
-            </div>
-        </div>
-
-        <!-- Tab Contents -->
-        <div class="tab-contents">
-            <!-- Dashboard Tab -->
-            <div id="dashboard" class="tab-content active">
-                                <div class="w-full mb-6 overflow-hidden rounded-xl">
-                    <img src="photo.jpg" alt="Seva Banner" 
-                         class="w-full h-auto object-contain rounded-xl" />
-                   
-                    
-                </div>
-                  
-                  
-                  
-                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-lg">Dashboard Overview</h2>
-                <div class="flex space-x-4 mt-6">
-                    <button onclick="showTab('add-event')" class="px-4 py-4 mb-4 font-bold bg-red-800 text-white rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
-                        <i class="fas fa-plus mr-2"></i> Add New Sabha Data
-                    </button>
-                    <button onclick="showTab('add-recipe')" class="px-4 py-4 mb-4 font-bold bg-red-800 text-white rounded-lg hover:bg-orange-300 transition flex items-center p-3 rounded-full">
-                        <i class="fas fa-plus mr-2"></i> Add New Recipe
-                    </button>
-                </div>
-                
-                <!-- Stat Cards -->
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 mr-4">
-                                <i class="fas fa-calendar-check text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Events</p>
-                                <h3 class="text-2xl font-bold" id="total-events">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 mr-4">
-                                <i class="fas fa-users text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Bhaktas</p>
-                                <h3 class="text-2xl font-bold" id="total-bhaktas">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 mr-4">
-                                <i class="fas fa-utensils text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 dark:text-gray-400 text-sm">Total Recipes</p>
-                                <h3 class="text-2xl font-bold" id="total-recipes">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 mr-4">
-                                <i class="fas fa-clock text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 dark:text-gray-400 text-sm">Latest Event</p>
-                                <h3 class="text-2xl font-bold" id="latest-event">-</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charts Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <!-- Bhakta Attendance Chart -->
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <h3 class="text-lg font-semibold mb-4">Bhakta Attendance Over Time</h3>
-                        <canvas id="attendanceChart" height="300"></canvas>
-                    </div>
-                    
-                    <!-- Gents vs Ladies Chart -->
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                        <h3 class="text-lg font-semibold mb-4">Gents vs Ladies Ratio</h3>
-                        <canvas id="genderChart" height="300"></canvas>
-                    </div>
-                </div>
-
-                <!-- Image Gallery Section -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
-                  <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Seva Memories</h3>
-                  <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <!-- Gallery images will go here -->
-                  </div>
-                </div>
-
-
-
-                <!-- Recent Events -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Recent Sabha Events</h3>
-                        <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('event-data')">View All</a>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Speaker</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recent-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                <!-- Recent events will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Popular Recipes -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Recent Recipes</h3>
-                        <a href="#" class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" onclick="showTab('recipe-book')">View All</a>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="popular-recipes">
-                        <!-- Popular recipes will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add Event Tab -->
-            <div id="add-event" class="tab-content">
-                <h2 class="text-2xl font-bold mb-6">Add New Sabha Event</h2>
-                
-<form id="event-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-            <label for="event-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-            <input type="date" id="event-date" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
-        </div>
-        <div>
-            <label for="event-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sabha Name</label>
-            <input type="text" id="event-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
-        </div>
-        <div>
-            <label for="event-saints" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pujya Santo's Present</label>
-            <input type="text" id="event-saints" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-        </div>
-        <div>
-            <label for="event-bhaktas" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Bhaktas</label>
-            <input type="number" id="event-bhaktas" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
-        </div>
-        <div>
-            <label for="event-gents" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gents</label>
-            <input type="number" id="event-gents" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
-        </div>
-        <div>
-            <label for="event-ladies" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ladies</label>
-            <input type="number" id="event-ladies" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" min="0">
-        </div>
-        <div>
-            <label for="event-menu" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Menu</label>
-            <textarea id="event-menu" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="List the menu items..."></textarea>
-        </div>
-
-        <div>
-            <label for="event-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
-            <textarea id="event-ingredients" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Enter ingredients, one per line"></textarea>
-        </div>
-        <div>
-            <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leftover Food (optional)</label>
-            <input type="text" id="event-leftover" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-        </div>
-        <div>
-            <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Re-made Items (optional)</label>
-            <input type="text" id="event-remade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-        </div>
-        <div>
-            <label for="event-leftover" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Grocery Cost :</label>
-            <input type="text" id="event-grocery-cost" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-        </div>
-        <div>
-            <label for="event-remade" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost Per Plate :</label>
-            <input type="text" id="event-cost-per-plate" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-        </div>
-    </div>
-
-    <div class="mb-6">
-        <label for="event-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-        <textarea id="event-notes" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
-    </div>
-
-    <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Image/File (optional)</label>
-        <div class="file-upload">
-            <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                <i class="fas fa-upload mr-2"></i>Upload
-            </button>
-            <input type="file" id="event-file" class="file-upload-input" accept="image/*,.pdf,.doc,.docx">
-        </div>
-    </div>
-
-    <div class="flex justify-end">
-        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">Cancel</button>
-        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-            <i class="fas fa-save mr-2"></i>Save Event
-        </button>
-    </div>
-</form>
-
-            </div>
-
-            <!-- Event Data Tab -->
-            <div id="event-data" class="tab-content">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Sabha Event Data</h2>
-                    <div class="relative w-64">
-                        <input type="text" id="event-search" class="w-full mt-3 pl-10 pr-4 py-2 mb-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search events...">
-                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                            <i class="fas fa-search"></i>
-                        </div>       
-                    
-                    </div>
-                    <button onclick="showTab('add-event')" class="px-4 mt-3 py-4 font-bold bg-blue-500 hover:bg-orange-600 text-white rounded-lg shadow transition">
-                        <i class="fas fa-plus mr-2"></i>Add New Sabha Data
-                    </button>
-                    
-                </div>
-                
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="all-events" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                <!-- All events will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add Recipe Tab -->
-            <div id="add-recipe" class="tab-content">
-                <h2 class="text-2xl font-bold mb-6">Add New Recipe</h2>
-                <form id="recipe-form" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="recipe-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Name</label>
-                            <input type="text" id="recipe-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Enter recipe name" required>
-                        </div>
-
-                        <div>
-                            <label for="recipe-cook-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cooking Time (min)</label>
-                            <input type="number" id="recipe-cook-time" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Cooking time in minutes" min="0">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label for="recipe-ingredients" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients</label>
-                        <div class="tag-input" id="ingredients-container">
-                            <input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label for="recipe-instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
-                        <textarea id="recipe-instructions" rows="5" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Step-by-step instructions" required></textarea>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label for="recipe-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-                        <textarea id="recipe-notes" rows="2" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Additional notes about the recipe"></textarea>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Image</label>
-                        <div class="file-upload">
-                            <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                                <i class="fas fa-upload mr-2"></i>Upload Image
-                            </button>
-                            <input type="file" id="recipe-image" class="file-upload-input" accept="image/*">
-                        </div>
-                        <div id="recipe-image-preview" class="mt-4"></div>
-                    </div>
-                    
-                    <div class="flex justify-end">
-                        <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg mr-3 hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="showTab('dashboard')">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                            <i class="fas fa-save mr-2"></i>Save Recipe
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-                        <!-- Find Recipe With AI Tab Content -->
-            <div id="find-ai-recipe" class="tab-content">
-                <h2 class="text-2xl font-bold mb-6 mt-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded">Welcome to AI Recipe Finder ! Find Your Favorite Item Recipe Here:</h2>
-                
-               
-                <!-- Recipe Search Form -->
-                <form id="ai-recipe-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-1">
-                      <label for="item-name" class="block text-sm font-medium font-semibold text-gray-700">Item Name :</label>
-                      <input type="text" id="item-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                    </div>
-                    <div class="md:col-span-1">
-                      <label for="num-people" class="block text-sm font-medium font-semibold text-gray-700">Number Of Serving people ?</label>
-                      <input type="number" id="num-people" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                    </div>
-                  
-                    <div class="md:col-span-1">
-                      <label for="special-note" class="block text-sm font-medium font-semibold text-gray-700">Special Notes (optional):</label>
-                      <textarea id="special-note" class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
-                    </div>
-                  
-                    <div class="md:col-span-1">
-                      <label for="other-items" class="block text-sm font-medium font-semiboldtext-gray-700">Are you making any other item with this ?</label>
-                      <input type="text" id="other-items" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                    </div>
-                  
-                    <div class="md:col-span-2">
-                      <label class="inline-flex items-center">
-                        <input type="checkbox" id="with-swaminarayan-diet" class="form-checkbox text-indigo-600" style="transform: scale(2.0);">
-                        <span class="ml-2 text-gray-700 font-bold">Check This Box To Make It With Swaminarayan Diet.</span>
-                      </label>
-                    </div>
-                  
-                    <div class="md:col-span-2 flex justify-center">
-                      <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        Find Recipe
-                      </button>
-                    </div>
-                </form>
-                    
-                <!-- AI Recipe Response Display -->
-                <div id="ai-response" class="mt-6 text-gray-700 dark:text-gray-200">
-                    <!-- ChatGPT's response will be displayed here -->
-                </div>
-            </div>
-
-            <!-- Recipe Book Tab -->
-            <div id="recipe-book" class="tab-content">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Recipe Book</h2>
-                    <div class="relative w-64">
-                        <input type="text" id="recipe-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Search recipes...">
-                        <div class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500">
-                            <i class="fas fa-search"></i>
-                        </div>
-                    </div>
-                    <button onclick="showTab('add-recipe')" class="px-4 font-bold py-4 bg-blue-500 mt-4 hover:bg-orange-600 text-white rounded-lg shadow transition mb-4">
-                        <i class="fas fa-plus mr-2"></i>Add New Recipe
-                    </button>
-                    
-                    
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="all-recipes">
-                    <!-- All recipes will be populated here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recipe Modal -->
-    <div id="recipe-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="flex justify-between items-start">
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="modal-recipe-name"></h3>
-                        <button type="button" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" onclick="closeModal()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            <span class="mr-4"><i class="fas fa-clock mr-1"></i> <span id="modal-prep-time"></span> min prep</span>
-                            <span><i class="fas fa-fire mr-1"></i> <span id="modal-cook-time"></span> min cook</span>
-                            <span class="ml-4 px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-xs" id="modal-category"></span>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Ingredients</h4>
-                                <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300" id="modal-ingredients"></ul>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Instructions</h4>
-                                <div class="whitespace-pre-line text-gray-700 dark:text-gray-300" id="modal-instructions"></div>
-                            </div>
-                        </div>
-                        <div class="mt-4" id="modal-notes-container">
-                            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Notes</h4>
-                            <p class="text-gray-700 dark:text-gray-300" id="modal-notes"></p>
-                        </div>
-                        <div class="mt-4" id="modal-image-container">
-                            <img src="" alt="Recipe" class="rounded-lg w-full h-48 object-cover" id="modal-image">
-                        </div>
-                    </div>
-                </div>
-                <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <div id="event-photo-preview" class="mt-4"></div>
-                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sabha Event Modal -->
-    <div id="event-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen px-4 text-center">
-        <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-        <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-2xl w-full z-10">
-          <div class="px-6 py-4">
-            <div class="flex justify-between items-center">
-              <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="modal-event-title">Event Details</h3>
-              <button onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="mt-4 space-y-3 text-gray-700 dark:text-gray-300">
-              <p><strong>Date:</strong> <span id="modal-event-date"></span></p>
-              <p><strong>Sabha Name:</strong> <span id="modal-event-title"></span></p>
-              <p><strong>Pujya Santo's Present:</strong> <span id="modal-event-speaker"></span></p>
-              <p><strong>Total Bhaktas:</strong> <span id="modal-event-bhaktas"></span></p>
-              <p><strong>Gents:</strong> <span id="modal-event-gents"></span></p>
-              <p><strong>Ladies:</strong> <span id="modal-event-ladies"></span></p>
-              <p><strong>Menu:</strong> <span id="modal-event-menu"></span></p>
-              <p><strong>Ingredients:</strong> <span id="modal-event-ingredients"></span></p>
-              <p><strong>Total Grocery Cost:</strong> <span id="modal-event-grocery"></span></p>
-              <p><strong>Cost Per Plate:</strong> <span id="modal-event-costplate"></span></p>    
-              <p><strong>Notes:</strong> <span id="modal-event-notes"></span></p>
-            </div>
-            <div class="mt-4 flex flex-wrap gap-3" id="modal-event-photos"></div>
-         </div>
-         <div class="px-6 py-3 text-right">
-           <button onclick="closeEventModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">Close</button>
-         </div>
-       </div>
-     </div>
-   </div>
-
+<body class="bg-gray-50">
    
 
+    <!-- Header -->
+    <header class="fixed w-full z-50 bg-blue-900 shadow-md"> <!-- Changed to solid white background -->
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img src="logo1.jpeg" alt="WROS" class="h-12"> <!-- Reduced height slightly -->
+                <div class="h-12 border-l border-gray-300"></div>
+                <div class="hidden md:flex flex-col justify-center text-blue-900">
+                    <span class="font-bold text-white text-lg leading-tight">WATER REFINED</span>
+                    <span class="font-medium text-sm text-white leading-tight">OPERATING SERVICES</span>
+                </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menu-toggle');
-            const closeMenu = document.getElementById('close-menu');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
+            </div>
             
-            // Toggle sidebar
-            function toggleSidebar() {
-                sidebar.classList.toggle('open');
-                overlay.classList.toggle('hidden');
-                menuToggle.classList.toggle('open');
+            <nav class="hidden md:flex space-x-6">
+                <a href="index.html#home" class="text-white hover:text-blue-200 font-bold">Home</a>
+                <a href="about.html" class="text-white hover:text-blue-200 font-bold">About</a>
+                <a href="services.html" class="text-white hover:text-blue-200 font-bold">Services</a>
+                <a href="careers.html" class="text-white hover:text-blue-200 font-bold">Careers</a>
+                <a href="index.html#contact" class="text-white hover:text-blue-200 font-bold">Contact</a>
+            </nav>
+            
+            <button id="mobile-menu-button" class="md:hidden text-white">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu fixed inset-y-0 right-0 w-64 bg-blue-900 shadow-lg z-50 p-4 transform translate-x-full transition-transform duration-300">
+          <div class="flex justify-end mb-4">
+            <button id="close-menu" class="text-white">
+              <i class="fas fa-times text-2xl"></i>
+            </button>
+          </div>
+          <nav class="flex flex-col space-y-4">
+            <a href="index.html#home" class="text-white hover:text-orange-400 text-lg font-semibold">Home</a>
+            <a href="about.html" class="text-white hover:text-orange-400 text-lg font-semibold">About</a>
+            <a href="services.html" class="text-white hover:text-orange-400 text-lg font-semibold">Services</a>
+            <a href="careers.html" class="text-white hover:text-orange-400 text-lg font-semibold">Careers</a>
+            <a href="index.html#contact" class="text-white hover:text-orange-400 text-lg font-semibold">Contact</a>
+    
+          </nav>
+        </div>
+        
+        
+    </header>
+
+ 
+
+
+
+
+    <!-- Hero Section -->
+    <!-- Hero Section -->
+    <section id="home" class="relative w-full overflow-hidden">
+      <!-- Full-width responsive image -->
+      <img src="HERO.png" alt="Hero Background" class="w-full h-auto max-h-screen object-contain md:object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-b from-blue-500/50 to-blue-100/30 z-0"></div>
+
+    
+      <!-- Overlay text content -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pt-2 z-10">
+
+        <h2 class="text-white text-3xl md:text-5xl font-bold mb-4 px-4 py-2 font-family rounded drop-shadow-[0_2px_10px_rgba(0,0,0,2)]">Your Partner in Water Purity</h2>
+
+        <a href="services.html" class="inline-block text-white font-bold py-3 px-6 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-700 hover:to-cyan-500 transition shadow-lg">
+          Explore Our Services
+        </a>
+      </div>
+    </section>
+    
+    
+
+
+    <!-- Place this right after your hero section -->
+    <!-- Place this immediately after your hero section closing tag -->
+    <div class="wave-divider">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="#004c97"></path>
+        <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="#004c97"></path>
+        <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="#004c97"></path>
+      </svg>
+    </div>
+ <div class="max-w-[1400px] mx-auto px-4">
+    <!-- Mission Statement -->
+    <section class="py-16 bg-white section">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-blue-900 mb-6">Our Mission</h2>
+                <p class="text-lg md:text-xl text-gray-700 mb-8">To provide high-quality water services through innovative solutions, environmental stewardship, and community partnerships while maintaining fiscal responsibility and operational excellence.</p>
+                <div class="w-24 h-1 bg-blue-500 mx-auto"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-16 bg-blue-50 section">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="p-6 border border-blue-200 rounded-xl shadow-sm bg-white">
+                    <div class="counter" data-target="2500">0</div>
+                    <h3 class="text-xl font-semibold text-blue-900 mt-2">Customers Served</h3>
+                </div>
+                <div class="p-6 border border-blue-200 rounded-xl shadow-sm bg-white">
+                    <div class="counter" data-target="150">0</div>
+                    <h3 class="text-xl font-semibold text-blue-900 mt-2">Miles of Pipeline</h3>
+                </div>
+                <div class="p-6 border border-blue-200 rounded-xl shadow-sm bg-white">
+                    <div class="counter" data-target="100">0</div>
+                    <h3 class="text-xl font-semibold text-blue-900 mt-2">Years of Service</h3>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="pt-8 pb-0 bg-white section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-blue-900 mb-4">About Us</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Serving our community with pride for over a century.</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-8 items-center mb-16">
+                <div class="lg:w-1/2">
+                    <img src="1.jpeg" alt="Water treatment plant" class="rounded-lg shadow-lg w-full">
+                </div>
+                <div class="lg:w-1/2">
+                    <h3 class="text-2xl font-bold text-blue-900 mb-10">Who We Are</h3>
+                    <p class="text-gray-700 mb-4">
+                       Water Refined Operating Services (WROS) is a progressive public utility provider specializing in advanced water and wastewater treatment operations. Founded in 2023, WROS has grown into a trusted authority in municipal and industrial water systems across the region. 
+                     </p>
+                     <p class="text-gray-700 mb-4">
+                       With a team of experienced engineers, certified plant operators, and sustainability experts, we manage the entire lifecycle of water — from source intake and treatment, to reuse, delivery, and environmental discharge. Our operations serve over 2.5 million residents, hundreds of businesses, and numerous local governments.
+                     </p>
+                     <p class="text-gray-700 mb-4">
+                       At WROS, we combine industry-leading technology with time-tested methods to ensure clean, safe, and sustainable water solutions. Our facilities are optimized for energy efficiency, automation, and rigorous quality monitoring.
+                     </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="bg-white section pb-0">
+        <div class="container mx-auto py-16 px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold text-blue-900 mb-2">Our Services</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">We provide comprehensive water services to meet the needs of our communities.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 auto-rows-fr">
+
+                <!-- Service 1 -->
+                <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+                    <div class="h-48 bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-tools text-6xl text-blue-600"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-3">Operations & Maintenance</h3>
+                        <p class="text-gray-700 px-3">We ensure water systems run efficiently around the clock, managing pumps, plants & pipelines with rapid response.</p>
+                        <a href="services.html" class="inline-block mt-4 text-blue-600 font-semibold hover:text-blue-800">Learn More →</a>
+                    </div>
+                </div>
                 
-                // Adjust main content margin when sidebar is open
-                if (sidebar.classList.contains('open')) {
-                    document.querySelector('.main-content').style.marginLeft = '16rem';
-                } else {
-                    document.querySelector('.main-content').style.marginLeft = '0';
-                }
-            }
-            
-            // Event listeners
-            
-
-
-            menuToggle.addEventListener('click', toggleSidebar);
-            closeMenu.addEventListener('click', toggleSidebar);
-            overlay.addEventListener('click', toggleSidebar);
-            
-            // Modify your existing tab button event listeners
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.dataset.tab;
-                    showTab(tabId);
-                    
-                    // Update active state for both sidebar and header buttons
-                    document.querySelectorAll('.tab-btn').forEach(b => {
-                        b.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    // Close sidebar if it's open (for mobile)
-                    if (sidebar.classList.contains('open')) {
-                        toggleSidebar();
-                    }
-                });
-            });
-            
-           
-        });
-       
-
-
-        // Data storage
-        let events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
-        let recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-        
-        // DOM elements
-        const themeToggle = document.getElementById('theme-toggle');
-        const exportBtn = document.getElementById('export-btn');
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        
-        // Forms
-        const eventForm = document.getElementById('event-form');
-        const recipeForm = document.getElementById('recipe-form');
-        
-        // Search inputs
-        const eventSearch = document.getElementById('event-search');
-        const recipeSearch = document.getElementById('recipe-search');
-        
-        // Modal elements
-        const recipeModal = document.getElementById('recipe-modal');
-        
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                if (!navigator.onLine) {
-             // fallback to localStorage
-                    events = JSON.parse(localStorage.getItem('sabhaEvents')) || [];
-                    recipes = JSON.parse(localStorage.getItem('sabhaRecipes')) || [];
-                 } else {
-                     events = await loadFromFirebase("SabhaEvents");
-                     events.forEach(e => {
-                         e.gents = parseInt(e.gents) || 0;
-                         e.ladies = parseInt(e.ladies) || 0;
-                         e.totalBhaktas = e.gents + e.ladies;
-
-                         // Only split if it's a string
-                         if (typeof e.ingredients === 'string') {
-                             e.ingredients = e.ingredients.split('\n');
-                         } else if (!Array.isArray(e.ingredients)) {
-                             e.ingredients = [];
-                         }
-                     
-                     });
-
-
-                     recipes = await loadFromFirebase("Recipes");
-                     recipes.forEach(r => {
-                         if (typeof r.ingredients === 'string') {
-                             r.ingredients = r.ingredients.split(',');
-                         } else if (!Array.isArray(r.ingredients)) {
-                             r.ingredients = [];
-                         }
-                     });
-                     recipes = await loadFromFirebase("Recipes");
-                     recipes.forEach(r => {
-                         if (typeof r.ingredients === 'string') {
-                             r.ingredients = r.ingredients.split(',');
-                         } else if (!Array.isArray(r.ingredients)) {
-                             r.ingredients = [];
-                         }
-                      });
-                  }
-
-                  
-
-                  await saveEvents();
-                  await saveRecipes();
-                  updateDashboard();
-                  renderAllEvents();
-                  renderAllRecipes();
-                  setupEventListeners();
-                  renderGallery();
-                  initCharts();
-              } catch (err) {
-                  console.error("Error initializing app:", err);
-                  showToast("Failed to load data. Check console for details.");
-              }
-         });
-
-        
-        // Set up event listeners
-        function setupEventListeners() {
-            
-            // Export Button - Download PDFs
-            exportBtn.addEventListener('click', function() {
-              // Export Sabha Events
-              const sabhaSheetData = events.map(event => ({
-                Date: event.date || '-',
-                sabhaName: event.sabhaName || '-',
-                santosPresent: event.santosPresent || '-',
-                Gents: event.gents || 0,
-                Ladies: event.ladies || 0,
-                TotalBhaktas: event.totalBhaktas || 0,
-                Menu: event.menu || '-',
-                Ingredients: (event.ingredients || []).join(', '),
-                Leftover: event.leftover || '-',
-                Remade: event.remade || '-',
-                GroceryCost: event.groceryCost || '-',
-                CostPerPlate: event.costPerPlate || '-',
-                Notes: event.notes || '-',
-                Photos: (event.photos || []).join(', '), // multiple photos joined
+                <!-- Service 2 -->
+                <div class="service-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+                    <div class="h-48 bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-water text-6xl text-blue-600"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-3">Project Management & Delivery</h3>
+                        <p class="text-gray-700 px-3">From planning to execution, our team leads complex water infrastructure projects that meet budget & timeline.</p>
+                        <a href="services.html" class="inline-block mt-4 text-blue-600 font-semibold hover:text-blue-800">Learn More →</a>
+                    </div>
+                </div>
                 
-              }));
-              const sabhaWorkbook = XLSX.utils.book_new();
-              const sabhaWorksheet = XLSX.utils.json_to_sheet(sabhaSheetData);
-              XLSX.utils.book_append_sheet(sabhaWorkbook, sabhaWorksheet, "Sabha Events");
-              XLSX.writeFile(sabhaWorkbook, "sabha-data.xlsx");
+                <!-- Service 3 -->
+                <div class="service-card hidden md:block bg-white rounded-lg shadow-md overflow-hidden transition duration-300 flex flex-col h-full w-full">
+                    <div class="h-48 bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-building text-6xl text-blue-600"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-3">Infrastructure Support</h3>
+                        <p class="text-gray-700 px-3">We support the maintenance and upgrade of treatment plants, storage tanks, valves & other critical infrastructure components.</p>
+                        <a href="services.html" class="inline-block mt-4 text-blue-600 font-semibold hover:text-blue-800">Learn More →</a>
+                    </div>
+                </div>
+                 
+            </div>
+            <div class="mt-12 text-center">
+              <a href="services.html" class="inline-block text-white text-lg font-bold py-5 px-6 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-700 hover:to-cyan-500 transition shadow-lg">
+                View More Services
+              </a>
+            </div>
+        </div>
+    </section>
 
-              const recipeSheetData = recipes.map(recipe => ({
-                Name: recipe.name || '-',
-               
-          
-                CookTime_Minutes: recipe.cookTime || 0,
-                Ingredients: (recipe.ingredients || []).join(', '),
-                Instructions: recipe.instructions || '-',
-                Notes: recipe.notes || '-',
-                ImageLink: recipe.image || '-',  // if you have image URLs
-              }));
-              const recipeWorkbook = XLSX.utils.book_new();
-              const recipeWorksheet = XLSX.utils.json_to_sheet(recipeSheetData);
-              XLSX.utils.book_append_sheet(recipeWorkbook, recipeWorksheet, "Recipes");
-              XLSX.writeFile(recipeWorkbook, "recipe-data.xlsx");
-              showToast('Downloaded Sabha & Recipe Data as Excel!');
-            });
+    <!-- Call to Action -->
+    <section class="py-16 text-black section">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row items-center gap-10">
+          <!-- Text Content -->
+          <div class="lg:w-1/2 text-left">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Have a Water Service Question?</h2>
+            <p class="text-xl mb-8 max-w-xl">Our customer service team is ready to assist you with any questions about your water service.</p>
+            <a href="#contact" class="bg-blue-900 text-white hover:bg-blue-100 font-bold py-3 px-8 rounded-full transition duration-300">
+              Contact Us Today
+            </a>
+          </div>
+    
+          <!-- Image -->
+          <div class="lg:w-1/2">
+            <img src="water.png" alt="Customer Support" class="w-full h-full object-cover rounded-xl shadow-lg max-h-[400px]" />
+          </div>
+        </div>
+      </div>
+    </section>
+
 
     
 
+    <!-- Water Education Section -->
+    <section id="education" class="py-16 bg-blue-50 section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Water Education</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Learn about water conservation, treatment processes, and how you can help protect our most precious resource.</p>
+            </div>
             
-            
-
-
-
-
-            // Tab navigation
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', () => showTab(btn.dataset.tab));
-            });
-            
-            // Event form submission
-            eventForm.addEventListener('submit', handleEventSubmit);
-            
-            // Recipe form submission
-            recipeForm.addEventListener('submit', handleRecipeSubmit);
-            
-            // Ingredients input
-            const ingredientsInput = document.getElementById('recipe-ingredients');
-            ingredientsInput.addEventListener('keydown', handleIngredientInput);
-            
-            // Event search
-            eventSearch.addEventListener('input', () => filterEvents(eventSearch.value));
-            
-            // Recipe search
-            recipeSearch.addEventListener('input', () => filterRecipes(recipeSearch.value));
-            
-            // File uploads
-            const eventFileInput = document.getElementById('event-file');
-            if (eventFileInput) {
-                eventFileInput.addEventListener('change', handleEventPhotosUpload);
-            }
-            
-            document.getElementById('recipe-image').addEventListener('change', handleRecipeImageUpload);
-            
-
-        }
-
-        function showToastMessage(message, url = null) {
-          const toast = document.getElementById('custom-toast');
-          const toastMsg = document.getElementById('custom-toast-message');
-          const button = document.getElementById('proceed-chatgpt-btn');
-        
-          toast.classList.remove('hidden');
-        
-          if (url) {
-            button.onclick = () => {
-              window.open(url, '_blank');
-              toast.classList.add('hidden');
-            };
-          }
-        }
-
-        
-        
-
-        // Show tab content
-        function showTab(tabId) {
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            tabBtns.forEach(btn => {
-                btn.classList.remove('active'); // Remove active class from all buttons
-            });
-            
-            document.getElementById(tabId).classList.add('active');
-            
-            const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active'); // Add active class to current button
-            }
-            
-            // Update specific tabs when shown
-            if (tabId === 'dashboard') {
-                updateDashboard();
-                initCharts();
-            } else if (tabId === 'event-data') {
-                renderAllEvents();
-            } else if (tabId === 'recipe-book') {
-                renderAllRecipes();
-            }
-        }
-        
-        // Show toast notification
-        function showToast(message) {
-            toastMessage.textContent = message;
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
-        }
-        
-        // Update dashboard statistics
-        function updateDashboard() {
-            // Total events
-            document.getElementById('total-events').textContent = events.length;
-            
-            // Total bhaktas
-            const totalBhaktas = events.reduce((sum, event) => sum + (event.gents || 0) + (event.ladies || 0), 0);
-            document.getElementById('total-bhaktas').textContent = totalBhaktas;
-            
-            // Total recipes
-            document.getElementById('total-recipes').textContent = recipes.length;
-            
-            // Latest event
-            if (events.length > 0) {
-                const latestEvent = events[events.length - 1];
-                document.getElementById('latest-event').textContent = latestEvent.sabhaName || 'No topic';
-            } else {
-                document.getElementById('latest-event').textContent = '-';
-            }
-            
-            // Recent events (last 5)
-            const recentEventsContainer = document.getElementById('recent-events');
-            recentEventsContainer.innerHTML = '';
-            
-            const recentEvents = [...events].reverse().slice(0, 5);
-            recentEvents.forEach(event => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${(event.gents || 0) + (event.ladies || 0)}</td>
-                `;
-                recentEventsContainer.appendChild(row);
-            });
-            
-            // Popular recipes (first 6)
-            const popularRecipesContainer = document.getElementById('popular-recipes');
-            popularRecipesContainer.innerHTML = '';
-            
-            const popularRecipes = recipes.slice(0, 6);
-            popularRecipes.forEach(recipe => {
-                const card = document.createElement('div');
-                card.className = 'recipe-card bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden';
-                card.innerHTML = `
-                    <div class="h-40 bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-utensils text-4xl"></i></div>'}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <!-- Education Card 1 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg">
+                    <div class="h-48 bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-recycle text-6xl text-blue-600"></i>
                     </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-lg mb-1">${recipe.name}</h3>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            
-                            <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
-                        </div>
-                        <div class="flex flex-wrap gap-1 mb-3">
-                            ${recipe.ingredients.slice(0, 3).map(ing => `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${ing}</span>`).join('')}
-                            ${recipe.ingredients.length > 3 ? '<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">+' + (recipe.ingredients.length - 3) + ' more</span>' : ''}
-                        </div>
-                        <button onclick="openRecipeModal('${recipe.id}')" class="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
-                            View Recipe
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-3">The Water Cycle</h3>
+                        <p class="text-gray-600 mb-4">The water cycle, also known as the hydrological cycle, describes the continuous movement of water on, above, and below the surface of the Earth.</p>
+                        <a href="https://en.wikipedia.org/wiki/Water_cycle?utm_source=chatgpt.com" class="text-blue-600 font-semibold hover:text-blue-800">Read More →</a>
+                    </div>
+                </div>
+                
+                <!-- Education Card 2 -->
+                <div class="bg-white hidden md:block rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg">
+                    <div class="h-48 bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-shower text-6xl text-blue-600"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-3">Conservation Tips</h3>
+                        <p class="text-gray-600 mb-4">Instead of pouring unused water down the drain, consider reusing it for watering plants or cleaning purposes.</p>
+                        <a href="https://www.wilmette.gov/624/Water-Conservation?utm_source=chatgpt.com" class="text-blue-600 font-semibold hover:text-blue-800">Read More →</a>
+                    </div>
+                </div>
+                
+                <!-- Education Card 3 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg">
+                    <div class="h-48 bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-filter text-6xl text-blue-600"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-3">Treatment Process</h3>
+                        <p class="text-gray-600 mb-4">A foundational guide from the U.S. Environmental Protection Agency (EPA) detailing the primary and secondary stages of wastewater treatment.</p>
+                        <a href="https://www3.epa.gov/npdes/pubs/bastre.pdf" class="text-blue-600 font-semibold hover:text-blue-800">Read More →</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQs -->
+            <div class="max-w-3xl mx-auto">
+                <h3 class="text-2xl font-bold text-blue-900 mb-6 text-center">Frequently Asked Questions</h3>
+                
+                <div class="space-y-4">
+                    <!-- FAQ 1 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button class="faq-toggle w-full text-left p-4 bg-white hover:bg-gray-50 focus:outline-none">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-blue-900">What is wastewater refined treatment & why is it important?</span>
+                                <i class="fas fa-chevron-down text-blue-600 transition-transform duration-300"></i>
+                            </div>
                         </button>
+                        <div class="faq-content hidden p-4 bg-gray-50 border-t border-gray-200">
+                            <p class="text-gray-600">Wastewater refined treatment is the advanced process of removing contaminants from used water before it's returned to the environment or reused. It protects public health, preserves natural water sources, and ensures compliance with environmental regulations.</p>
+                        </div>
                     </div>
-                `;
-                popularRecipesContainer.appendChild(card);
-            });
-        }
-        let attendanceChartInstance;
-        let genderChartInstance;
-        // Initialize charts
-        function initCharts() {
-            if (events.length === 0) return;
-            // Destroy existing charts if they exist
-            if (attendanceChartInstance) attendanceChartInstance.destroy();
-            if (genderChartInstance) genderChartInstance.destroy();
-            
-            // Sort events by date
-            const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            // Attendance chart
-            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
-            const genderCtx = document.getElementById('genderChart').getContext('2d');
-            const attendanceLabels = sortedEvents.map(event => formatDate(event.date, true));
-            const attendanceData = sortedEvents.map(event => (event.gents || 0) + (event.ladies || 0));
-            
-            attendanceChartInstance = new Chart(attendanceCtx, {
-                type: 'line',
-                data: {
-                    labels: attendanceLabels,
-                    datasets: [{
-                        label: 'Total Attendance',
-                        data: attendanceData,
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        borderColor: 'rgba(79, 70, 229, 1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            
-            // Gender ratio chart
-            
-            const totalGents = sortedEvents.reduce((sum, event) => sum + (event.gents || 0), 0);
-            const totalLadies = sortedEvents.reduce((sum, event) => sum + (event.ladies || 0), 0);
-  
-            genderChartInstance = new Chart(genderCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Gents', 'Ladies'],
-                    datasets: [{
-                        data: [totalGents, totalLadies],
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(244, 114, 182, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(59, 130, 246, 1)',
-                            'rgba(244, 114, 182, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-        document.addEventListener('DOMContentLoaded', initCharts);
-        // Handle event form submission
-        async function handleEventSubmit(e) {
-           e.preventDefault();
-           const dateInput = document.getElementById('event-date');
-           const isUpdate = eventForm.dataset.mode === 'update';
-           const eventId = isUpdate ? eventForm.dataset.id : Date.now().toString();
+                    
+                    <!-- FAQ 2 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button class="faq-toggle w-full text-left p-4 bg-white hover:bg-gray-50 focus:outline-none">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-blue-900">Is treated wastewater safe for reuse?</span>
+                                <i class="fas fa-chevron-down text-blue-600 transition-transform duration-300"></i>
+                            </div>
+                        </button>
+                        <div class="faq-content hidden p-4 bg-gray-50 border-t border-gray-200">
+                            <p class="text-gray-600">Yes, when properly treated through refined processes, wastewater can be safely reused for industrial applications, irrigation, and even groundwater recharge. We adhere to strict safety and quality standards to ensure its suitability for non-potable uses.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ 3 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button class="faq-toggle w-full text-left p-4 bg-white hover:bg-gray-50 focus:outline-none">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-blue-900">What types of wastewater do you treat?</span>
+                                <i class="fas fa-chevron-down text-blue-600 transition-transform duration-300"></i>
+                            </div>
+                        </button>
+                        <div class="faq-content hidden p-4 bg-gray-50 border-t border-gray-200">
+                            <p class="text-gray-600">We treat industrial wastewater. Our facilities are equipped to handle complex contaminants from manufacturing units, food processing plants and more, using customized treatment protocols</p>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ 4 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button class="faq-toggle w-full text-left p-4 bg-white hover:bg-gray-50 focus:outline-none">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-blue-900">How can industries ensure their wastewater properly managed?</span>
+                                <i class="fas fa-chevron-down text-blue-600 transition-transform duration-300"></i>
+                            </div>
+                        </button>
+                        <div class="faq-content hidden p-4 bg-gray-50 border-t border-gray-200">
+                            <p class="text-gray-600">We offer tailored wastewater treatment solutions for industries, including site assessments, design, and ongoing maintenance. Proper pretreatment and regular monitoring help industries stay compliant with environmental laws and avoid penalties</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-           const gents = parseInt(document.getElementById('event-gents').value) || 0;
-           const ladies = parseInt(document.getElementById('event-ladies').value) || 0;
+    
 
-           const event = {
-               
-               id: eventId,
-               date: dateInput.value,
-               sabhaName: document.getElementById('event-name').value,
-               santosPresent: document.getElementById('event-saints').value,
-               gents: gents,
-               ladies: ladies,
-               totalBhaktas: gents + ladies,
-               menu: document.getElementById('event-menu').value,
-               ingredients: document.getElementById('event-ingredients').value.split('\n'),
-               leftover: document.getElementById('event-leftover').value,
-               remade: document.getElementById('event-remade').value,
-               notes: document.getElementById('event-notes').value,
-               photos: Array.from(document.querySelectorAll('#event-photo-preview img')).map(img => img.src),
-               groceryCost: document.getElementById('event-grocery-cost').value,
-               costPerPlate: document.getElementById('event-cost-per-plate').value
+    <!-- Careers Section -->
+    <section id="careers" class="py-16 bg-blue-800 text-white section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Careers</h2>
+                <p class="text-xl max-w-2xl mx-auto">Join our team and help deliver clean water to your community.</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <!-- Job Listing 1 -->
+                <div class="bg-white text-gray-800 rounded-lg shadow-md mb-6 overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Water Treatment Plant Operator</h3>
+                        <div class="flex flex-wrap gap-4 text-sm mb-4">
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Full-time</span>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">$25 - $35/hr</span>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Central Treatment Plant</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Operate and maintain equipment at our state-of-the-art water treatment facility. Requires certification and mechanical aptitude.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">Posted: June 1, 2023</span>
+                            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Apply Now</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Job Listing 2 -->
+                <div class="bg-white text-gray-800 rounded-lg shadow-md mb-6 overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">Customer Service Representative</h3>
+                        <div class="flex flex-wrap gap-4 text-sm mb-4">
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Full-time</span>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">$20 - $28/hr</span>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Downtown Office</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Assist customers with billing inquiries, service requests, and water conservation programs. Excellent communication skills required.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">Posted: May 25, 2023</span>
+                            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Apply Now</a>
+                        </div>
+                    </div>
+                </div>
+                
+                
+            </div>
+            
+            <div class="text-center mt-8">
+                <p class="mb-4">Don't see the perfect position? Submit your resume for future opportunities.</p>
+                <button id="upload-resume" class="bg-white text-blue-800 hover:bg-blue-100 font-bold py-3 px-8 rounded-lg transition duration-300">Upload Resume</button>
+            </div>
+        </div>
+    </section>
 
-            };
-            // Collect photo previews
-            const photoPreviews = document.getElementById('event-photo-preview')?.querySelectorAll('img') || [];
-            event.photos = Array.from(photoPreviews).map(img => img.src); // base64 or hosted links
+    <!-- Resume Upload Modal -->
+    <div id="resume-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-blue-900">Submit Your Resume</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form>
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="phone" class="block text-gray-700 mb-2">Phone</label>
+                    <input type="tel" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="resume" class="block text-gray-700 mb-2">Upload Resume (PDF or DOC)</label>
+                    <input type="file" id="resume" accept=".pdf,.doc,.docx" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="position" class="block text-gray-700 mb-2">Position of Interest</label>
+                    <select id="position" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Any Position</option>
+                        <option value="operations">Operations</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="customer-service">Customer Service</option>
+                        <option value="administration">Administration</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">Submit Application</button>
+            </form>
+        </div>
+    </div>
 
-            if (isUpdate) {
-               const index = events.findIndex(ev => ev.id === eventId);
-               if (index !== -1) events[index] = event;
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 bg-white section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Contact Us</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">We're here to help with any questions about your water service.</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="lg:w-1/2">
+                    <!-- Contact Info -->
+                    <div class="bg-blue-50 rounded-lg p-6 mb-8">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">General Inquiries</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-phone-alt text-blue-600 mt-1 mr-4"></i>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Customer Service</h4>
+                                    <p class="text-gray-600">289-830-2582</p>
+                                    <p class="text-gray-600 text-sm">Monday-Friday, 8am-5pm</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-envelope text-blue-600 mt-1 mr-4"></i>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Email</h4>
+                                    <p class="text-gray-600">jay@wros.info</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt text-blue-600 mt-1 mr-4"></i>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Main Office</h4>
+                                    <p class="text-gray-600">123 Waterfront Drive</p>
+                                    <p class="text-gray-600">Kitchener</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+                
+                <div class="lg:w-1/2">
+                    <!-- Contact Form -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-6">Send Us a Message</h3>
+                        <form>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="first-name" class="block text-gray-700 mb-2">First Name</label>
+                                    <input type="text" id="first-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="last-name" class="block text-gray-700 mb-2">Last Name</label>
+                                    <input type="text" id="last-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="block text-gray-700 mb-2">Email</label>
+                                <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="mb-4">
+                                <label for="phone" class="block text-gray-700 mb-2">Phone</label>
+                                <input type="tel" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="message" class="block text-gray-700 mb-2">Message</label>
+                                <textarea id="message" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-blue-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <!-- Footer Column 1 -->
+                <div>
+                    <img src="logo1.jpeg" alt="WROS" class="h-12 mb-4">
+                    <p class="text-blue-200 mb-4">Providing clean, safe water to our communities for over 100 years.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="text-white hover:text-blue-300"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Footer Column 2 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-blue-200 hover:text-white">Home</a></li>
+                        <li><a href="#about" class="text-blue-200 hover:text-white">About Us</a></li>
+                        <li><a href="#services" class="text-blue-200 hover:text-white">Services</a></li>
+                        <li><a href="#education" class="text-blue-200 hover:text-white">Water Education</a></li>
+                        <li><a href="#news" class="text-blue-200 hover:text-white">Newsroom</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Footer Column 3 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Resources</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-blue-200 hover:text-white">Water Quality Reports</a></li>
+                        <li><a href="#" class="text-blue-200 hover:text-white">Conservation Tips</a></li>
+                        <li><a href="#" class="text-blue-200 hover:text-white">Frequently Asked Questions</a></li>
+                        <li><a href="#" class="text-blue-200 hover:text-white">Forms & Documents</a></li>
+                        <li><a href="#" class="text-blue-200 hover:text-white">Careers</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Footer Column 4 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Contact</h3>
+                    <address class="not-italic space-y-2">
+                        <p class="text-blue-200">123 Waterfront Drive</p>
+                        <p class="text-blue-200">Capital City, CC 12345</p>
+                        <p class="text-blue-200">Phone: 1-800-555-WATER</p>
+                        <p class="text-blue-200">Email: info@nwa.gov</p>
+                    </address>
+                </div>
+            </div>
+            
+            <div class="pt-8 border-t border-blue-800 text-center text-blue-300 text-sm">
+                <p>&copy; 2025 WATER REFINED OPERATING SERVICES. All rights reserved. | <a href="#" class="hover:text-white">Privacy Policy</a> | <a href="#" class="hover:text-white">Terms of Service</a> | <a href="#" class="hover:text-white">Accessibility</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add this to your existing script section
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('main-header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
             } else {
-                events.push(event);
+                header.classList.remove('scrolled');
             }
-            await saveEvents();
-            await syncToFirebase("SabhaEvents", events);
+        });
 
-
-            // Reset form
-            eventForm.reset();
-            eventForm.removeAttribute('data-mode');
-            eventForm.removeAttribute('data-id');
-            document.getElementById('event-photo-preview').innerHTML = '';
-
-            // Show confirmation and return to dashboard
-            showToast(isUpdate ? 'Event updated successfully!' : 'Event added successfully!');
-            showTab('event-data');
-         }
-
-
+        // Mobile Menu Toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenu = document.getElementById('close-menu');
         
-        // Handle recipe form submission
-        async function handleRecipeSubmit(e) {
-            e.preventDefault();
-            const isUpdate = recipeForm.dataset.mode === 'update';
-            const recipeId = isUpdate ? recipeForm.dataset.id : Date.now().toString();
-            
-            const recipe = {
-                id: recipeId,
-                name: document.getElementById('recipe-name').value,
-                cookTime: parseInt(document.getElementById('recipe-cook-time').value) || 0,
-                ingredients: Array.from(document.querySelectorAll('#ingredients-container .tag')).map(tag => tag.textContent.trim().replace('×', '')),
-                instructions: document.getElementById('recipe-instructions').value,
-                notes: document.getElementById('recipe-notes').value,
-                image: document.getElementById('recipe-image-preview').querySelector('img')?.src || ''
-            };
-            if (isUpdate) {
-                const index = recipes.findIndex(r => r.id === recipeId);
-                if (index !== -1) recipes[index] = recipe;
-            } else {
-                recipes.push(recipe);
-            }
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.add('open');
+        });
         
-            await saveRecipes();
-            await syncToFirebase("Recipes", recipes);
-            
-            // Reset form
-            recipeForm.reset();
-            recipeForm.removeAttribute('data-mode');
-            recipeForm.removeAttribute('data-id');
-            document.getElementById('ingredients-container').innerHTML = '<input type="text" id="recipe-ingredients" class="flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800" placeholder="Add ingredients (press Enter)">';
-            document.getElementById('recipe-ingredients').addEventListener('keydown', handleIngredientInput);
-            document.getElementById('recipe-image-preview').innerHTML = '';
-
-            showToast(isUpdate ? 'Recipe updated successfully!' : 'Recipe added successfully!');
-            showTab('dashboard');
-        }
+        closeMenu.addEventListener('click', () => {
+            mobileMenu.classList.remove('open');
+        });
         
-        async function downloadEventPDF(eventId) {
-            const event = events.find(ev => ev.id === eventId);
-            if (!event) return;
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Set document properties
-            doc.setProperties({
-                title: `Kitchen Report - ${event.date || 'Event'}`,
-                subject: 'BAPS Cambridge Kitchen Sabha Report',
-                author: 'BAPS Cambridge Kitchen'
+        // Resume Modal
+        const uploadResume = document.getElementById('upload-resume');
+        const resumeModal = document.getElementById('resume-modal');
+        const closeModal = document.getElementById('close-modal');
+        
+        uploadResume.addEventListener('click', () => {
+            resumeModal.classList.remove('hidden');
+        });
+        
+        closeModal.addEventListener('click', () => {
+            resumeModal.classList.add('hidden');
+        });
+        
+        // FAQ Toggle
+        const faqToggles = document.querySelectorAll('.faq-toggle');
+        
+        faqToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const content = toggle.nextElementSibling;
+                const icon = toggle.querySelector('i');
+                
+                content.classList.toggle('hidden');
+                icon.classList.toggle('transform');
+                icon.classList.toggle('rotate-180');
             });
+        });
         
-            // ===== PAGE 1 =====
-            
-            // Header with color
-            doc.setFillColor(0, 0, 0); // Indigo background
-            doc.rect(0, 0, 210, 25, 'F');
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(255, 255, 255); // White text
-            doc.text(`Kitchen Report - ${formatPDFDate(event.date)}`, 105, 16, { align: 'center' });
-            
-            // Reset text color
-            doc.setTextColor(0, 0, 0); // Black text
-            
-            // Sabha Date section with colored header
-            doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0); // Indigo text
-            doc.text('Sabha Details', 20, 40);
-            doc.setDrawColor(79, 70, 229);
-            doc.setLineWidth(0.3);
-            doc.line(20, 42, 50, 42);
-            
-            // Create table for event details with colors
-            doc.autoTable({
-                startY: 45,
-                head: [['Field', 'Details']],
-                body: [
-                    ['Event Date:', formatPDFDate(event.date)],
-                    ['Special Event:', event.sabhaName || '-'],
-                    ['Pujya Santo\'s Presence:', event.santosPresent || '-'],
-                    ['Total Bhaktas:', (event.gents || 0) + (event.ladies || 0)],
-                    ['Total Gents:', event.gents || '0'],
-                    ['Total Ladies:', event.ladies || '0'],
-                    ['Left-Over Food:', event.leftover || '-'],
-                    ['Remade Items:', event.remade || '-'],
-                    ['Total Grocery Cost:', event.groceryCost || '-'],
-                    ['Cost Per Plate:', event.costPerPlate || '-'],
-                    ['Notes:', event.notes || '-']
-                ],
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [79, 70, 229], // Indigo header
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [240, 240, 255] // Light blue alternate rows
-                },
-                styles: {
-                    fontSize: 12,
-                    cellPadding: 5,
-                    overflow: 'linebreak'
-                },
-                columnStyles: {
-                    0: { fontStyle: 'bold', cellWidth: 60 },
-                    1: { cellWidth: 'auto' }
+        // Scroll Animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
                 }
             });
-            
-            // Replace the Menu and Ingredients sections with this combined version:
-            // Replace the Menu & Ingredients section with this corrected version:
-
-            // Combined Menu & Ingredients section
-            doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0); // Indigo text
-            doc.text('Menu & Ingredients', 20, doc.lastAutoTable.finalY + 15);
-            doc.line(20, doc.lastAutoTable.finalY + 17, 70, doc.lastAutoTable.finalY + 17);
-            
-            // Prepare content
-            const menuText = event.menu || 'No menu items entered';
-            const ingredientsText = event.ingredients?.join('\n') || 'No ingredients entered';
-            
-            // Create the combined table
-            doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 25,
-                head: false,
-                body: [
-                    ['Menu Items:', menuText],
-                    ['Ingredients Used:', ingredientsText]
-                ],
-                theme: 'grid',
-                columnStyles: {
-                    0: { 
-                        cellWidth: 50, 
-                        fontStyle: 'bold',
-                        textColor: [79, 70, 229] // Indigo text
-                    },
-                    1: { 
-                        cellWidth: 'auto',
-                        cellPadding: { top: 5, right: 5, bottom: 5, left: 5 }
-                    }
-                },
-                styles: {
-                    fontSize: 12,
-                    lineColor: [200, 200, 200], // Light gray lines
-                    lineWidth: 0.3
-                },
-                // Handle multi-line text properly
-                didParseCell: (data) => {
-                    if (data.section === 'body' && data.column.index === 1) {
-                        // Split text into lines
-                        data.cell.text = data.cell.raw.split('\n');
-                    }
+        }, {
+            threshold: 0.1
+        });
+        
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+        
+        // Counter Animation
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+        
+        function animateCounters() {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText;
+                const increment = target / speed;
+                
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + increment);
+                    setTimeout(animateCounters, 1);
+                } else {
+                    counter.innerText = target.toLocaleString();
                 }
             });
-            
-            // Update position for next section
-            const menuY = doc.lastAutoTable.finalY;
-            
-            // Add photo if available
-            // Calculate available space on page
-            const remainingSpace = 280 - doc.lastAutoTable.finalY;
-            const minSpaceNeeded = 100; // Minimum space needed for photo + caption
-            
-            // Add photo if available (after ingredients)
-            if (event.photos && event.photos.length > 0) {
-                try {
-                    // Add new page if not enough space
-                    if (remainingSpace < minSpaceNeeded) {
-                        doc.addPage();
-                    }
-            
-                    const img = await loadImage(event.photos[0]);
-                    const imgProps = doc.getImageProperties(img);
-                    
-                    // Calculate dimensions to fit full width (with margins)
-                    const pageWidth = 170; // 190 - 20px margins
-                    const pdfWidth = pageWidth;
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                    
-                    // Position after ingredients with proper spacing
-                    const photoY = doc.lastAutoTable.finalY + 10;
-                    
-                    // Add photo caption
-                    doc.setFontSize(10);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('Event Photo:', 20, photoY);
-                    
-                    // Add the image (full width with margins)
-                    doc.addImage(img, 'JPEG', 20, photoY + 5, pdfWidth, pdfHeight);
-                    
-                    // Update final Y position
-                    menuY = photoY + pdfHeight + 10;
-                } catch (err) {
-                    console.error("Failed to load image:", err);
+        }
+        
+        // Start counters when stats section is visible
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    statsObserver.unobserve(entry.target);
                 }
-            } else {
-                menuY = doc.lastAutoTable.finalY;
-            }
-           
-            
-            // Footer with color
-       
-            doc.rect(0, 280, 210, 20, 'F');
-            doc.setFontSize(10);
-            doc.setTextColor(255, 255, 255);
-            doc.text('Generated by BAPS Cambridge Kitchen System', 105, 287, { align: 'center' });
-            doc.text(`Report generated on: ${formatPDFDate(new Date())}`, 105, 293, { align: 'center' });
-            
-            // Save the PDF
-            doc.save(`Kitchen_Report_${formatPDFDate(event.date, true)}.pdf`);
-        }
-        
-        // Helper function to load images
-        function loadImage(url) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.setAttribute('crossOrigin', 'anonymous');
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-                img.src = url;
             });
+        });
+        
+        const statsSection = document.querySelector('.bg-blue-50');
+        if (statsSection) {
+            statsObserver.observe(statsSection);
         }
         
-        // Helper function to format dates
-        // Replace the formatPDFDate function with this corrected version:
-        function formatPDFDate(dateString, forFilename = false) {
-            if (!dateString) return '-';
-            
-            // Parse date correctly (fixes timezone issues)
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
-            
-            // Adjust for timezone offset to get correct date
-            const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-            
-            if (forFilename) {
-                return adjustedDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-            }
-            
-            return adjustedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        }
-        
-        
-                 
-                 // Helper to load external image
-        function loadImage(url) {
-           return new Promise((resolve, reject) => {
-             const img = new Image();
-             img.setAttribute('crossOrigin', 'anonymous');
-             img.onload = () => resolve(img);
-             img.onerror = reject;
-             img.src = url;
-           });
-        }              
-        
-        // Handle ingredient input
-        function handleIngredientInput(e) {
-            if (e.key === 'Enter' && e.target.value.trim()) {
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                const tag = document.createElement('span');
-                tag.className = 'tag';
-                tag.innerHTML = `
-                    ${e.target.value.trim()}
-                    <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
-                `;
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
                 
-                const container = document.getElementById('ingredients-container');
-                container.insertBefore(tag, e.target);
-                e.target.value = '';
-            }
-        }
-        
-        // Handle event photos upload
-        function handleEventPhotosUpload(e) {
-            const files = e.target.files;
-            const previewContainer = document.getElementById('event-photo-preview');
-            previewContainer.innerHTML = '';
-            
-            if (files) {
-                Array.from(files).forEach(file => {
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'preview-image';
-                            previewContainer.appendChild(img);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-        }
-        
-        // Handle recipe image upload
-        function handleRecipeImageUpload(e) {
-            const file = e.target.files[0];
-            const previewContainer = document.getElementById('recipe-image-preview');
-            previewContainer.innerHTML = '';
-            
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-image';
-                    previewContainer.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Handle the AI Recipe Finder form submission
-
-        // AI Recipe Form Submit
-        document.getElementById('ai-recipe-form').addEventListener('submit', function(e) {
-          e.preventDefault();
-
-          const itemName = document.getElementById('item-name').value;
-          const numPeople = document.getElementById('num-people').value;
-          const specialNote = document.getElementById('special-note').value;
-          const otherItems = document.getElementById('other-items').value.trim();
-          const withswaminarayandiet = document.getElementById('with-swaminarayan-diet').checked;
-          let prompt = "";
-
-          if (itemName) {
-            prompt += `Give me a detailed recipe for "${itemName}" for ${numPeople} people.`;
-          }
-
-          if (otherItems) {
-            prompt += ` Please consider that the user is also preparing ${otherItems} with this, so adjust quantities and ingredients for "${itemName}" accordingly.`;
-          }
-        
-          if (specialNote) {
-            prompt += ` Special Notes: ${specialNote}.`;
-          }
-        
-          if (withswaminarayandiet) {
-            prompt += " Please make it Pure Vegetarian & without Onion, Garlic, Asafoetida.";
-          }
-        
-          prompt += " Please double check your response first & give accurate measurements and detailed steps.";
-        
-          navigator.clipboard.writeText(prompt)
-            .then(() => {
-              showToastMessage('✅ Prompt made & copied to keyboard! Click below to open ChatGPT & just Paste there.', 'https://chat.openai.com/');
-            })
-            .catch(err => {
-              console.error('Failed to copy:', err);
-              showToastMessage('❌ Failed to copy prompt. Please try manually.');
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    mobileMenu.classList.remove('open');
+                }
             });
         });
-        
-        
-                   
-
-        
-        // Render all events in the event data tab
-        function renderAllEvents() {
-            const container = document.getElementById('all-events');
-            if (!container) {
-                console.error('Could not find all-events container!');
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            // Create a fresh sorted copy
-            const eventsToRender = [...events].sort((a, b) => 
-                new Date(b.date) - new Date(a.date)
-            );
-            
-            eventsToRender.forEach(event => {
-                // Ensure YYYY-MM-DD format
-                let displayDate = event.date;
-                
-                // Convert if not already in correct format
-                if (typeof displayDate === 'string' && !displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    try {
-                        const d = new Date(displayDate);
-                        if (!isNaN(d.getTime())) {
-                            displayDate = d.toISOString().split('T')[0];
-                        }
-                    } catch (e) {
-                        console.warn('Date conversion failed for:', displayDate);
-                    }
-                }
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                        ${displayDate}
-                    </td>
-                    
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                        <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
-                        <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="viewEventDetails('${event.id}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-500 mr-3">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button onclick="editEvent('${event.id}')" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-500 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteEvent('${event.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-500">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button onclick="downloadEventPDF('${event.id}')" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-500 mr-3">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </td>
-                `;
-                container.appendChild(row);
-            });
-        }
-        
-        // Render all recipes in the recipe book tab
-        function renderAllRecipes() {
-            const container = document.getElementById('all-recipes');
-            container.innerHTML = '';
-            
-            if (recipes.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-3 text-center py-8">
-                        <i class="fas fa-utensils text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-500 dark:text-gray-400">No recipes found. Add your first recipe!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            recipes.forEach(recipe => {
-                const card = document.createElement('div');
-                card.className = 'recipe-card bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden';
-                card.innerHTML = `
-                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-utensils text-4xl"></i></div>'}
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-lg mb-1">${recipe.name}</h3>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            
-                            <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
-                            
-                        </div>
-                        <div class="flex flex-wrap gap-1 mb-3">
-                            ${recipe.ingredients.slice(0, 3).map(ing => `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${ing}</span>`).join('')}
-                            ${recipe.ingredients.length > 3 ? '<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">+' + (recipe.ingredients.length - 3) + ' more</span>' : ''}
-                        </div>
-                        <div class="flex justify-between">
-                            <button onclick="openRecipeModal('${recipe.id}')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
-                                View Recipe
-                            </button>
-                            <div>
-                                <button onclick="editRecipe('${recipe.id}')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm mr-2">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deleteRecipe('${recipe.id}')" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                    <button onclick="downloadRecipePDF('${recipe.id}')" class="text-green-600 hover:text-green-900">
-                                        <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderGallery() {
-          const galleryContainer = document.getElementById('gallery');
-          galleryContainer.innerHTML = '';
-        
-          // ✅ Add your 4 special images manually here
-          const images = [
-            'image1.jpg',
-            'image2.jpg',
-            'image3.jpg',
-            'image4.jpg',
-            'image5.jpg',
-            'image6.jpg',
-            'image7.jpg',
-            'image8.jpg'
-          ];
-        
-          images.forEach(src => {
-            const img = document.createElement('img');
-            img.src = src;
-            img.alt = "Special Gallery Image";
-            img.className = 'rounded-lg w-full h-40 object-cover hover:scale-105 transform transition shadow-md cursor-pointer border-4 border-gray-200 dark:border-gray-700';
-            img.addEventListener('click', () => openLightbox(src));
-            galleryContainer.appendChild(img);
-          });
-        }        
-        
-                
-        function openLightbox(src) {
-          const modal = document.getElementById('lightbox-modal');
-          const modalImg = document.getElementById('lightbox-image');
-          modalImg.src = src;
-          modal.classList.remove('hidden');
-        }
-        
-        function closeLightbox() {
-          const modal = document.getElementById('lightbox-modal');
-          modal.classList.add('hidden');
-        }
-
-
-
-
-
-        
-        // Filter events based on search query
-          function filterEvents(query) {
-              const container = document.getElementById('all-events');
-              container.innerHTML = '';
-
-              if (!query) {
-                 renderAllEvents();
-                 return;
-              }
-
-              const filteredEvents = events.filter(event => {
-                  const fullText = Object.values(event)
-                      .flat()
-                      .join(' ')
-                      .toLowerCase();
-
-                   return fullText.includes(query.toLowerCase());
-              });
-
-              if (filteredEvents.length === 0) {
-                 container.innerHTML = `
-                     <tr>
-                          <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No events match your search.</td>
-                     </tr>
-        `         ;
-                 return;
-              }
-
-              filteredEvents.forEach(event => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${formatDate(event.date)}</td>
-                      <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">${event.sabhaName || '-'}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">${event.santosPresent || '-'}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                          <span class="text-blue-600 dark:text-blue-400">${event.gents || 0} G</span> / 
-                          <span class="text-pink-600 dark:text-pink-400">${event.ladies || 0} L</span>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button onclick="viewEventDetails('${event.id}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-500 mr-3">
-                             <i class="fas fa-eye"></i>
-                          </button>
-                          <button onclick="editEvent('${event.id}')" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-500 mr-3">
-                              <i class="fas fa-edit"></i>
-                          </button>
-                          <button onclick="deleteEvent('${event.id}')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-500">
-                             <i class="fas fa-trash"></i>
-                          </button>
-                      </td>
-        `         ;
-                 container.appendChild(row);
-              });
-            }
-        
-        // Filter recipes based on search query
-        function filterRecipes(query) {
-            if (!query) {
-                renderAllRecipes();
-                return;
-            }
-            
-            const filteredRecipes = recipes.filter(recipe => {
-                const searchableFields = [
-                    recipe.name,
-                   
-                    recipe.ingredients.join(' '),
-                    recipe.instructions,
-                    recipe.notes
-                ].join(' ').toLowerCase();
-                
-                return searchableFields.includes(query.toLowerCase());
-            });
-            
-            const container = document.getElementById('all-recipes');
-            container.innerHTML = '';
-            
-            if (filteredRecipes.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-3 text-center py-8">
-                        <i class="fas fa-utensils text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-500 dark:text-gray-400">No recipes match your search.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            filteredRecipes.forEach(recipe => {
-                const card = document.createElement('div');
-                card.className = 'recipe-card bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden';
-                
-                // Highlight matching text in name
-                const name = highlightMatches(recipe.name, query);
-                
-                card.innerHTML = `
-                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-utensils text-4xl"></i></div>'}
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-lg mb-1">${name}</h3>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            <span class="mr-3"><i class="fas fa-clock mr-1"></i>${recipe.prepTime || 0} min</span>
-                            <span><i class="fas fa-fire mr-1"></i>${recipe.cookTime || 0} min</span>
-                           
-                        </div>
-                        <div class="flex flex-wrap gap-1 mb-3">
-                            ${recipe.ingredients.slice(0, 3).map(ing => {
-                                const highlightedIng = highlightMatches(ing, query);
-                                return `<span class="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">${highlightedIng}</span>`;
-                            }).join('')}
-                            ${recipe.ingredients.length > 3 ? '<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">+' + (recipe.ingredients.length - 3) + ' more</span>' : ''}
-                        </div>
-                        <div class="flex justify-between">
-                            <button onclick="openRecipeModal('${recipe.id}')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm">
-                                View Recipe
-                            </button>
-                            <div>
-                                <button onclick="editRecipe('${recipe.id}')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm mr-2">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deleteRecipe('${recipe.id}')" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        async function downloadRecipePDF(recipeId) {
-            const recipe = recipes.find(r => r.id === recipeId);
-            if (!recipe) return;
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Set document properties
-            doc.setProperties({
-                title: `Recipe - ${recipe.name}`,
-                subject: 'BAPS Cambridge Kitchen Recipe',
-                author: 'BAPS Cambridge Kitchen'
-            });
-        
-            // ===== PAGE 1 =====
-            
-            // Header with orange background
-            doc.setFillColor(0, 0, 0); // Orange background
-            doc.rect(0, 0, 210, 25, 'F');
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(255, 255, 255); // White text
-            doc.text(`Recipe: ${recipe.name}`, 105, 16, { align: 'center' });
-            
-            // Reset text color
-            doc.setTextColor(0, 0, 0); // Black text
-            
-            // Recipe Details section
-            doc.setFontSize(14);
-            doc.setTextColor(79, 70, 229); // Indigo text
-            doc.text('Recipe Details', 20, 40);
-            doc.setDrawColor(79, 70, 229);
-            doc.setLineWidth(0.3);
-            doc.line(20, 42, 50, 42);
-            
-            // Basic info table
-            doc.autoTable({
-                startY: 45,
-                head: false,
-                body: [
-                    ['Preparation Time:', `${recipe.cookTime || '0'} minutes`],
-                    ['Category:', recipe.category || '-']
-                ],
-                theme: 'grid',
-                columnStyles: {
-                    0: { 
-                        cellWidth: 60, 
-                        fontStyle: 'bold',
-                        textColor: [79, 70, 229] // Indigo text
-                    },
-                    1: { cellWidth: 'auto' }
-                },
-                styles: {
-                    fontSize: 12,
-                    cellPadding: 5,
-                    lineColor: [200, 200, 200]
-                }
-            });
-            
-            // Ingredients section
-            doc.setFontSize(14);
-            doc.setTextColor(79, 70, 229);
-            doc.text('Ingredients', 20, doc.lastAutoTable.finalY + 15);
-            doc.line(20, doc.lastAutoTable.finalY + 17, 50, doc.lastAutoTable.finalY + 17);
-            
-            // Ingredients table with line breaks preserved
-            const ingredientsText = recipe.ingredients?.join('\n') || 'No ingredients listed';
-            doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 25,
-                head: false,
-                body: [['', ingredientsText]],
-                columnStyles: {
-                    0: { cellWidth: 10 },
-                    1: { cellWidth: 'auto' }
-                },
-                styles: {
-                    fontSize: 12,
-                    cellPadding: { left: 5, right: 5, top: 5, bottom: 5 },
-                    lineColor: [200, 200, 200]
-                },
-                didParseCell: function(data) {
-                    if (data.section === 'body' && data.column.index === 1) {
-                        data.cell.text = data.cell.raw.split('\n');
-                    }
-                }
-            });
-            
-            // Instructions section
-            doc.setFontSize(14);
-            doc.setTextColor(79, 70, 229);
-            doc.text('Instructions', 20, doc.lastAutoTable.finalY + 15);
-            doc.line(20, doc.lastAutoTable.finalY + 17, 50, doc.lastAutoTable.finalY + 17);
-            
-            // Instructions with line breaks preserved
-            const instructionsText = recipe.instructions || 'No instructions provided';
-            doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 25,
-                head: false,
-                body: [['', instructionsText]],
-                columnStyles: {
-                    0: { cellWidth: 10 },
-                    1: { cellWidth: 'auto' }
-                },
-                styles: {
-                    fontSize: 12,
-                    cellPadding: { left: 5, right: 5, top: 5, bottom: 5 },
-                    lineColor: [200, 200, 200]
-                },
-                didParseCell: function(data) {
-                    if (data.section === 'body' && data.column.index === 1) {
-                        data.cell.text = data.cell.raw.split('\n');
-                    }
-                }
-            });
-            
-            // Notes section (if exists)
-            if (recipe.notes) {
-                doc.setFontSize(14);
-                doc.setTextColor(79, 70, 229);
-                doc.text('Notes', 20, doc.lastAutoTable.finalY + 15);
-                doc.line(20, doc.lastAutoTable.finalY + 17, 30, doc.lastAutoTable.finalY + 17);
-                
-                doc.autoTable({
-                    startY: doc.lastAutoTable.finalY + 25,
-                    head: false,
-                    body: [['', recipe.notes]],
-                    columnStyles: {
-                        0: { cellWidth: 10 },
-                        1: { cellWidth: 'auto' }
-                    },
-                    styles: {
-                        fontSize: 12,
-                        cellPadding: { left: 5, right: 5, top: 5, bottom: 5 },
-                        lineColor: [200, 200, 200]
-                    },
-                    didParseCell: function(data) {
-                        if (data.section === 'body' && data.column.index === 1) {
-                            data.cell.text = data.cell.raw.split('\n');
-                        }
-                    }
-                });
-            }
-            
-            // Add recipe image if available
-            if (recipe.image) {
-                try {
-                    const img = await loadImage(recipe.image);
-                    const imgProps = doc.getImageProperties(img);
-                    const pdfWidth = 60;
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                    
-                    doc.addImage(img, 'JPEG', 140, 40, pdfWidth, pdfHeight);
-                    doc.setFontSize(10);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('Recipe Image:', 140, 38);
-                } catch (err) {
-                    console.error("Failed to load recipe image:", err);
-                }
-            }
-            
-            // Footer
-            doc.setFillColor(0, 0, 0); // Orange background
-            doc.rect(0, 280, 210, 20, 'F');
-            doc.setFontSize(10);
-            doc.setTextColor(255, 255, 255);
-            doc.text('Generated by BAPS Cambridge Kitchen System', 105, 287, { align: 'center' });
-            doc.text(`Report generated on: ${new Date().toLocaleDateString()}`, 105, 293, { align: 'center' });
-            
-            // Save the PDF
-            doc.save(`Recipe_${recipe.name.replace(/ /g, '_')}.pdf`);
-        }
-       
-       
-        
-        // Highlight matching text in search results
-        function highlightMatches(text, query) {
-            if (!text || !query) return text;
-            
-            const regex = new RegExp(query, 'gi');
-            return text.toString().replace(regex, match => `<span class="search-highlight">${match}</span>`);
-        }
-        
-        // View event details
-        function viewEventDetails(id) {
-            const event = events.find(e => e.id === id);
-            if (!event) return;
-            document.getElementById('modal-event-title').textContent = event.sabhaName || 'Untitled';
-            document.getElementById('modal-event-date').textContent = formatDate(event.date);
-            document.getElementById('modal-event-speaker').textContent = event.santosPresent || '-';
-            document.getElementById('modal-event-bhaktas').textContent = (event.gents || 0) + (event.ladies || 0);
-            document.getElementById('modal-event-menu').textContent = event.menu || '-';
-            document.getElementById('modal-event-ingredients').textContent = (event.ingredients || []).join(', ');
-            document.getElementById('modal-event-notes').textContent = event.notes || '-';
-            document.getElementById('modal-event-grocery').textContent = event.groceryCost || '-';
-            document.getElementById('modal-event-costplate').textContent = event.costPerPlate || '-';
-            document.getElementById('modal-event-gents').textContent = event.gents || '0';
-            document.getElementById('modal-event-ladies').textContent = event.ladies || '0';
-
-            // 🆕 Add leftover and remade
-            let extraHtml = '';
-            if (event.leftover) {
-                extraHtml += `<p><strong>Leftover Food:</strong> ${event.leftover}</p>`;
-            }
-            if (event.remade) {
-                extraHtml += `<p><strong>Re-made Items:</strong> ${event.remade}</p>`;
-            }
-            document.getElementById('modal-event-notes').innerHTML += '<br>' + extraHtml;
-            // Show uploaded photos
-            const photoContainer = document.getElementById('modal-event-photos');
-            photoContainer.innerHTML = '';
-            if (event.photos && event.photos.length > 0) {
-              event.photos.forEach(src => {
-                const img = document.createElement('img');
-                img.src = src;
-                img.className = 'preview-image';
-                photoContainer.appendChild(img);
-              });
-            }
-            document.getElementById('event-modal').classList.remove('hidden');
-         }
-
-         function closeEventModal() {
-           document.getElementById('event-modal').classList.add('hidden');
-         }
-
-
-          
-
-        
-         function editEvent(id) {
-             const event = events.find(e => e.id === id);
-             if (!event) return;
-
-             document.getElementById('event-date').value = event.date;
-             document.getElementById('event-name').value = event.sabhaName || '';
-             document.getElementById('event-saints').value = event.santosPresent || '';
-             document.getElementById('event-gents').value = event.gents || '';
-             document.getElementById('event-ladies').value = event.ladies || '';
-             document.getElementById('event-menu').value = event.menu || '';
-             document.getElementById('event-ingredients').value = (event.ingredients || []).join('\n');
-             document.getElementById('event-leftover').value = event.leftover || '';
-             document.getElementById('event-remade').value = event.remade || '';
-             document.getElementById('event-notes').value = event.notes || '';
-
-    // Show tab and set update mode
-             showTab('add-event');
-             eventForm.dataset.mode = 'update';
-             eventForm.dataset.id = id;
-
-    // Change submit button text
-             const submitBtn = eventForm.querySelector('button[type="submit"]');
-             submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Event';
-         }
-
-        // Delete event
-        async function deleteEvent(id) {
-            if (confirm('Are you sure you want to delete this event?')) {
-                events = events.filter(e => e.id !== id);
-                await saveEvents();
-                 // Delete from Firebase
-                try {
-                    await window.deleteDoc(window.firestoreDoc(window.db, "SabhaEvents", id));
-                    showToast('Event deleted successfully!');
-                } catch (err) {
-                    console.error("Failed to delete from Firebase:", err);
-                    showToast("Delete failed from database!");
-                }
-
-                
-                renderAllEvents();
-                updateDashboard();
-                renderGallery();
-            
-                
-            }
-        }
-        
-        // Open recipe modal
-        function openRecipeModal(id) {
-            const recipe = recipes.find(r => r.id === id);
-            if (!recipe) {
-              console.error("Recipe not found for ID:", recipeId);
-              showToast("Recipe not found.");
-              return;
-            }
-            
-            // Populate modal
-            document.getElementById('modal-recipe-name').textContent = recipe.name;
-           
-            document.getElementById('modal-cook-time').textContent = recipe.cookTime || 0;
-    
-            
-            // Ingredients
-            // Normalize ingredients safely
-            const ingredients = Array.isArray(recipe.ingredients)
-              ? recipe.ingredients
-              : (recipe.ingredients || '').split(',').map(i => i.trim()).filter(Boolean);
-
-            const ingredientsList = document.getElementById('modal-ingredients');
-            ingredientsList.innerHTML = '';
-
-            recipe.ingredients.forEach(ing => {
-                const li = document.createElement('li');
-                li.textContent = ing;
-                ingredientsList.appendChild(li);
-            });
-            
-            // Instructions
-            const instructionsList = document.getElementById('modal-instructions');
-            instructionsList.innerHTML = '';
-            instructionsList.textContent = recipe.instructions;
-
-            
-            // Notes
-            const notesContainer = document.getElementById('modal-notes-container');
-            const notesElement = document.getElementById('modal-notes');
-            if (recipe.notes) {
-                notesElement.textContent = recipe.notes;
-                notesContainer.style.display = 'block';
-            } else {
-                notesContainer.style.display = 'none';
-            }
-            
-            // Image
-            const imageContainer = document.getElementById('modal-image-container');
-            const imageElement = document.getElementById('modal-image');
-            if (recipe.image) {
-                imageElement.src = recipe.image;
-                imageContainer.style.display = 'block';
-            } else {
-                imageContainer.style.display = 'none';
-            }
-            
-            // Show modal
-            recipeModal.classList.remove('hidden');
-        }
-        
-        // Close modal
-        function closeModal() {
-            recipeModal.classList.add('hidden');
-        }
-        
-        // Edit recipe
-        function editRecipe(id) {
-            const recipe = recipes.find(r => r.id === id);
-            if (!recipe) return;
-            
-            // Populate the form with recipe data
-            document.getElementById('recipe-name').value = recipe.name;
-           
-            document.getElementById('recipe-cook-time').value = recipe.cookTime || '';
-            document.getElementById('recipe-instructions').value = recipe.instructions || '';
-            document.getElementById('recipe-notes').value = recipe.notes || '';
-            
-            // Handle ingredients
-            const ingredientsContainer = document.getElementById('ingredients-container');
-            ingredientsContainer.innerHTML = '';
-            
-            recipe.ingredients.forEach(ing => {
-                const tag = document.createElement('span');
-                tag.className = 'tag';
-                tag.innerHTML = `
-                    ${ing}
-                    <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
-                `;
-                ingredientsContainer.appendChild(tag);
-            });
-            
-            // Add the input field back
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.id = 'recipe-ingredients';
-            input.className = 'flex-grow px-2 py-1 border-0 focus:ring-0 focus:outline-none dark:bg-gray-800';
-            input.placeholder = 'Add ingredients (press Enter)';
-            ingredientsContainer.appendChild(input);
-            
-            // Re-attach event listener
-            input.addEventListener('keydown', handleIngredientInput);
-            
-            // Handle image
-            const previewContainer = document.getElementById('recipe-image-preview');
-            previewContainer.innerHTML = '';
-            
-            if (recipe.image) {
-                const img = document.createElement('img');
-                img.src = recipe.image;
-                img.className = 'preview-image';
-                previewContainer.appendChild(img);
-            }
-            
-            // Show the add recipe tab
-            showTab('add-recipe');
-            
-            // Change the form to update mode
-            const form = document.getElementById('recipe-form');
-            form.dataset.mode = 'update';
-            form.dataset.id = id;
-            
-            // Change the submit button text
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Recipe';
-        }
-        
-        // Delete recipe
-        async function deleteRecipe(id) {
-            if (confirm('Are you sure you want to delete this recipe?')) {
-                recipes = recipes.filter(r => r.id !== id);
-                await saveRecipes();
-                // Delete from Firebase
-                try {
-                    await window.deleteDoc(window.firestoreDoc(window.db, "Recipes", id));
-                    showToast('Recipe deleted successfully!');
-                } catch (err) {
-                    console.error("Failed to delete recipe from Firebase:", err);
-                    showToast("Delete failed from database!");
-                }
-                renderAllRecipes();
-                updateDashboard();
-                renderGallery();
-
-            }
-        }
-        
-        // Save events to localStorage
-        async function saveEvents() {
-           localStorage.setItem('sabhaEvents', JSON.stringify(events));
-           try {
-               await syncToFirebase("SabhaEvents", events);
-               console.log("✅ Events synced to Firebase.");
-               showToast("Event saved & synced!");
-           } catch (err) {
-               console.error("❌ Firebase sync failed for events:", err);
-               showToast("Event saved locally, but sync failed!");
-           }
-        }
-
-        async function saveRecipes() {
-            localStorage.setItem('sabhaRecipes', JSON.stringify(recipes));
-            try {
-                await syncToFirebase("Recipes", recipes);
-                console.log("✅ Recipes synced to Firebase.");
-                showToast("Recipe saved & synced!");
-            } catch (err) {
-                console.error("❌ Firebase sync failed for recipes:", err);
-                showToast("Recipe saved locally, but sync failed!");
-            }
-        }
-
-        
-       
-        
-
-
-
-
-
-        // Format date for display
-        function formatDate(dateString, short = false) {
-            if (!dateString) return '-';
-            
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
-            
-            if (short) {
-                return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            }
-            
-            return date.toLocaleDateString(undefined, { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        }
-    
     </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          const script = document.createElement('script');
-          script.src = "https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.full.min.js";
-          script.onload = function () {
-            console.log("✅ SheetJS loaded");
-      
-            const exportBtn = document.getElementById('export-btn');
-            if (!exportBtn) {
-              console.error("Export button not found!");
-              return;
-            }
-      
-            exportBtn.addEventListener('click', function () {
-              console.log("📦 Export started");
-      
-              const wb = XLSX.utils.book_new();
-      
-              const recipeSheet = XLSX.utils.json_to_sheet((window.recipes || []).map(r => ({
-                Name: r.name,
-                Category: r.category,
-                PrepTime: r.prepTime,
-                CookTime: r.cookTime,
-                Ingredients: (r.ingredients || []).join(", "),
-                Instructions: r.instructions,
-                Notes: r.notes
-              })));
-              XLSX.utils.book_append_sheet(wb, recipeSheet, "Recipes");
-      
-              const sabhaSheet = XLSX.utils.json_to_sheet((window.events || []).map(e => ({
-                Date: e.date,
-                Topic: e.sabhaName,
-                Speaker: e.santosPresent,
-                Gents: e.gents,
-                Ladies: e.ladies,
-                TotalBhaktas: e.totalBhaktas,
-                Menu: e.menu,
-                Ingredients: (e.ingredients || []).join(", "),
-                Leftover: e.leftover,
-                Remade: e.remade,
-                Notes: e.notes
-              })));
-              XLSX.utils.book_append_sheet(wb, sabhaSheet, "Sabha Events");
-      
-              XLSX.writeFile(wb, "BAPS_Kitchen_Data.xlsx");
-            });
-          };
-      
-          document.body.appendChild(script);
-        });
-    </script>
-          
-<!-- Lightbox Modal -->
-<div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-    <div class="relative">
-      <img id="lightbox-image" class="max-w-full max-h-[90vh] rounded-lg shadow-lg" src="" alt="Enlarged">
-      <button onclick="closeLightbox()" class="absolute top-2 right-2 bg-white rounded-full p-2 text-black hover:bg-gray-100 transition">
-        <i class="fas fa-times text-xl"></i>
-      </button>
-    </div>
-</div>
-
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=asl121/asa1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+ </div>
+</body>
 </html>
